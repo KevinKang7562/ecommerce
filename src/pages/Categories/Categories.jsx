@@ -44,7 +44,7 @@ export default function Categories() {
       const response = await axios.post(url, requestBody, {
         headers: requestHeaders,
       });
-      return response.data.data; // 실제 카테고리 배열!!
+      return response.data.data; // 실제 카테고리 배열
     } catch (error) {
       alert(error);
       throw error;
