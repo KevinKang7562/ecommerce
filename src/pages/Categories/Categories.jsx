@@ -3,6 +3,7 @@ import axios from 'axios';
 import Spinner from '../../components/Spinner/Spinner';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import { API_BASE_URL } from '../../constants/api';
 
 export default function Categories() {
   // Queries
@@ -25,7 +26,7 @@ export default function Categories() {
 
   /* ZIN에서 만든 API 형식 */
   async function getCategories() {
-    const url = 'http://localhost:7080/api/shopping/selectCategories.do';
+    const url = `${API_BASE_URL}/api/shopping/selectCategories.do`;
   
     // 요청 본문 (필요 없으면 {} 또는 null로 설정)
     // 본문입니다. 보통 파라미터를 넘길때 사용 (json 형식)
