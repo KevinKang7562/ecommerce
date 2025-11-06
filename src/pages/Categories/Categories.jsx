@@ -3,13 +3,15 @@ import axios from 'axios';
 import Spinner from '../../components/Spinner/Spinner';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { API_BASE_URL } from '../../constants/api';
+import { API_BASE_URL, SESSION_ALERT } from '../../constants/api';
+import { logout } from '../../components/Navbar/Navbar';
 
 export default function Categories() {
   // Queries
   const { data } = useQuery({
     queryKey: ['categories'],
     queryFn: getCategories,
+    retry: false,
   });
 
   /* 기존 원본소스에서 호출하던 API */
@@ -47,6 +49,12 @@ export default function Categories() {
       });
       return response.data.data; // 실제 카테고리 배열
     } catch (error) {
+      if(error.response?.status === 401){
+          alert(`${SESSION_ALERT}`);
+          logout();
+          window.location.href = "/login";    
+          throw error;
+      }
       alert(error);
       throw error;
     }
@@ -57,13 +65,13 @@ export default function Categories() {
   }
 
   useEffect(() => {
-    main();
+    //main();
   }, []);
 
   return (
     <>
       <div className="container flex flex-wrap items-center">
-        <h3 className="text-3xl font-medium mb-5 w-full">Our Categories</h3>
+        <h3 className="text-3xl font-medium mb-5 w-full text-yellow-500 dark:text-yellow-300">Our Categories</h3>
         {data ? (
           data.map((category) => (
             <div
@@ -78,7 +86,7 @@ export default function Categories() {
                   alt={category.title}
                 />
                 <div className="px-5 py-2">
-                  <h3 className="text-gray-900 overflow-hidden text-ellipsis whitespace-nowrap font-semibold text-xl tracking-tight dark:text-white">
+                  <h3 className="text-yellow-500 dark:text-yellow-300 overflow-hidden text-ellipsis whitespace-nowrap font-semibold text-xl tracking-tight">
                     {category.name}
                   </h3>
                 </div>

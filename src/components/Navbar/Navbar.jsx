@@ -6,6 +6,13 @@ import { initFlowbite } from 'flowbite';
 import { productsContext } from '../../context/Products/Products';
 import Search from '../../pages/Search/Search';
 
+
+export function logout() {
+  localStorage.removeItem('authToken');
+}
+
+
+
 export default function Navbar() {
   const { userToken, setUserToken } = useContext(authContext);
   const location = useLocation();
