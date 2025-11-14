@@ -24,6 +24,12 @@ import Categories from './pages/Categories/Categories';
 import ProductsContextProvider from './context/Products/Products';
 import Search from './pages/Search/Search';
 import RedirectIfAuthenticated from './components/RedirectIfAuthenticated/RedirectIfAuthenticated';
+import MyPageLayout from './pages/MyPage/MyPageLayout';
+import MyProfileEdit from './pages/MyPage/MyProfileEdit';
+import MyPersonalInquiry from './pages/MyPage/MyInquiries/MyPersonalInquiry';
+import MyProductQnA from './pages/MyPage/MyInquiries/MyProductQnA';
+import MyAllOrders from './pages/MyPage/MyOrders/MyAllOrders';
+import MyCancelReturn from './pages/MyPage/MyOrders/MyCancelReturn';
 
 function App() {
   const queryClient = new QueryClient();
@@ -31,7 +37,7 @@ function App() {
   const router = createBrowserRouter([
     {
       path: '',
-      element: <MainLayout />,
+      element: <MainLayout />, // 공통 UI가 포함된 기본 레이아웃 children이 <Outlet>자리에 랜더링
       children: [
         {
           index: true,
@@ -121,6 +127,57 @@ function App() {
               <Search />
             </ProtectedRoute>
           ),
+        },
+        {
+          path: 'mypage',
+          //마이페이지 공통 UI가 포함된 기본레이아웃
+          element: (
+            <ProtectedRoute>
+              <MyPageLayout />
+            </ProtectedRoute>
+          ),
+          children: [
+            {
+              index: true,
+              element: (
+                <ProtectedRoute>
+                  <MyProfileEdit />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: 'myAllOrders',
+              element: (
+                <ProtectedRoute>
+                  <MyAllOrders />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: 'myCancelReturn',
+              element: (
+                <ProtectedRoute>
+                  <MyCancelReturn />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: 'myPersonalInquiry',
+              element: (
+                <ProtectedRoute>
+                  <MyPersonalInquiry />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: 'myProductQnA',
+              element: (
+                <ProtectedRoute>
+                  <MyProductQnA />
+                </ProtectedRoute>
+              ),
+            },
+          ],
         },
         { path: '*', element: <NotFound /> },
       ],

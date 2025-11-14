@@ -6,16 +6,13 @@ import { initFlowbite } from 'flowbite';
 import { productsContext } from '../../context/Products/Products';
 import Search from '../../pages/Search/Search';
 
-
 export function logout() {
   localStorage.removeItem('authToken');
 }
 
-
-
 export default function Navbar() {
   const { userToken, setUserToken } = useContext(authContext);
-  const location = useLocation();
+  const location = useLocation(); //현재 url 가져오는 훅(React Router)
 
   const { data, setSearchRes, searchRes } = useContext(productsContext);
 
@@ -24,7 +21,7 @@ export default function Navbar() {
     localStorage.removeItem('authToken');
   }
 
-  const navigate = useNavigate();
+  const navigate = useNavigate(); //페이지 이동 훅(React Router)
   function handleSearch(e) {
     if (e.key === 'Enter') {
       const query = e.target.value;
@@ -239,6 +236,14 @@ export default function Navbar() {
                       <div className="flex lg:flex-col lg:justify-center items-center space-x-1">
                         <i className="fas fa-arrow-right-from-bracket fa-fw"></i>
                         <span>Logout</span>
+                      </div>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="mypage" className={getLinkClass('/mypage')}>
+                      <div className="flex lg:flex-col lg:justify-center items-center space-x-1">
+                        <i className="fas fa-user fa-fw"></i>
+                        <span>my page</span>
                       </div>
                     </Link>
                   </li>
