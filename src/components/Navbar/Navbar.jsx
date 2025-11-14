@@ -251,7 +251,7 @@ export default function Navbar() {
                     <Link to="mypage" className={getLinkClass('/mypage')}>
                       <div className="flex lg:flex-col lg:justify-center items-center space-x-1">
                         <i className="fas fa-user fa-fw"></i>
-                        <span>my page</span>
+                        <span>마이페이지</span>
                       </div>
                     </Link>
                   </li>
