@@ -24,6 +24,7 @@ import Categories from './pages/Categories/Categories';
 import ProductsContextProvider from './context/Products/Products';
 import Search from './pages/Search/Search';
 import RedirectIfAuthenticated from './components/RedirectIfAuthenticated/RedirectIfAuthenticated';
+import Board from './pages/Board/Board';
 
 function App() {
   const queryClient = new QueryClient();
@@ -119,6 +120,14 @@ function App() {
           element: (
             <ProtectedRoute>
               <Search />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: 'board',
+          element: (
+            <ProtectedRoute>
+              <Board />
             </ProtectedRoute>
           ),
         },

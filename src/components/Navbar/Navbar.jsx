@@ -231,6 +231,14 @@ export default function Navbar() {
                     </Link>
                   </li>
                   <li>
+                    <Link to="board" className={getLinkClass('/board')}>
+                      <div className="flex lg:flex-col lg:justify-center items-center space-x-1">
+                        <i className="fa-solid fa-bell" />
+                        <span>공지사항</span>
+                      </div>
+                    </Link>
+                  </li>
+                  <li>
                     <Link
                       to="login"
                       onClick={logout}
@@ -250,6 +258,14 @@ export default function Navbar() {
                       <div className="flex lg:flex-col lg:justify-center items-center space-x-1">
                         <i className="fas fa-sign-in-alt fa-fw"></i>
                         <span>Login</span>
+                      </div>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="board" className={getLinkClass('/board')}>
+                      <div className="flex lg:flex-col lg:justify-center items-center space-x-1">
+                        <i className="fas fa-bell fa-fw"></i>
+                        <span>공지사항</span>
                       </div>
                     </Link>
                   </li>
