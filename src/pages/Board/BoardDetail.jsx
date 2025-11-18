@@ -10,13 +10,37 @@ export default function BoardDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const fetchNoticeDetail = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const res = await fetch(`${API_BASE_URL}/api/board/selectBoardDetail.do`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ boardNo }),
+      });
+
+      if (!res.ok) throw new Error(`서버 오류: ${res.status}`);
+
+      const data = await res.json();
+      const payload = data?.data?.[0] ?? data?.data ?? data;
+      setNotice(payload || null);
+    } catch (err) {
+      setError(err.message || '데이터를 불러오는 중 오류가 발생했습니다.');
+      setNotice(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchNoticeDetail = async () => {
+    const updateViewCount = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const res = await fetch(`${API_BASE_URL}/api/board/selectBoardDetail.do`, {
+        const res = await fetch(`${API_BASE_URL}/api/board/updateBoardViewCount.do`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ boardNo }),
@@ -24,18 +48,20 @@ export default function BoardDetail() {
 
         if (!res.ok) throw new Error(`서버 오류: ${res.status}`);
 
-        const data = await res.json();
-        const payload = data?.data?.[0] ?? data?.data ?? data;
-        setNotice(payload || null);
       } catch (err) {
-        setError(err.message || '데이터를 불러오는 중 오류가 발생했습니다.');
-        setNotice(null);
+        setError(err.message || '조회수 업데이트중 오류 발생!!');
       } finally {
-        setLoading(false);
       }
     };
+    
+    const run = async () => {
+      if (!boardNo) return;
 
-    if (boardNo) fetchNoticeDetail();
+      await updateViewCount();
+      await fetchNoticeDetail();
+    }
+
+    run();
   }, [boardNo]);
 
   if (loading) return <div style={{ padding: 20 }}>로딩 중...</div>;
