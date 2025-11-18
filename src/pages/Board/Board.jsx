@@ -83,7 +83,7 @@ export default function Board() {
 
   function onRowClick(item) {
     // 상세페이지로 이동 (예: /board/123)
-    navigate(`/board/${item.id}`);
+    navigate('/boarddetail/' + item.boardNo);
   }
 
   function onSearchSubmit(e) {

@@ -25,6 +25,7 @@ import ProductsContextProvider from './context/Products/Products';
 import Search from './pages/Search/Search';
 import RedirectIfAuthenticated from './components/RedirectIfAuthenticated/RedirectIfAuthenticated';
 import Board from './pages/Board/Board';
+import BoardDetail from './pages/Board/BoardDetail';
 import MyPageLayout from './pages/MyPage/MyPageLayout';
 import MyProfileEdit from './pages/MyPage/MyProfileEdit';
 import MyPersonalInquiry from './pages/MyPage/MyInquiries/MyPersonalInquiry';
@@ -137,6 +138,14 @@ function App() {
             </ProtectedRoute>
           ),
         },
+        {
+          path: 'boarddetail/:boardNo',
+          element: (
+            <ProtectedRoute>
+              <BoardDetail />
+            </ProtectedRoute>
+          ),
+        },        
         {
           path: 'mypage',
           //마이페이지 공통 UI가 포함된 기본레이아웃
