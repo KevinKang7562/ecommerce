@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { API_BASE_URL, SESSION_ALERT } from '../../constants/api';
 
 /**
@@ -35,24 +36,20 @@ export default function Board() {
       const title = opts.title ?? searchTitle ?? '';
       const writer = opts.writer ?? searchWriterNm ?? '';
       const body = {
-        'pageSize': pageSize,
-        'currentPage': page,
-        'searchTitle': title,
-        'searchWriterNm': writer
+        pageSize: pageSize,
+        currentPage: page,
+        searchTitle: title,
+        searchWriterNm: writer,
       };
 
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`${API_BASE_URL}/api/board/selectBoard.do`, {
-          method: 'POST',
+        const res = await axios.post(`${API_BASE_URL}/api/board/selectBoard.do`, body, {
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
         });
 
-        if (!res.ok) throw new Error(`서버 오류: ${res.status}`);
-
-        const data = await res.json();
+        const data = res.data ?? {};
 
         const tPages =
           typeof data.totalPages === 'number'
@@ -65,7 +62,12 @@ export default function Board() {
         setTotalPages(tPages);
         setCurrentPage(page);
       } catch (err) {
-        setError(err.message || '데이터를 불러오는 중 오류가 발생했습니다.');
+        const msg =
+          err?.response?.data?.message ||
+          err?.response?.data?.error ||
+          err?.message ||
+          '데이터를 불러오는 중 오류가 발생했습니다.';
+        setError(msg);
         setItems([]);
         setTotalPages(1);
       } finally {
@@ -82,7 +84,7 @@ export default function Board() {
   }, []);
 
   function onRowClick(item) {
-    // 상세페이지로 이동 (예: /board/123)
+    // 상세페이지로 이동 (예: /boarddetail/123)
     navigate('/boarddetail/' + item.boardNo);
   }
 

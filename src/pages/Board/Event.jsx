@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Spinner from '../../components/Spinner/Spinner';
 import { useQuery } from '@tanstack/react-query';
@@ -6,7 +7,9 @@ import { Link } from 'react-router-dom';
 import { API_BASE_URL, SESSION_ALERT } from '../../constants/api';
 import { logout } from '../../components/Navbar/Navbar';
 
-export default function Categories() {
+export default function Event() {
+  const navigate = useNavigate();
+  
   const [activeTab, setActiveTab] = useState('ongoing'); // 'ongoing' | 'ended'
 
   const statusMap = {
@@ -15,7 +18,7 @@ export default function Categories() {
   };
 
   // API 호출: eventStatus 를 body에 포함
-  async function getCategories(eventStatus) {
+  async function getEvent(eventStatus) {
     const url = `${API_BASE_URL}/api/board/selectEvent.do`;
 
     const requestBody = {
@@ -45,10 +48,15 @@ export default function Categories() {
 
   // useQuery: activeTab 변경 시 쿼리키가 바뀌어 재요청됨
   const { data, isLoading } = useQuery({
-    queryKey: ['categories', activeTab],
-    queryFn: () => getCategories(statusMap[activeTab]),
+    queryKey: ['event', activeTab],
+    queryFn: () => getEvent(statusMap[activeTab]),
     retry: false,
   });
+
+  function onItemClick(item) {
+    // 상세페이지로 이동 (예: /eventdetail/123)
+    navigate('/eventdetail/' + item.boardNo);
+  }
 
   useEffect(() => {
     // no-op
@@ -104,22 +112,23 @@ export default function Categories() {
               <Spinner />
             </div>
           ) : data && data.length ? (
-            data.map((category) => (
-              <div className="w-full lg:md:w-1/4 md:w-1/3 sm:w-1/2 p-3" key={category._id}>
+            data.map((event) => (
+              <div className="w-full lg:md:w-1/4 md:w-1/3 sm:w-1/2 p-3" key={event._id}>
                 <div className="relative bg-white mx-auto hover:shadow-green-300 transition-shadow shadow-md rounded-lg max-w-sm dark:bg-gray-800 dark:border-gray-700">
                   <img
+                    onClick={() => onItemClick(event)}
                     className="rounded-t-lg sm:object-cover object-contain object-top w-full h-80"
-                    src={category.imgUrl}
-                    alt={category.title}
+                    src={event.imgUrl}
+                    alt={event.title}
                   />
                   <div className="px-5 py-2">
                     <p className="text-yellow-500 dark:text-yellow-300 overflow-hidden text-ellipsis whitespace-nowrap font-semibold text-base tracking-tight">
-                      {category.title}
+                      {event.title}
                     </p>
                   </div>
                   <div className="px-5 py-2 text-center">
                     <p className="text-yellow-500 dark:text-yellow-300 overflow-hidden text-ellipsis whitespace-nowrap font-semibold text-base tracking-tight">
-                      {category.startDate} ~ {category.endDate}
+                      {event.startDate} ~ {event.endDate}
                     </p>
                   </div>
                 </div>

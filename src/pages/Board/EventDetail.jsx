@@ -4,7 +4,7 @@ import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../../constants/api';
 
-export default function BoardDetail() {
+export default function EventDetail() {
   const { boardNo } = useParams();
   const navigate = useNavigate();
 
@@ -18,12 +18,12 @@ export default function BoardDetail() {
       setError(null);
 
       const res = await axios.post(
-        `${API_BASE_URL}/api/board/selectBoardDetail.do`,
+        `${API_BASE_URL}/api/board/selectEventDetail.do`,
         { boardNo },
         { headers: { 'Content-Type': 'application/json' } }
       );
 
-      const data = res.data;
+      const data = res?.data ?? {};
       const payload = data?.data?.[0] ?? data?.data ?? data;
       setNotice(payload || null);
     } catch (err) {
@@ -66,10 +66,21 @@ export default function BoardDetail() {
   const sanitizedHtml = useMemo(() => {
     return DOMPurify.sanitize(rawHtml, {
       USE_PROFILES: { html: true },
-      // 허용 URI 패턴: http(s), data, root-relative
       ALLOWED_URI_REGEXP: /^(?:(?:https?|data):|\/)/i,
     });
   }, [rawHtml]);
+
+  // format date helper (ISO or timestamp -> locale YYYY.MM.DD)
+  function formatDateShort(iso) {
+    if (!iso) return '';
+    try {
+      const d = new Date(iso);
+      // YYYY.MM.DD 형식
+      return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+    } catch {
+      return iso;
+    }
+  }
 
   if (loading) return <div style={{ padding: 20 }}>로딩 중...</div>;
   if (error) return <div style={{ padding: 20, color: 'red' }}>{error}</div>;
@@ -90,7 +101,6 @@ export default function BoardDetail() {
     >
       <div
         style={{
-          // 컨텐츠 박스: 화면 거의 꽉채움, 좌우 마진 작게
           maxWidth: '1200px',
           margin: '18px auto',
           width: 'calc(100% - 36px)',
@@ -100,7 +110,6 @@ export default function BoardDetail() {
           <h1
             style={{
               margin: 0,
-              // 반응형으로 크게 보이게
               fontSize: 'clamp(28px, 6vw, 44px)',
               fontWeight: 900,
               color: '#08203a',
@@ -128,10 +137,28 @@ export default function BoardDetail() {
             <div style={{ color: '#94a3b8' }}>{notice.idate ?? notice.createdAt ?? ''}</div>
             {typeof notice.viewCnt !== 'undefined' && <div style={{ color: '#94a3b8' }}>· 조회 {notice.viewCnt}</div>}
           </div>
+
+          {/* 추가: 이벤트 기간 표시 (startDate ~ endDate) */}
+          <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{
+              fontSize: 13,
+              color: '#0f172a',
+              background: 'linear-gradient(90deg,#eef6ff,#f8fbff)',
+              padding: '6px 10px',
+              borderRadius: 8,
+              border: '1px solid rgba(17,96,216,0.08)',
+              fontWeight: 700,
+            }}>
+              이벤트 기간
+            </span>
+            <div style={{ color: '#334155', fontSize: 14 }}>
+              {formatDateShort(notice.startDate) || '시작일 없음'} &nbsp;〜&nbsp; {formatDateShort(notice.endDate) || '종료일 없음'}
+            </div>
+          </div>
         </header>
 
         <section
-          aria-label="공지사항 내용"
+          aria-label="이벤트 내용"
           style={{
             background: '#ffffff',
             border: '1px solid rgba(14,40,72,0.06)',

@@ -218,12 +218,12 @@ export default function Navbar() {
                   </li>
                   <li>
                     <Link
-                      to="categories"
-                      className={getLinkClass('/categories')}
+                      to="event"
+                      className={getLinkClass('/event')}
                     >
                       <div className="flex lg:flex-col lg:justify-center items-center space-x-1">
                         <i className="fa-solid fa-list" />
-                        <span>Categories</span>
+                        <span>이벤트</span>
                       </div>
                     </Link>
                   </li>

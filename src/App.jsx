@@ -20,7 +20,8 @@ import VerifyCode from './pages/VerifyCode/VerifyCode';
 import Checkout from './pages/Checkout/Checkout';
 import Wishlist from './pages/Wishlist/Wishlist';
 import Brands from './pages/Brands/Brands';
-import Categories from './pages/Categories/Categories';
+import Event from './pages/Board/Event';
+import EventDetail from './pages/Board/EventDetail';
 import ProductsContextProvider from './context/Products/Products';
 import Search from './pages/Search/Search';
 import RedirectIfAuthenticated from './components/RedirectIfAuthenticated/RedirectIfAuthenticated';
@@ -115,13 +116,21 @@ function App() {
           ),
         },
         {
-          path: 'categories',
+          path: 'event',
           element: (
             <ProtectedRoute>
-              <Categories />
+              <Event />
             </ProtectedRoute>
           ),
         },
+        {
+          path: 'eventdetail/:boardNo',
+          element: (
+            <ProtectedRoute>
+              <EventDetail />
+            </ProtectedRoute>
+          ),
+        },   
         {
           path: 'search',
           element: (
