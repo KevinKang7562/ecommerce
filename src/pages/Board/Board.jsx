@@ -7,7 +7,7 @@ import { API_BASE_URL, SESSION_ALERT } from '../../constants/api';
  * 공지사항 게시판 (Grid + 그룹 페이징)
  * - 고정된 그리드 높이: header + (pageSize rows)
  * - items가 부족하면 빈 행으로 채워 시각적 높이 고정
- * - 한 화면에 페이지 번호 10개씩 그룹으로 표시
+ * - 한 화면에 페이지 번호 10개씩 그룹으로 표시!
  */
 
 export default function Board() {
