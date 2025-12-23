@@ -9,12 +9,13 @@ import MyOrderBlock from '../../../components/MyPageCommon/MyOrder/MyOrderBlock'
 function MyAllOrders() {
   const [orderList, setOrderList] = useState([]); //주문목록
   // const [totalCount, setTotalCount] = useState(0); //전체주문목록 수
-  const [totalPages, setTotalPages] = useState(0); //전체 페이지 수
 
   const [loading, setLoading] = useState(false); //로딩 표시
   const [error, setError] = useState(false); //에러표시
 
-  const [page, setPage] = useState(1); //페이지
+  const [currentPage, setCurrentPage] = useState(1); //현재 페이지
+  const [totalPages, setTotalPages] = useState(0); //전체 페이지 수
+
   const [selected, setSelected] = useState(''); //주문상태 검색필터
   const [searchStartDate, setSearchStartDate] = useState(''); //시작날짜 검색필터
   const [searchEndDate, setSearchEndDate] = useState(''); //종료날짜 검색필터
@@ -36,7 +37,7 @@ function MyAllOrders() {
       orderStatus: selected || null, //검색필터의 주문상태 조건
       searchStartDate: searchStartDate || null,
       searchEndDate: searchEndDate || null,
-      currentPage: page,
+      currentPage: currentPage,
       pageSize: itemsPerPage,
     };
     console.log('요청 파라미터', requestBody);
@@ -64,11 +65,11 @@ function MyAllOrders() {
     }
   };
 
-  //MyAllOrders 컴포넌트 및 자식 컴포넌트 랜더링 이후 주문목록 조회(비동기), 최초 진입 + page 변경될 때마다 실행
+  //MyAllOrders 컴포넌트 및 자식 컴포넌트 랜더링 이후 주문목록 조회(비동기), 최초 진입 + currentPage 변경될 때마다 실행
   useEffect(() => {
     fetchOrderList();
     //}, [selected, page, pageSize]);
-  }, [page]);
+  }, [currentPage]);
 
   console.log('render check', {
     loading,
@@ -90,10 +91,10 @@ function MyAllOrders() {
         // onSearch={fetchOrderList}
         onSearch={() => {
           //검색 시 페이지 1로 초기화
-          if (page !== 1) {
-            setPage(1); // page 변경 → useEffect 실행 → fetchOrderList()
+          if (currentPage !== 1) {
+            setCurrentPage(1); // currentPage 변경 → useEffect 실행 → fetchOrderList()
           } else {
-            fetchOrderList(); // 이미 page=1이면 직접 호출(useState는 값이 바뀌어야만 재랜더링 되므로 강제로 호출하는 것)
+            fetchOrderList(); // 이미 currentPage=1이면 직접 호출(useState는 값이 바뀌어야만 재랜더링 되므로 강제로 호출하는 것)
           }
         }}
       />
@@ -118,9 +119,9 @@ function MyAllOrders() {
 
       {/* 페이지 */}
       <Pagination
-        currentPage={page}
+        currentPage={currentPage}
         totalPages={totalPages}
-        onChange={(p) => setPage(p)}
+        onChange={(p) => setCurrentPage(p)}
       />
     </div>
   );

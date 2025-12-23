@@ -4,37 +4,6 @@ import MyPageSidebar from './MyPageSidebar';
 import { myPageMenus } from './menuData';
 import React, { useState } from 'react';
 
-// export default function MyPageLayout() {
-//   const location = useLocation();
-//   const currentMenu = myPageMenus.find(
-//     (menu) => menu.path === location.pathname
-//   );
-//   const title = currentMenu ? currentMenu.label : '';
-
-//   return (
-//     <div className="flex min-h-screen ">
-//       {/* 왼쪽 사이드바 */}
-//       <MyPageSidebar />
-
-//       {/* 오른쪽 본문 영역 */}
-//       <main className="flex-1 ml-80 p-8">
-//         {' '}
-//         {/* ml-72 = sidebar 너비와 동일 */}
-//         {/* 제목 */}
-//         <div className="px-10">
-//           {title && (
-//             <h1 className="text-3xl font-bold mb-8 border-b border-gray-300 pb-5 ">
-//               {title}
-//             </h1>
-//           )}
-//           {/* 실제 페이지 렌더링 */}
-//           <Outlet />
-//         </div>
-//       </main>
-//     </div>
-//   );
-// }
-
 export default function MyPageLayout() {
   const location = useLocation();
   const currentMenu = myPageMenus.find(
