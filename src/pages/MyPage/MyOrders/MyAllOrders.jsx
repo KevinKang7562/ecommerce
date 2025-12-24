@@ -5,7 +5,7 @@ import MyOrdersSearch from '../../../components/MyPageCommon/MyOrder/MyOrderSear
 import Pagination from '../../../components/MyPageCommon/Common/Pagination';
 import { API_BASE_URL } from '../../../constants/api';
 import MyOrderBlock from '../../../components/MyPageCommon/MyOrder/MyOrderBlock';
-
+import { useCommCd } from '../../../hooks/useCommCd';
 function MyAllOrders() {
   const [orderList, setOrderList] = useState([]); //주문목록
   // const [totalCount, setTotalCount] = useState(0); //전체주문목록 수
@@ -20,14 +20,18 @@ function MyAllOrders() {
   const [searchStartDate, setSearchStartDate] = useState(''); //시작날짜 검색필터
   const [searchEndDate, setSearchEndDate] = useState(''); //종료날짜 검색필터
 
-  const itemsPerPage = 5; //페이지당 보일 항목 수
+  const itemsPerPage = 2; //페이지당 보일 항목 수
+
+  // =====================================================================
+  // useCommCd(공통코드 가져오는 함수) 훅을 사용해 주문처리상태 자동 로딩
+  // =====================================================================
+  const { codes: orderStatusOptions } = useCommCd('ORDER_STATUS');
 
   // ==========================================
-  // ⭐ API 호출 함수
+  // 전체 주문목록 조회 + 검색 버튼 이벤트
   // ==========================================
-  //전체 주문목록 조회 + 검색 버튼 이벤트
-  const fetchOrderList = async () => {
-    setLoading(true);
+  const fetchOrderList = async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     setError(false);
     const url = `${API_BASE_URL}/api/order/selectOrderList.do`;
 
@@ -40,7 +44,7 @@ function MyAllOrders() {
       currentPage: currentPage,
       pageSize: itemsPerPage,
     };
-    console.log('요청 파라미터', requestBody);
+
     try {
       const response = await axios.post(url, requestBody, {
         headers: { 'Content-Type': 'application/json' },
@@ -49,13 +53,8 @@ function MyAllOrders() {
 
       const result = response.data;
 
-      // 결과 값 구조에 따라 조정 필요
-      // setOrders(result.orderList || []); //삭제 예정
       setOrderList(result.data || []); //주문목록 없는 경우 빈배열로 마운트/언마운트 시에만 실행
       setTotalPages(result.totalPages || 0); //전체 페이지 수
-      // setTotalCount(result.data?.length || 0);
-      console.log('전체 주문목록 결과:', response.data);
-      // console.log('전체 목록 수 ', totalCount);
     } catch (err) {
       console.error('주문 조회 실패:', err);
       setError(true);
@@ -65,36 +64,46 @@ function MyAllOrders() {
     }
   };
 
-  //MyAllOrders 컴포넌트 및 자식 컴포넌트 랜더링 이후 주문목록 조회(비동기), 최초 진입 + currentPage 변경될 때마다 실행
+  //useEffect : MyAllOrders 컴포넌트 및 자식 컴포넌트 랜더링 이후 주문목록 조회(비동기), 최초 진입 + currentPage 변경될 때마다 실행
+  // ===========================
+  // 최초 진입
+  // ===========================
   useEffect(() => {
-    fetchOrderList();
-    //}, [selected, page, pageSize]);
+    fetchOrderList({ silent: false });
+  }, []);
+
+  // ===========================
+  // 페이지 이동 (silent : loading 표시로 인한 깜빡임 제거)
+  // ===========================
+  useEffect(() => {
+    fetchOrderList({ silent: true });
   }, [currentPage]);
 
-  console.log('render check', {
-    loading,
-    error,
-    orderList,
-    ordersLength: orderList.length,
-  });
+  // console.log('render check', {
+  //   loading,
+  //   error,
+  //   orderList,
+  //   ordersLength: orderList.length,
+  // });
 
   return (
     <div>
       {/* 검색조건 */}
       <MyOrdersSearch
-        selected={selected}
-        setSelected={setSelected}
         searchStartDate={searchStartDate}
         setSearchStartDate={setSearchStartDate}
         searchEndDate={searchEndDate}
         setSearchEndDate={setSearchEndDate}
-        // onSearch={fetchOrderList}
+        selectBoxLabel="주문처리상태"
+        selectBoxOption={orderStatusOptions}
+        selected={selected}
+        setSelected={setSelected}
         onSearch={() => {
           //검색 시 페이지 1로 초기화
           if (currentPage !== 1) {
             setCurrentPage(1); // currentPage 변경 → useEffect 실행 → fetchOrderList()
           } else {
-            fetchOrderList(); // 이미 currentPage=1이면 직접 호출(useState는 값이 바뀌어야만 재랜더링 되므로 강제로 호출하는 것)
+            fetchOrderList(); // 이미 currentPage=1이면 직접 호출(useState는 값이 바뀌어야만 재랜더링 되므로 강제로 호출)
           }
         }}
       />

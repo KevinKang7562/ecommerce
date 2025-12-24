@@ -1,22 +1,18 @@
 import SelectBox from '../Common/SelectBox';
-import { useCommCd } from '../../../hooks/useCommCd';
 
 //마이페이지 검색 필터
 //부모 컴포넌트로부터 상태관리함수 및 검색 버튼 이벤트 전달받음(단반향 데이터 통신이기 때문)
 function MyOrdersSearch({
-  selected,
-  setSelected,
   searchStartDate,
   setSearchStartDate,
   searchEndDate,
   setSearchEndDate,
+  selectBoxLabel,
+  selectBoxOption,
+  selected,
+  setSelected,
   onSearch,
 }) {
-  // =====================================================================
-  // useCommCd(공통코드 가져오는 함수) 훅을 사용해 주문처리상태 자동 로딩
-  // =====================================================================
-  const { codes: statusOptions } = useCommCd('ORDER_STATUS');
-
   const formatDate = (date) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -101,9 +97,9 @@ function MyOrdersSearch({
           {/* 주문상태 셀렉트박스 */}
           <div className="flex flex-col sm:flex-row sm:items-end gap-4">
             <SelectBox
-              label="주문처리상태"
+              label={selectBoxLabel}
               value={selected}
-              options={[{ value: '', label: '전체' }, ...statusOptions]}
+              options={[{ value: '', label: '전체' }, ...selectBoxOption]}
               onChange={(e) => setSelected(e.target.value)}
             />
           </div>

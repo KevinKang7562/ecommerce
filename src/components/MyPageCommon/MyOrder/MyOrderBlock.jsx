@@ -2,8 +2,8 @@ import { useNavigate } from 'react-router-dom';
 import MyOrdersTable from './MyOrdersTale';
 
 function MyOrderBlock({ order }) {
-  console.log('MyOrderBlock order:', order);
-  console.log('order.items:', order.items);
+  // console.log('MyOrderBlock order:', order);
+  // console.log('order.items:', order.items);
 
   const navigate = useNavigate();
   const moveOrderDetail = () => {
