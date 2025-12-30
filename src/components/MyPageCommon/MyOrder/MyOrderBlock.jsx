@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
-import MyOrdersTable from './MyOrdersTale';
+import CommonTable from '../Common/CommonTable';
 
-function MyOrderBlock({ order }) {
+function MyOrderBlock({ order, columns }) {
   // console.log('MyOrderBlock order:', order);
   // console.log('order.items:', order.items);
 
@@ -19,11 +19,14 @@ function MyOrderBlock({ order }) {
           <span className="mr-6 text-gray-500">주문번호 : {order.orderNo}</span>
         </div>
 
-        <button className="text-sm border px-3 py-1">주문상세보기</button>
+        {/* <button className="text-sm  px-5 py-2 bg-green-700 text-white rounded hover:bg-green-800"> */}
+        <button className="text-sm border-2 rounded border-green-600 text-green-600 px-3 py-1 transition-colors hover:bg-green-600 hover:text-white">
+          주문상세보기
+        </button>
       </div>
 
-      {/* 상품주문번호 테이블 */}
-      <MyOrdersTable items={order.items || []} />
+      {/* 상품주문번호 기준 테이블(item 없는 경우 빈배열처리) */}
+      <CommonTable columns={columns} data={order.items || []} />
     </div>
   );
 }

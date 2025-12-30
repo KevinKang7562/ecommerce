@@ -1,4 +1,3 @@
-// 나의 전체 주문 목록
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import MyOrdersSearch from '../../../components/MyPageCommon/MyOrder/MyOrderSearch';
@@ -6,6 +5,8 @@ import Pagination from '../../../components/MyPageCommon/Common/Pagination';
 import { API_BASE_URL } from '../../../constants/api';
 import MyOrderBlock from '../../../components/MyPageCommon/MyOrder/MyOrderBlock';
 import { useCommCd } from '../../../hooks/useCommCd';
+
+// 나의 전체 주문 목록
 function MyAllOrders() {
   const [orderList, setOrderList] = useState([]); //주문목록
   // const [totalCount, setTotalCount] = useState(0); //전체주문목록 수
@@ -20,8 +21,42 @@ function MyAllOrders() {
   const [searchStartDate, setSearchStartDate] = useState(''); //시작날짜 검색필터
   const [searchEndDate, setSearchEndDate] = useState(''); //종료날짜 검색필터
 
-  const itemsPerPage = 2; //페이지당 보일 항목 수
+  const itemsPerPage = 5; //페이지당 보일 항목 수
 
+  const orderColumns = [
+    { key: 'itemOrderNo', header: '상품주문번호' },
+    {
+      key: 'imgUrl',
+      header: '상품이미지',
+      render: (v) => <img src={v} className="w-16" />,
+    },
+    { key: 'prodNm', header: '상품명' },
+    { key: 'optionInfo', header: '옵션/수량' },
+    {
+      key: 'totalAmt',
+      header: '상품별총액',
+      render: (v) => v.toLocaleString() + '원',
+    },
+    { key: 'orderStatusNm', header: '주문처리상태' },
+    {
+      key: 'csStatusNm',
+      header: '취소/반품상태',
+    },
+    {
+      key: 'reviewYn',
+      header: '리뷰',
+      render: (v, row) =>
+        v === 'Y' ? (
+          <button className="border-2 text-sm border-green-600 text-green-600 px-2 py-1 rounded transition-colors hover:bg-green-600 hover:text-white">
+            리뷰보기
+          </button>
+        ) : (
+          <button className="border-2 text-sm border-green-600 text-green-600 px-2 py-1 rounded transition-colors hover:bg-green-600 hover:text-white">
+            리뷰쓰기
+          </button>
+        ),
+    },
+  ];
   // =====================================================================
   // useCommCd(공통코드 가져오는 함수) 훅을 사용해 주문처리상태 자동 로딩
   // =====================================================================
@@ -30,8 +65,8 @@ function MyAllOrders() {
   // ==========================================
   // 전체 주문목록 조회 + 검색 버튼 이벤트
   // ==========================================
-  const fetchOrderList = async ({ silent = false } = {}) => {
-    if (!silent) setLoading(true);
+  const fetchOrderList = async () => {
+    setLoading(true);
     setError(false);
     const url = `${API_BASE_URL}/api/order/selectOrderList.do`;
 
@@ -65,18 +100,8 @@ function MyAllOrders() {
   };
 
   //useEffect : MyAllOrders 컴포넌트 및 자식 컴포넌트 랜더링 이후 주문목록 조회(비동기), 최초 진입 + currentPage 변경될 때마다 실행
-  // ===========================
-  // 최초 진입
-  // ===========================
   useEffect(() => {
-    fetchOrderList({ silent: false });
-  }, []);
-
-  // ===========================
-  // 페이지 이동 (silent : loading 표시로 인한 깜빡임 제거)
-  // ===========================
-  useEffect(() => {
-    fetchOrderList({ silent: true });
+    fetchOrderList();
   }, [currentPage]);
 
   // console.log('render check', {
@@ -87,51 +112,61 @@ function MyAllOrders() {
   // });
 
   return (
-    <div>
-      {/* 검색조건 */}
-      <MyOrdersSearch
-        searchStartDate={searchStartDate}
-        setSearchStartDate={setSearchStartDate}
-        searchEndDate={searchEndDate}
-        setSearchEndDate={setSearchEndDate}
-        selectBoxLabel="주문처리상태"
-        selectBoxOption={orderStatusOptions}
-        selected={selected}
-        setSelected={setSelected}
-        onSearch={() => {
-          //검색 시 페이지 1로 초기화
-          if (currentPage !== 1) {
-            setCurrentPage(1); // currentPage 변경 → useEffect 실행 → fetchOrderList()
-          } else {
-            fetchOrderList(); // 이미 currentPage=1이면 직접 호출(useState는 값이 바뀌어야만 재랜더링 되므로 강제로 호출)
-          }
-        }}
-      />
+    <div className="min-h-[100dvh] flex flex-col">
+      <div className="flex-1 overflow-auto">
+        {/* 검색조건 */}
+        <MyOrdersSearch
+          searchStartDate={searchStartDate}
+          setSearchStartDate={setSearchStartDate}
+          searchEndDate={searchEndDate}
+          setSearchEndDate={setSearchEndDate}
+          selectBoxLabel="주문처리상태"
+          selectBoxOption={orderStatusOptions}
+          selected={selected}
+          setSelected={setSelected}
+          onSearch={() => {
+            //검색 시 페이지 1로 초기화
+            if (currentPage !== 1) {
+              setCurrentPage(1); // currentPage 변경 → useEffect 실행 → fetchOrderList()
+            } else {
+              fetchOrderList(); // 이미 currentPage=1이면 직접 호출(useState는 값이 바뀌어야만 재랜더링 되므로 강제로 호출)
+            }
+          }}
+        />
 
-      {/* 주문 목록 */}
-      {loading ? (
-        <div className="py-20 text-center">주문내역을 불러오는 중입니다...</div>
-      ) : error ? (
-        <div className="py-20 text-center text-red-500">
-          주문내역 조회 중 오류가 발생했습니다.
-        </div>
-      ) : orderList.length === 0 ? (
-        <div className="py-20 text-center text-gray-500">
-          주문내역이 없습니다.
-        </div>
-      ) : (
-        orderList.map((order) => (
-          // 주문번호별로 그룹핑
-          <MyOrderBlock key={order.orderNo} order={order} />
-        ))
-      )}
+        {/* 주문 목록 */}
+        {loading ? (
+          <div className="py-20 text-center">
+            주문내역을 불러오는 중입니다...
+          </div>
+        ) : error ? (
+          <div className="py-20 text-center text-red-500">
+            주문내역 조회 중 오류가 발생했습니다.
+          </div>
+        ) : orderList.length === 0 ? (
+          <div className="py-20 text-center text-gray-500">
+            주문내역이 없습니다.
+          </div>
+        ) : (
+          orderList.map((order) => (
+            // 주문번호별로 그룹핑
+            <MyOrderBlock
+              key={order.orderNo}
+              order={order}
+              columns={orderColumns}
+            />
+          ))
+        )}
+      </div>
 
-      {/* 페이지 */}
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onChange={(p) => setCurrentPage(p)}
-      />
+      <div className="border-t pt-4">
+        {/* 페이지(최하단에 위치 고정) */}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onChange={(p) => setCurrentPage(p)}
+        />
+      </div>
     </div>
   );
 }

@@ -6,17 +6,20 @@ function Pagination({ currentPage, totalPages, onChange }) {
   const start = currentGroup * groupSize + 1; //현재 그룹의 시작 페이지 번호
   const end = Math.min(start + groupSize - 1, totalPages); //현재 그룹의 마지막 페이지 번호
 
+  const showPrev = start > 1; //이전번호 버튼 표시
+  const showNext = end < totalPages; //다음 번호 버튼 표시
+
   return (
     <div className="flex justify-center gap-2 mt-4">
       {/* 이전번호 */}
-      <button
-        disabled={start === 1}
-        onClick={() => onChange(start - groupSize)}
-        className="px-3 py-1 border rounded disabled:opacity-40"
-      >
-        &lt;
-      </button>
-
+      {showPrev && (
+        <button
+          onClick={() => onChange(start - groupSize)}
+          className="px-3 py-1 border rounded"
+        >
+          &lt;
+        </button>
+      )}
       {/* 페이지 번호 */}
       {Array.from({ length: end - start + 1 }, (_, i) => start + i).map(
         (page) => (
@@ -24,7 +27,9 @@ function Pagination({ currentPage, totalPages, onChange }) {
             key={page}
             onClick={() => onChange(page)}
             className={`px-3 py-1 border rounded ${
-              page === currentPage ? 'bg-blue-500 text-white' : 'bg-white'
+              page === currentPage
+                ? 'bg-blue-600 text-white'
+                : 'bg-white hover:bg-blue-500 hover:text-white'
             }`}
           >
             {page}
@@ -33,13 +38,14 @@ function Pagination({ currentPage, totalPages, onChange }) {
       )}
 
       {/* 다음 번호 */}
-      <button
-        disabled={end === totalPages}
-        onClick={() => onChange(end + 1)}
-        className="px-3 py-1 border rounded disabled:opacity-40"
-      >
-        &gt;
-      </button>
+      {showNext && (
+        <button
+          onClick={() => onChange(end + 1)}
+          className="px-3 py-1 border rounded"
+        >
+          &gt;
+        </button>
+      )}
     </div>
   );
 }
