@@ -11,7 +11,7 @@ function SelectBox({ label, options = [], value, onChange }) {
     <div className="flex flex-col gap-2">
       {label && <label className="text-base font-medium">{label}</label>}
       <select
-        className="border border-gray-300 rounded px-2 py-1"
+        className="border border-gray-300 rounded px-2 py-1 min-w-[160px]"
         value={value}
         onChange={onChange}
       >

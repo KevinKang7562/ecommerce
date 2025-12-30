@@ -50,25 +50,25 @@ function MyOrdersSearch({
               {/* 빠른 기간 */}
               <div className="flex flex-nowrap gap-1  whitespace-nowrap">
                 <button
-                  className="px-3 py-1 border rounded text-sm sm:text-base "
+                  className="px-3 py-1 border rounded text-sm sm:text-base hover:bg-green-700 hover:text-white"
                   onClick={() => setQuickPeriod(0)}
                 >
                   오늘
                 </button>
                 <button
-                  className="px-3 py-1 border rounded text-sm sm:text-base "
+                  className="px-3 py-1 border rounded text-sm sm:text-base hover:bg-green-700 hover:text-white"
                   onClick={() => setQuickPeriod(1)}
                 >
                   1개월
                 </button>
                 <button
-                  className="px-3 py-1 border rounded text-sm sm:text-base "
+                  className="px-3 py-1 border rounded text-sm sm:text-base hover:bg-green-700 hover:text-white"
                   onClick={() => setQuickPeriod(3)}
                 >
                   3개월
                 </button>
                 <button
-                  className="px-3 py-1 border rounded text-sm sm:text-base "
+                  className="px-3 py-1 border rounded text-sm sm:text-base hover:bg-green-700 hover:text-white"
                   onClick={() => setQuickPeriod(6)}
                 >
                   6개월
@@ -106,7 +106,7 @@ function MyOrdersSearch({
 
           {/* 검색 버튼 */}
           <button
-            className="w-full sm:w-auto px-6 py-2 bg-black text-white rounded"
+            className="w-full sm:w-auto px-6 py-2 bg-green-700 text-white rounded hover:bg-green-800 "
             onClick={onSearch}
           >
             검색

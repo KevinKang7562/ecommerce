@@ -4,7 +4,7 @@ import { myPageMenus } from './menuData';
 
 export default function MyPageSidebar() {
   const linkStyle =
-    'block py-3 px-4 rounded-md transition-all duration-150 hover:bg-green-100';
+    'block py-3 px-4 rounded-md transition-all duration-150 hover:bg-green-100'; //기본 스타일
 
   const activeStyle = 'bg-green-700 text-white hover:bg-green-700'; //현재 메뉴
 
