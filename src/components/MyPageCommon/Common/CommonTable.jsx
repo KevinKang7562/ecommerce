@@ -1,4 +1,4 @@
-function CommonTable({ columns, data }) {
+export default function CommonTable({ columns, data }) {
   return (
     <table className="w-full border-collapse">
       <thead>
@@ -36,5 +36,3 @@ function CommonTable({ columns, data }) {
     </table>
   );
 }
-
-export default CommonTable;

@@ -1,8 +1,8 @@
 import SelectBox from '../Common/SelectBox';
-
+import MyButton from '../Common/MyButton';
 //마이페이지 검색 필터
 //부모 컴포넌트로부터 상태관리함수 및 검색 버튼 이벤트 전달받음(단반향 데이터 통신이기 때문)
-function MyOrdersSearch({
+export default function MyOrdersSearch({
   searchStartDate,
   setSearchStartDate,
   searchEndDate,
@@ -49,30 +49,10 @@ function MyOrdersSearch({
             <div className="flex flex-col sm:flex-row sm:items-center gap-2">
               {/* 빠른 기간 */}
               <div className="flex flex-nowrap gap-1  whitespace-nowrap">
-                <button
-                  className="px-3 py-1 border rounded text-sm sm:text-base hover:bg-green-700 hover:text-white"
-                  onClick={() => setQuickPeriod(0)}
-                >
-                  오늘
-                </button>
-                <button
-                  className="px-3 py-1 border rounded text-sm sm:text-base hover:bg-green-700 hover:text-white"
-                  onClick={() => setQuickPeriod(1)}
-                >
-                  1개월
-                </button>
-                <button
-                  className="px-3 py-1 border rounded text-sm sm:text-base hover:bg-green-700 hover:text-white"
-                  onClick={() => setQuickPeriod(3)}
-                >
-                  3개월
-                </button>
-                <button
-                  className="px-3 py-1 border rounded text-sm sm:text-base hover:bg-green-700 hover:text-white"
-                  onClick={() => setQuickPeriod(6)}
-                >
-                  6개월
-                </button>
+                <MyButton onClick={() => setQuickPeriod(0)}>오늘</MyButton>
+                <MyButton onClick={() => setQuickPeriod(1)}>1개월</MyButton>
+                <MyButton onClick={() => setQuickPeriod(3)}>3개월</MyButton>
+                <MyButton onClick={() => setQuickPeriod(6)}>6개월</MyButton>
               </div>
 
               {/* 날짜 */}
@@ -116,5 +96,3 @@ function MyOrdersSearch({
     </>
   );
 }
-
-export default MyOrdersSearch;

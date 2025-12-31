@@ -6,7 +6,7 @@ import React from 'react';
 //options 배열 : 셀렉트 박스 안에 들어갈 옵션 목록 (opt.value : 실제 서버로 보내지는 값, opt.label : 화면에 보이는 옵션명)
 // value : 현재 선택된 값
 // onChange : 사용자가 선택값 변경 시 실행될 함수
-function SelectBox({ label, options = [], value, onChange }) {
+export default function SelectBox({ label, options = [], value, onChange }) {
   return (
     <div className="flex flex-col gap-2">
       {label && <label className="text-base font-medium">{label}</label>}
@@ -25,5 +25,3 @@ function SelectBox({ label, options = [], value, onChange }) {
     </div>
   );
 }
-
-export default SelectBox;

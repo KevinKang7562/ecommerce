@@ -1,6 +1,6 @@
 import React from 'react';
 
-function Pagination({ currentPage, totalPages, onChange }) {
+export default function Pagination({ currentPage, totalPages, onChange }) {
   const groupSize = 5; //페이지 번호 개수
   const currentGroup = Math.floor((currentPage - 1) / groupSize); //현재 페이지가 속한 그룹
   const start = currentGroup * groupSize + 1; //현재 그룹의 시작 페이지 번호
@@ -28,8 +28,8 @@ function Pagination({ currentPage, totalPages, onChange }) {
             onClick={() => onChange(page)}
             className={`px-3 py-1 border rounded ${
               page === currentPage
-                ? 'bg-blue-600 text-white'
-                : 'bg-white hover:bg-blue-500 hover:text-white'
+                ? 'bg-green-700 text-white'
+                : 'bg-white hover:bg-green-500 hover:text-white'
             }`}
           >
             {page}
@@ -49,5 +49,3 @@ function Pagination({ currentPage, totalPages, onChange }) {
     </div>
   );
 }
-
-export default Pagination;

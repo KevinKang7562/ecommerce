@@ -5,7 +5,7 @@ import Pagination from '../../../components/MyPageCommon/Common/Pagination';
 import { API_BASE_URL } from '../../../constants/api';
 import MyOrderBlock from '../../../components/MyPageCommon/MyOrder/MyOrderBlock';
 import { useCommCd } from '../../../hooks/useCommCd';
-
+import MyButton from '../../../components/MyPageCommon/Common/MyButton';
 // 나의 전체 주문 목록
 function MyAllOrders() {
   const [orderList, setOrderList] = useState([]); //주문목록
@@ -47,13 +47,9 @@ function MyAllOrders() {
       header: '리뷰',
       render: (v, row) =>
         v === 'Y' ? (
-          <button className="border-2 text-sm border-green-600 text-green-600 px-2 py-1 rounded transition-colors hover:bg-green-600 hover:text-white">
-            리뷰보기
-          </button>
+          <MyButton>리뷰보기</MyButton>
         ) : (
-          <button className="border-2 text-sm border-green-600 text-green-600 px-2 py-1 rounded transition-colors hover:bg-green-600 hover:text-white">
-            리뷰쓰기
-          </button>
+          <MyButton>리뷰쓰기</MyButton>
         ),
     },
   ];
