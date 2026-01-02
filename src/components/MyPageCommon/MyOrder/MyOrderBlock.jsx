@@ -8,7 +8,9 @@ export default function MyOrderBlock({ order, columns }) {
 
   const navigate = useNavigate();
   const moveOrderDetail = () => {
-    navigate(`/mypage/myOrderDetail/${order.orderNo}`);
+    navigate(`/mypage/myOrderDetail/${order.orderNo}`, {
+      state: { from: 'orderList' }, //주문목록에서 이동한 경우 주문목록 버튼 클릭시 '뒤로가기'로 이동하게 하기 위한 표시
+    });
   };
   //주문번호 기준으로 그룹핑 -> 주문번호 내에서 상품주문번호별로 테이블에 표시
   return (

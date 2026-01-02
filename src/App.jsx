@@ -33,6 +33,7 @@ import MyPersonalInquiry from './pages/MyPage/MyInquiries/MyPersonalInquiry';
 import MyProductQnA from './pages/MyPage/MyInquiries/MyProductQnA';
 import MyAllOrders from './pages/MyPage/MyOrders/MyAllOrders';
 import MyCancelReturn from './pages/MyPage/MyOrders/MyCancelReturn';
+import MyOrdrerDetail from './pages/MyPage/MyOrders/MyOrderDetail';
 
 function App() {
   const queryClient = new QueryClient();
@@ -130,7 +131,7 @@ function App() {
               <EventDetail />
             </ProtectedRoute>
           ),
-        },   
+        },
         {
           path: 'search',
           element: (
@@ -154,7 +155,7 @@ function App() {
               <BoardDetail />
             </ProtectedRoute>
           ),
-        },        
+        },
         {
           path: 'mypage',
           //마이페이지 공통 UI가 포함된 기본레이아웃
@@ -177,6 +178,14 @@ function App() {
               element: (
                 <ProtectedRoute>
                   <MyAllOrders />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: 'myOrderDetail/:orderNo',
+              element: (
+                <ProtectedRoute>
+                  <MyOrdrerDetail />
                 </ProtectedRoute>
               ),
             },
