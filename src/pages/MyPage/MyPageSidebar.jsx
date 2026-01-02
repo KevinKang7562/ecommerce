@@ -9,7 +9,7 @@ export default function MyPageSidebar() {
   const activeStyle = 'bg-green-700 text-white hover:bg-green-700'; //현재 메뉴
 
   return (
-    <aside className="w-80 bg-white border-r border-gray-200 p-10 fixed left-0 top-0 h-full shadow-lg flex flex-col">
+    <aside className="w-full bg-white border-r border-gray-200 p-10 left-0 top-0 h-full shadow-lg flex flex-col">
       {/* 사이드바 제목 */}
       <h2 className="text-xl font-bold mb-6 text-center">마이페이지</h2>
       {/* 메뉴(메뉴명은 menuData.js파일에서 관리) */}

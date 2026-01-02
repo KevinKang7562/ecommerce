@@ -23,6 +23,7 @@ function MyAllOrders() {
 
   const itemsPerPage = 5; //페이지당 보일 항목 수
 
+  //주문 목록 테이블 컬럼
   const orderColumns = [
     { key: 'itemOrderNo', header: '상품주문번호' },
     {
