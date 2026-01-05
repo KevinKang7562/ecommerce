@@ -34,8 +34,8 @@ function MyAllOrders() {
     { key: 'prodNm', header: '상품명' },
     { key: 'optionInfo', header: '옵션/수량' },
     {
-      key: 'totalAmt',
-      header: '상품별총액',
+      key: 'totalPrice',
+      header: '상품별총금액',
       render: (v) => v.toLocaleString() + '원',
     },
     { key: 'orderStatusNm', header: '주문처리상태' },
