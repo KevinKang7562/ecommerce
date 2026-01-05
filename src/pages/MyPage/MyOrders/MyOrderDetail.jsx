@@ -1,4 +1,3 @@
-import OrderInfo from '../../../components/MyPageCommon/MyOrder/OrderInfo';
 import CommonTable from '../../../components/MyPageCommon/Common/CommonTable';
 import MyButton from '../../../components/MyPageCommon/Common/MyButton';
 import InfoSection from '../../../components/MyPageCommon/Common/InfoSection';
@@ -7,6 +6,7 @@ import { useParams } from 'react-router-dom';
 import { API_BASE_URL } from '../../../constants/api';
 import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
+import CsDetailModal from '../../../components/MyPageCommon/MyOrder/CsDetailModal';
 
 export default function MyOrderDetail() {
   //주문번호 파라미터
@@ -17,7 +17,9 @@ export default function MyOrderDetail() {
   const [error, setError] = useState(false); //에러표시
   const [orderData, setOrderData] = useState(null); //주문상세내역
 
+  // =====================================================================
   //페이지이동
+  // =====================================================================
   const navigate = useNavigate();
   const location = useLocation();
   console.log('location.state:', location.state);
@@ -30,10 +32,26 @@ export default function MyOrderDetail() {
     }
   };
 
-  //취소/반품 상세보기 이벤트
-  const csDetail = () => {};
+  // =====================================================================
+  //취소/반품 상세보기 이벤트(팝업)
+  // =====================================================================
+  //팝업 상태
+  const [csPopupOpen, setCsPopupOpen] = useState(false);
+  const [selectedCsItem, setSelectedCsItem] = useState(null);
+  //팝업열기
+  const openCsPopup = (item) => {
+    setSelectedCsItem(item);
+    setCsPopupOpen(true);
+  };
+  //팝업닫기
+  const closeCsPopup = () => {
+    setCsPopupOpen(false);
+    setSelectedCsItem(null);
+  };
 
+  // =====================================================================
   //테이블: 주문상품목록 컬럼
+  // =====================================================================
   const columns = [
     // { key: 'itemOrderNo', header: '상품주문번호' },
     {
@@ -54,6 +72,7 @@ export default function MyOrderDetail() {
             수량/옵션 : {row.optionInfo}
           </div>
           <div className="text-sm font-semibold">
+            {/* 상품별 총금액 ()(구매단가-할인금액+옵션추가금)*수량)*/}
             {row.totalPrice?.toLocaleString()}원
           </div>
         </div>
@@ -83,7 +102,9 @@ export default function MyOrderDetail() {
     },
   ];
 
+  // =====================================================================
   //주문상세 데이터 조회
+  // =====================================================================
   const fetchOrderDetail = async () => {
     setLoading(true);
     setError(false);
@@ -97,8 +118,7 @@ export default function MyOrderDetail() {
 
       const resData = response.data.data;
 
-      console.log('주문상세 : ', response);
-      console.log('상세 데이터 가공 : ', resData);
+      console.log('주문상세 : ', resData);
 
       setOrderData({
         order: {
@@ -115,23 +135,12 @@ export default function MyOrderDetail() {
         },
 
         payment: {
-          totalPrice: resData.totalAmt ?? 0,
+          totalAmt: resData.totalAmt ?? 0, //상품별 총금액의 합
           deliveryFee: resData.deliveryFee ?? 0,
-          payAmt: resData.payAmt ?? 0,
+          payAmt: resData.payAmt ?? 0, //총 결제 금액
           payMethod: resData.payMethod ?? '',
           payMethodNm: resData.payMethodNm ?? '',
         },
-
-        // csInfo: {
-        //   csNo: resData.csNo ?? '',
-        //   csTypeNm: resData.csTypeNm ?? '',
-        //   requestDate: resData.requestDate ?? '',
-        //   csReason: resData.csReason ?? '',
-        //   refundAmt: resData.refundAmt ?? 0,
-        //   refundMethod: resData.refundMethod ?? '',
-        //   csStatus: resData.csStatus ?? '',
-        //   completeDate: resData.completeDate ?? '',
-        // },
 
         productitems: resData.items ?? [],
       });
@@ -148,24 +157,26 @@ export default function MyOrderDetail() {
     fetchOrderDetail(orderNo);
   }, [orderNo]);
 
+  // =====================================================================
+  //조건부 랜더링(데이터 조회 전 orderData 구조분해 실행으로 인한 에러발생 방지하기 위해 초기 랜더링 시 구조분해 전에 return으로 함수 조기 종료)
+  // =====================================================================
   if (loading) {
     return <div className="py-20 text-center">로딩중...</div>;
   }
-
   if (error) {
     return <div className="py-20 text-center text-red-500">{error}</div>;
   }
-
   if (!orderData) {
     return <div className="py-20 text-center">주문 정보 없음</div>;
   }
 
+  // =====================================================================
+  //데이터 가공
+  // =====================================================================
   //주문정보 구조분해
+  //(반드시 조건부 랜더링 아래 위치해야 함
+  //데이터 조회 전 초기 랜더링 시 orderData = null로 인해 구조분해 단계에서 에러 발생 방지하기 위함)
   const { order, delivery, payment, productitems } = orderData;
-
-  //취소/환불 정보 유무
-  // const hasRefund = true;
-  // const hasRefund = !!csInfo.csTypeNm;
 
   //주문상세정보
   const orderInfoItems = [
@@ -180,35 +191,25 @@ export default function MyOrderDetail() {
     {
       label: '주소',
       value: (
-        <>
+        <div className="text-end">
           {delivery.postCd}
           <br />
           {delivery.address}
           <br />
           {delivery.addressDetail}
-        </>
+        </div>
       ),
     },
   ];
 
   //결제정보
   const paymentInfoItems = [
-    { label: '상품총액', value: `${payment.totalPrice.toLocaleString()}원` },
+    { label: '상품총액', value: `${payment.totalAmt.toLocaleString()}원` },
     { label: '배송비', value: `${payment.deliveryFee.toLocaleString()}원` },
     { label: '총결제금액', value: `${payment.payAmt.toLocaleString()}원` },
     { label: '결재수단', value: payment.payMethodNm },
   ];
 
-  // //취소/환불정보
-  // const csInfoItems = [
-  //   { label: `${csInfo.csTypeNm}처리번호`, value: csInfo.csNo },
-  //   { label: `${csInfo.csTypeNm}요청일`, value: csInfo.requestDate },
-  //   { label: `${csInfo.csTypeNm}사유`, value: csInfo.csReason },
-  //   { label: `${csInfo.csTypeNm}금액`, value: `${csInfo.refundAmt}원` },
-  //   { label: `${csInfo.csTypeNm}수단`, value: csInfo.refundMethod },
-  //   { label: `${csInfo.csTypeNm}처리상태`, value: csInfo.csStatus },
-  //   { label: `${csInfo.csTypeNm}처리일`, value: csInfo.completeDate },
-  // ];
   console.log('상세데이터 : ', orderData);
   return (
     <div className="w-full  ">
@@ -216,10 +217,9 @@ export default function MyOrderDetail() {
         주문상세내역
       </h1>
 
-      {/* <div className="flex flex-col gap-10 py-10 "> */}
       <div className="flex flex-col lg:flex-row gap-10 ">
         {/* 주문정보 */}
-        {/* <div className="w-full"> */}
+
         <div className="w-full lg:w-2/5">
           <InfoSection
             title={'주문상세정보'}
@@ -233,16 +233,10 @@ export default function MyOrderDetail() {
             title={'결제정보'}
             items={paymentInfoItems}
           ></InfoSection>
-          {/* {hasRefund && (
-            <InfoSection
-              title={'취소/환불정보'}
-              items={csInfoItems}
-            ></InfoSection>
-          )} */}
         </div>
 
         {/* 주문상품목록 */}
-        {/* <div className="w-full"> */}
+
         <div className="w-full lg:w-3/5">
           <CommonTable columns={columns} data={productitems} />
           <div className="flex justify-center gap-10 mt-20">
@@ -251,6 +245,10 @@ export default function MyOrderDetail() {
           </div>
         </div>
       </div>
+
+      {csPopupOpen && selectedCsItem && (
+        <CsDetailModal item={selectedCsItem} onClose={closeCsPopup} />
+      )}
     </div>
   );
 }
