@@ -25,19 +25,30 @@ function MyAllOrders() {
 
   //주문 목록 테이블 컬럼
   const orderColumns = [
-    { key: 'itemOrderNo', header: '상품주문번호' },
     {
       key: 'imgUrl',
       header: '상품이미지',
-      render: (v) => <img src={v} className="w-16" />,
+      render: (v) => <img src={v} className="w-24 h-24 object-cover-16" />,
     },
-    { key: 'prodNm', header: '상품명' },
-    { key: 'optionInfo', header: '옵션/수량' },
     {
-      key: 'totalPrice',
-      header: '상품별총금액',
-      render: (v) => v.toLocaleString() + '원',
+      key: 'productInfo',
+      header: '상품정보',
+      render: (_, row) => (
+        <div className="text-start flex flex-col gap-1 min-w-[200px]">
+          <div className="text-sm text-gray-600">
+            상품주문번호 : {row.itemOrderNo}
+          </div>
+          <div className="font-medium">{row.prodNm}</div>
+          <div className="text-sm text-gray-600">
+            수량/옵션 : {row.optionInfo}
+          </div>
+          <div className="text-sm font-semibold">
+            {row.totalPrice?.toLocaleString()}원
+          </div>
+        </div>
+      ),
     },
+
     { key: 'orderStatusNm', header: '주문처리상태' },
     {
       key: 'csStatusNm',
