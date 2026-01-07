@@ -97,7 +97,7 @@ export default function MyOrderDetail() {
           <div className="flex flex-col gap-1">
             {hasCs ? (
               <>
-                <div className="text-sm">{row.csStatusNm}</div>
+                <div className="text-md">{row.csStatusNm}</div>
                 <MyButton size="sm" onClick={() => openCsPopup(row)}>
                   {row.csTypeNm} 상세보기
                 </MyButton>

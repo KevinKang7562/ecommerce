@@ -23,9 +23,9 @@ export default function CancelReturnRequest() {
   // =====================================================================
   // 페이지이동 및 정보
   // =====================================================================
-  const naviagte = useNavigate(); //페이지 이동 훅(이벤트 발생)
+  const navigate = useNavigate(); //페이지 이동 훅(이벤트 발생)
   const goToOrderList = () => {
-    naviagte('/mypage/myAllOrders');
+    navigate('/mypage/myAllOrders');
   };
 
   const location = useLocation(); //현재 url, state 등 위치 정보 조회 훅(렌더링/조건 판단)
@@ -49,8 +49,9 @@ export default function CancelReturnRequest() {
   //체크박스 변경 핸들러
   const handleCsCheckChange = (itemOrderNo, checked) => {
     //prev:업데이트 직전(현재 화면의 productitems)의 상태값
-    setProductitems((prev) =>
-      prev.map((item) =>
+    setProductitems((prev) => {
+      console.log('체크 변경 전:', prev);
+      const next = prev.map((item) =>
         item.itemOrderNo === itemOrderNo
           ? {
               ...item, //스프레드 연산자 나머지 데이터는 그대로 유지
@@ -58,19 +59,25 @@ export default function CancelReturnRequest() {
               csQty: checked ? item.csQty : 1, //체크 해제시 수량 1로 초기화
             }
           : item
-      )
-    );
+      );
+
+      console.log('체크 변경 후:', next);
+      return next;
+    });
   };
 
   //취소/반품 요청 수량 변경 핸들러
   const handleQtyChange = (itemOrderNo, qty) => {
-    setProductitems((prev) =>
-      prev.map((item) =>
+    setProductitems((prev) => {
+      console.log('수량 변경 전:', prev);
+      const next = prev.map((item) =>
         item.itemOrderNo === itemOrderNo
           ? { ...item, csQty: Number(qty) }
           : item
-      )
-    );
+      );
+      console.log('수량 변경 후:', next);
+      return next;
+    });
   };
 
   //주문상품 목록 테이블 컬럼
@@ -79,6 +86,7 @@ export default function CancelReturnRequest() {
       key: 'csSelect',
       header: '선택',
       render: (_, row) => {
+        //체크박스 활성화 여부 확인 (orderStatus가 주문완료/배송완료인 경우만 활성화 + 이미 취소/반품신청한 경우 비활성화)
         const isEnabled =
           enableCheckOrderStatus.includes(row.orderStatus) && !row.csType;
         return (
@@ -117,6 +125,7 @@ export default function CancelReturnRequest() {
             {row.totalPrice?.toLocaleString()}원
           </div>
 
+          {/* 체크박스 체크 + 상품 수량 2개이상인 경우 수량 선택 셀렉트박스 노출 */}
           {row.csChecked && row.quantity > 1 && (
             <div className="mt-1">
               <span>수량 선택 : </span>
@@ -144,23 +153,23 @@ export default function CancelReturnRequest() {
     {
       key: 'csStatusNm',
       header: '취소/반품상태',
-      render: (v, row) => {
-        const hasCs = Boolean(row.csTypeNm);
-        return (
-          <div className="flex flex-col gap-1">
-            {hasCs ? (
-              <>
-                <div className="text-sm">{row.csStatusNm}</div>
-                <MyButton size="sm" onClick={() => openCsPopup(row)}>
-                  {row.csTypeNm} 상세보기
-                </MyButton>
-              </>
-            ) : (
-              <span className="text-gray-400 text-sm">-</span>
-            )}
-          </div>
-        );
-      },
+      //   render: (v, row) => {
+      //     const hasCs = Boolean(row.csTypeNm);
+      //     return (
+      //       <div className="flex flex-col gap-1">
+      //         {hasCs ? (
+      //           <>
+      //             <div className="text-sm">{row.csStatusNm}</div>
+      //             <MyButton size="sm" onClick={() => openCsPopup(row)}>
+      //               {row.csTypeNm} 상세보기
+      //             </MyButton>
+      //           </>
+      //         ) : (
+      //           <span className="text-gray-400 text-sm">-</span>
+      //         )}
+      //       </div>
+      //     );
+      //   },
     },
   ];
 
@@ -210,12 +219,11 @@ export default function CancelReturnRequest() {
 
       //상품목록
       setProductitems(
-        resData.items ??
-          [].map((item) => ({
-            ...item,
-            csChecked: false, //체크박스 초기상태
-            csQty: 1, //취소/반품 기본 선택 수량
-          }))
+        (resData.items ?? []).map((item) => ({
+          ...item,
+          csChecked: false, //체크박스 초기상태
+          csQty: 1, //취소/반품 기본 선택 수량
+        }))
       );
     } catch (err) {
       console.error('주문상세 조회 실패 : ', err);
