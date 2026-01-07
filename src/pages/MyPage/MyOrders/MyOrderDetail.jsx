@@ -20,16 +20,25 @@ export default function MyOrderDetail() {
   // =====================================================================
   //페이지이동
   // =====================================================================
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate = useNavigate(); //페이지 이동 훅(이벤트 발생)
+  const location = useLocation(); //현재 url, state 등 위치 정보 조회 훅(렌더링/조건 판단)
   console.log('location.state:', location.state);
   console.log('from:', location.state?.from);
+  // 주문목록으로 이동
   const goToOrderList = () => {
     if (location.state?.from === 'orderList') {
       navigate(-1); //주문 목록에서 이동한 경우 뒤로가기로 이동
     } else {
       navigate('/mypage/myAllOrders'); //url로 직접 접근, 새로고침 등인 경우 목록화면으로 바로 이동
     }
+  };
+
+  //취소/반품요청 페이지로 이동
+  const moveCancelReturnRequest = (cancelReturnType) => {
+    navigate(`/mypage/CancelReturnRequest/${orderNo}`, {
+      // navigate(`/mypage/CancelReturnRequest/${order.orderNo}`, {
+      state: { from: 'orderDetail', cancelReturnType }, //URL로 표현할 필요 없는 부가정보(context)
+    });
   };
 
   // =====================================================================
@@ -52,7 +61,7 @@ export default function MyOrderDetail() {
   // =====================================================================
   //테이블: 주문상품목록 컬럼
   // =====================================================================
-  const columns = [
+  const orderProductColumns = [
     // { key: 'itemOrderNo', header: '상품주문번호' },
     {
       key: 'imgUrl',
@@ -124,6 +133,8 @@ export default function MyOrderDetail() {
         order: {
           orderNo: resData.orderNo,
           orderDate: resData.orderDate,
+          canCancelYn: resData.canCancelYn,
+          canReturnYn: resData.canReturnYn,
         },
 
         delivery: {
@@ -238,9 +249,19 @@ export default function MyOrderDetail() {
         {/* 주문상품목록 */}
 
         <div className="w-full lg:w-3/5">
-          <CommonTable columns={columns} data={productitems} />
+          <CommonTable columns={orderProductColumns} data={productitems} />
           <div className="flex justify-center gap-10 mt-20">
-            <MyButton>취소/반품요청</MyButton>
+            {order.canCancelYn === 'Y' && (
+              //파라미터 있는 경우 화살표함수 사용할 것
+              <MyButton onClick={() => moveCancelReturnRequest('CANCEL')}>
+                취소요청
+              </MyButton>
+            )}
+            {order.canReturnYn === 'Y' && (
+              <MyButton onClick={() => moveCancelReturnRequest('RETURN')}>
+                반품요청
+              </MyButton>
+            )}
             <MyButton onClick={goToOrderList}>주문목록</MyButton>
           </div>
         </div>
