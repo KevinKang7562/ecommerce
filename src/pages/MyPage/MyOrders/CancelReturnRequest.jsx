@@ -9,13 +9,14 @@ import { API_BASE_URL } from '../../../constants/api';
 import axios from 'axios';
 
 export default function CancelReturnRequest() {
-  //주문 번호 파라미터
+  // 주문 번호 파라미터
   const { orderNo } = useParams();
 
-  //상태
+  // =====================================================================
+  // 상태
+  // =====================================================================
   const [loading, setLoading] = useState(false); //로딩표시
   const [error, setError] = useState(false); //에러표시
-
   const [orderInfo, setOrderInfo] = useState(null); //주문메타정보
   const [productitems, setProductitems] = useState([]); //주문상품별 정보
   const [selectedCsReason, setSelectedCsReason] = useState(''); //취소/반품사유
@@ -25,7 +26,8 @@ export default function CancelReturnRequest() {
   // =====================================================================
   const navigate = useNavigate(); //페이지 이동 훅(이벤트 발생)
   const goToOrderList = () => {
-    navigate('/mypage/myAllOrders');
+    // navigate('/mypage/myAllOrders');
+    navigate(-2);
   };
 
   const location = useLocation(); //현재 url, state 등 위치 정보 조회 훅(렌더링/조건 판단)
@@ -80,6 +82,48 @@ export default function CancelReturnRequest() {
     });
   };
 
+  // =====================================================================
+  //취소/반품 상품 선택에 따른 취소정보 계산
+  // =====================================================================
+  const selectedItems = productitems.filter((item) => item.csChecked);
+
+  const totalCsQty = selectedItems.reduce((sum, item) => sum + item.csQty, 0);
+
+  const csReqAmt = selectedItems.reduce((sum, item) => {
+    //상품 단가 = 상품별 총금액 / 주문수량
+    const unitPrice = item.totalPrice / item.quantity;
+    return sum + unitPrice * item.csQty;
+  }, 0);
+
+  //반품 배송비 = 임시로 기본 반품비 3000원 설정
+  const returnFee =
+    cancelReturnType === 'RETURN' && selectedItems.length > 0 ? 3000 : 0;
+
+  const refundAmt = csReqAmt - returnFee;
+
+  const csInfo = [
+    {
+      label: `${csTitle[cancelReturnType]}수량`,
+      value: totalCsQty,
+    },
+    {
+      label: `${csTitle[cancelReturnType]} 요청 금액`,
+      value: `${csReqAmt.toLocaleString()}원`,
+    },
+    ...(cancelReturnType === 'RETURN' //스프레드 연산자로 '반품'인 경우만 반품배송비 배열 추가
+      ? [
+          {
+            label: '반품 배송비',
+            value: `${returnFee.toLocaleString()}원`,
+          },
+        ]
+      : []),
+    {
+      label: '환불금액',
+      value: `${refundAmt.toLocaleString()}원`,
+    },
+  ];
+
   //주문상품 목록 테이블 컬럼
   const orderProductColumns = [
     {
@@ -121,7 +165,7 @@ export default function CancelReturnRequest() {
           </div>
 
           <div className="text-sm font-semibold">
-            {/* 상품별 총금액 ()(구매단가-할인금액+옵션추가금)*수량)*/}
+            {/* 상품별 총금액 (구매단가-할인금액+옵션추가금)*수량)*/}
             {row.totalPrice?.toLocaleString()}원
           </div>
 
@@ -153,25 +197,12 @@ export default function CancelReturnRequest() {
     {
       key: 'csStatusNm',
       header: '취소/반품상태',
-      //   render: (v, row) => {
-      //     const hasCs = Boolean(row.csTypeNm);
-      //     return (
-      //       <div className="flex flex-col gap-1">
-      //         {hasCs ? (
-      //           <>
-      //             <div className="text-sm">{row.csStatusNm}</div>
-      //             <MyButton size="sm" onClick={() => openCsPopup(row)}>
-      //               {row.csTypeNm} 상세보기
-      //             </MyButton>
-      //           </>
-      //         ) : (
-      //           <span className="text-gray-400 text-sm">-</span>
-      //         )}
-      //       </div>
-      //     );
-      //   },
     },
   ];
+
+  // =====================================================================
+  // 취소/반품 요청
+  // =====================================================================
 
   // =====================================================================
   //주문상세 데이터 조회
@@ -259,15 +290,6 @@ export default function CancelReturnRequest() {
   //(반드시 조건부 랜더링 아래 위치해야 함
   //데이터 조회 전 초기 랜더링 시 orderInfo = null로 인해 구조분해 단계에서 에러 발생 방지하기 위함)
   const { order, delivery, payment } = orderInfo;
-
-  const csInfo = [
-    { label: `${csTitle[cancelReturnType]}수량`, value: 0 },
-    { label: `${csTitle[cancelReturnType]} 요청 금액`, value: 0 },
-    ...(cancelReturnType === 'RETURN' //스프레드 연산자로 '반품'인 경우만 반품배송비 배열 추가
-      ? [{ label: '반품 배송비', value: 0 }]
-      : []),
-    { label: '환불금액', value: 0 },
-  ];
 
   return (
     <div className="w-full">

@@ -34,6 +34,7 @@ import MyProductQnA from './pages/MyPage/MyInquiries/MyProductQnA';
 import MyAllOrders from './pages/MyPage/MyOrders/MyAllOrders';
 import MyCancelReturn from './pages/MyPage/MyOrders/MyCancelReturn';
 import MyOrdrerDetail from './pages/MyPage/MyOrders/MyOrderDetail';
+import CancelReturnRequest from './pages/MyPage/MyOrders/CancelReturnRequest';
 
 function App() {
   const queryClient = new QueryClient();
@@ -186,6 +187,14 @@ function App() {
               element: (
                 <ProtectedRoute>
                   <MyOrdrerDetail />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: 'CancelReturnRequest/:orderNo',
+              element: (
+                <ProtectedRoute>
+                  <CancelReturnRequest />
                 </ProtectedRoute>
               ),
             },
