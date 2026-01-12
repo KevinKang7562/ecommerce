@@ -1,17 +1,18 @@
 import CommonTable from '../../../components/MyPageCommon/Common/CommonTable';
 import MyButton from '../../../components/MyPageCommon/Common/MyButton';
 import InfoSection from '../../../components/MyPageCommon/Common/InfoSection';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import { useParams } from 'react-router-dom';
-import { API_BASE_URL } from '../../../constants/api';
-import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
 import CsDetailModal from '../../../components/MyPageCommon/MyOrder/CsDetailModal';
+import { OrderContext } from '../../../context/Order/Order';
 
 export default function MyOrderDetail() {
   //주문번호 파라미터
   const { orderNo } = useParams();
 
+  //api 호출은 context 이용
+  const { selectOrderDetail } = useContext(OrderContext);
   //상태
   const [loading, setLoading] = useState(false); //로딩표시
   const [error, setError] = useState(false); //에러표시
@@ -114,18 +115,12 @@ export default function MyOrderDetail() {
   // =====================================================================
   //주문상세 데이터 조회
   // =====================================================================
-  const fetchOrderDetail = async () => {
+  const fetchOrderDetail = async (orderNo) => {
     setLoading(true);
     setError(false);
 
-    const url = `${API_BASE_URL}/api/order/selectOrderDetail.do`;
-
     try {
-      const response = await axios.get(url, {
-        params: { orderNo },
-      });
-
-      const resData = response.data.data;
+      const resData = await selectOrderDetail(orderNo);
 
       console.log('주문상세 : ', resData);
 
