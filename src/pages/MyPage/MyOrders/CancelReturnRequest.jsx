@@ -4,23 +4,29 @@ import InfoSection from '../../../components/MyPageCommon/Common/InfoSection';
 import SelectBox from '../../../components/MyPageCommon/Common/SelectBox';
 import MyButton from '../../../components/MyPageCommon/Common/MyButton';
 import { useCommCd } from '../../../hooks/useCommCd';
-import { useEffect, useState } from 'react';
-import { API_BASE_URL } from '../../../constants/api';
-import axios from 'axios';
+import { useEffect, useState, useContext } from 'react';
+import { OrderContext } from '../../../context/Order/Order';
 
 export default function CancelReturnRequest() {
   // 주문 번호 파라미터
   const { orderNo } = useParams();
 
+  //api 호출은 context 이용
+  const { selectOrderDetail, cancelReturnRequest } = useContext(OrderContext);
+
   // =====================================================================
   // 상태
   // =====================================================================
   const [loading, setLoading] = useState(false); //로딩표시
-  const [error, setError] = useState(false); //에러표시
+  //   const [error, setError] = useState(false); //에러표시
   const [orderInfo, setOrderInfo] = useState(null); //주문메타정보
   const [productitems, setProductitems] = useState([]); //주문상품별 정보
   const [selectedCsReason, setSelectedCsReason] = useState(''); //취소/반품사유
 
+  const [loadError, setLoadError] = useState(false); // 최초 조회 실패
+  const [requestError, setRequestError] = useState(false); // 요청 실패
+
+  console.log('사유', selectedCsReason);
   // =====================================================================
   // 페이지이동 및 정보
   // =====================================================================
@@ -69,7 +75,7 @@ export default function CancelReturnRequest() {
   };
 
   //취소/반품 요청 수량 변경 핸들러
-  const handleQtyChange = (itemOrderNo, qty) => {
+  const handleCsQtyChange = (itemOrderNo, qty) => {
     setProductitems((prev) => {
       console.log('수량 변경 전:', prev);
       const next = prev.map((item) =>
@@ -130,9 +136,11 @@ export default function CancelReturnRequest() {
       key: 'csSelect',
       header: '선택',
       render: (_, row) => {
+        const remainQty = row.quantity - row.cancelQty - row.returnQty;
         //체크박스 활성화 여부 확인 (orderStatus가 주문완료/배송완료인 경우만 활성화 + 이미 취소/반품신청한 경우 비활성화)
+        // const isEnabled =enableCheckOrderStatus.includes(row.orderStatus) && !row.csType;
         const isEnabled =
-          enableCheckOrderStatus.includes(row.orderStatus) && !row.csType;
+          enableCheckOrderStatus.includes(row.orderStatus) && remainQty > 0;
         return (
           <input
             type="checkbox"
@@ -177,7 +185,7 @@ export default function CancelReturnRequest() {
                 className="border border-gray-300 rounded px-2 py-1 text-sm w-24"
                 value={row.csQty}
                 onChange={(e) =>
-                  handleQtyChange(row.itemOrderNo, e.target.value)
+                  handleCsQtyChange(row.itemOrderNo, e.target.value)
                 }
               >
                 {Array.from({ length: row.quantity }, (_, i) => i + 1).map(
@@ -203,22 +211,46 @@ export default function CancelReturnRequest() {
   // =====================================================================
   // 취소/반품 요청
   // =====================================================================
+  //취소/반품 상품 선택 + 사유 선택
+  const isRequestDisabled = !selectedCsReason || selectedItems.length === 0;
 
+  const handleCancelRefundRequest = async () => {
+    setLoading(true);
+    setRequestError(false);
+    const params = {
+      orderNo,
+      csType: cancelReturnType,
+      csReason: selectedCsReason,
+      items: selectedItems.map((item) => ({
+        itemOrderNo: item.itemOrderNo,
+        requestQty: item.csQty,
+      })),
+    };
+    console.log('파라미터 : ', params);
+    try {
+      const resData = await cancelReturnRequest(params);
+
+      console.log('취소/반품 요청 결과 : ', resData);
+
+      alert(`${csTitle[cancelReturnType]} 요청이 완료되었습니다.`);
+      navigate(-1);
+    } catch (error) {
+      console.error('주문상세 조회 실패 : ', error);
+      setRequestError(true);
+      alert(`${csTitle[cancelReturnType]} 요청에 실패했습니다`);
+    } finally {
+      setLoading(false);
+    }
+  };
   // =====================================================================
   //주문상세 데이터 조회
   // =====================================================================
   const fetchOrderDetail = async () => {
     setLoading(true);
-    setError(false);
-
-    const url = `${API_BASE_URL}/api/order/selectOrderDetail.do`;
+    setLoadError(false);
 
     try {
-      const response = await axios.get(url, {
-        params: { orderNo },
-      });
-
-      const resData = response.data.data;
+      const resData = await selectOrderDetail(orderNo);
 
       console.log('주문상세 : ', resData);
 
@@ -258,7 +290,7 @@ export default function CancelReturnRequest() {
       );
     } catch (err) {
       console.error('주문상세 조회 실패 : ', err);
-      setError(true);
+      setLoadError(true);
       setOrderInfo(null);
       setProductitems([]);
     } finally {
@@ -276,8 +308,12 @@ export default function CancelReturnRequest() {
   if (loading) {
     return <div className="py-20 text-center">로딩중...</div>;
   }
-  if (error) {
-    return <div className="py-20 text-center text-red-500">{error}</div>;
+  if (loadError) {
+    return (
+      <div className="py-20 text-center text-red-500">
+        주문 정보를 불러오지 못했습니다.
+      </div>
+    );
   }
   if (!orderInfo) {
     return <div className="py-20 text-center">주문 정보 없음</div>;
@@ -312,7 +348,7 @@ export default function CancelReturnRequest() {
             <SelectBox
               label={`${csTitle[cancelReturnType]} 사유`}
               value={selectedCsReason}
-              options={csReasonOption}
+              options={[{ value: '', label: '사유 선택' }, ...csReasonOption]}
               onChange={(e) => setSelectedCsReason(e.target.value)}
             ></SelectBox>
           </div>
@@ -325,7 +361,13 @@ export default function CancelReturnRequest() {
         </div>
 
         <div className="w-full  flex justify-center gap-10">
-          <MyButton className="w-full sm:w-auto">취소/반품요청</MyButton>
+          <MyButton
+            onClick={handleCancelRefundRequest}
+            disabled={isRequestDisabled}
+            className="w-full sm:w-auto"
+          >
+            취소/반품요청
+          </MyButton>
           <MyButton onClick={goToOrderList}>주문목록</MyButton>
         </div>
       </div>
