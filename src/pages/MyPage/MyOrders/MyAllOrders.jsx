@@ -49,13 +49,13 @@ function MyAllOrders() {
             수량/옵션 : {row.optionInfo}
           </div>
           <div className="text-sm font-semibold">
-            {row.totalPrice?.toLocaleString()}원
+            {row.csAppliedAmt?.toLocaleString()}원
           </div>
         </div>
       ),
     },
 
-    { key: 'orderStatusNm', header: '주문처리상태' },
+    { key: 'displayStatusNm', header: '주문처리상태' },
     {
       key: 'csStatusNm',
       header: '취소/반품상태',
@@ -63,12 +63,18 @@ function MyAllOrders() {
     {
       key: 'reviewYn',
       header: '리뷰',
-      render: (v, row) =>
-        v === 'Y' ? (
+      render: (v, row) => {
+        console.log('행', row);
+        return v === 'Y' && row.orderStatus === 'OS10' ? (
           <MyButton>리뷰보기</MyButton>
-        ) : (
+        ) : v === 'N' && row.orderStatus === 'OS10' ? (
           <MyButton>리뷰쓰기</MyButton>
-        ),
+        ) : v === 'N' && row.orderStatus === 'OS03' ? (
+          <MyButton>구매확정</MyButton>
+        ) : (
+          <div className="w-[78px]"></div>
+        );
+      },
     },
   ];
   // =====================================================================
@@ -94,6 +100,7 @@ function MyAllOrders() {
         pageSize: itemsPerPage,
       });
 
+      // console.log('주문목록', list);
       setOrderList(list); //주문목록 없는 경우 빈배열로 마운트/언마운트 시에만 실행
       setTotalPages(totalPages); //전체 페이지 수
     } catch (err) {

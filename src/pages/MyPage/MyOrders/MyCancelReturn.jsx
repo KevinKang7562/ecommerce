@@ -46,13 +46,13 @@ export default function MyCancelReturn() {
             수량/옵션 : {row.optionInfo}
           </div>
           <div className="text-sm font-semibold">
-            {row.totalPrice?.toLocaleString()}원
+            {row.csAppliedAmt?.toLocaleString()}원
           </div>
         </div>
       ),
     },
 
-    { key: 'orderStatusNm', header: '주문처리상태' },
+    { key: 'displayStatusNm', header: '주문처리상태' },
     {
       key: 'csStatusNm',
       header: '취소/반품상태',
