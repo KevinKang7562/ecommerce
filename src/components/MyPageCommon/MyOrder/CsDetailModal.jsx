@@ -13,7 +13,9 @@ export default function CsDetailModal({ item, onClose }) {
     { label: '사유', value: item.csReasonNm },
     {
       label: '환불금액',
-      value: item.refundAmt ? `${item.refundAmt.toLocaleString()}원` : '-',
+      value: item.csRequestAmt
+        ? `${item.csRequestAmt.toLocaleString()}원`
+        : '-',
     },
     // { label: '환불수단', value: item.refundMethod },
     { label: '처리완료일', value: item.completeDate },

@@ -48,13 +48,13 @@ export default function MyOrderDetail() {
   //팝업 상태
   const [csPopupOpen, setCsPopupOpen] = useState(false);
   const [selectedCsItem, setSelectedCsItem] = useState(null);
-  //팝업열기
-  const openCsPopup = (item) => {
+  //팝업열기 이벤트
+  const handelOpenCsPopup = (item) => {
     setSelectedCsItem(item);
     setCsPopupOpen(true);
   };
-  //팝업닫기
-  const closeCsPopup = () => {
+  //팝업닫기 이벤트
+  const handleCloseCsPopup = () => {
     setCsPopupOpen(false);
     setSelectedCsItem(null);
   };
@@ -83,12 +83,12 @@ export default function MyOrderDetail() {
           </div>
           <div className="text-sm font-semibold">
             {/* 상품별 총금액 ()(구매단가-할인금액+옵션추가금)*수량)*/}
-            {row.totalPrice?.toLocaleString()}원
+            {row.csAppliedAmt?.toLocaleString()}원
           </div>
         </div>
       ),
     },
-    { key: 'orderStatusNm', header: '주문처리상태' },
+    { key: 'displayStatusNm', header: '주문처리상태' },
     {
       key: 'csStatusNm',
       header: '취소/반품상태',
@@ -99,7 +99,7 @@ export default function MyOrderDetail() {
             {hasCs ? (
               <>
                 <div className="text-md">{row.csStatusNm}</div>
-                <MyButton size="sm" onClick={() => openCsPopup(row)}>
+                <MyButton size="sm" onClick={() => handelOpenCsPopup(row)}>
                   {row.csTypeNm} 상세보기
                 </MyButton>
               </>
@@ -143,7 +143,7 @@ export default function MyOrderDetail() {
         payment: {
           totalAmt: resData.totalAmt ?? 0, //상품별 총금액의 합
           deliveryFee: resData.deliveryFee ?? 0,
-          payAmt: resData.payAmt ?? 0, //총 결제 금액
+          payAmt: resData.payAmt ?? 0, //총 결제 금액 (배송비 포함 금액인데 실제 배송비는 0원인 걸로 고려)
           payMethod: resData.payMethod ?? '',
           payMethodNm: resData.payMethodNm ?? '',
         },
@@ -211,7 +211,7 @@ export default function MyOrderDetail() {
   //결제정보
   const paymentInfoItems = [
     { label: '상품총액', value: `${payment.totalAmt.toLocaleString()}원` },
-    { label: '배송비', value: `${payment.deliveryFee.toLocaleString()}원` },
+    { label: '배송비', value: `${payment.deliveryFee.toLocaleString()}원` }, //배송비는 따로 없는 상태라 무조건 0으로 나올 것...
     { label: '총결제금액', value: `${payment.payAmt.toLocaleString()}원` },
     { label: '결재수단', value: payment.payMethodNm },
   ];
@@ -263,7 +263,7 @@ export default function MyOrderDetail() {
       </div>
 
       {csPopupOpen && selectedCsItem && (
-        <CsDetailModal item={selectedCsItem} onClose={closeCsPopup} />
+        <CsDetailModal item={selectedCsItem} onClose={handleCloseCsPopup} />
       )}
     </div>
   );

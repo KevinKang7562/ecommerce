@@ -64,7 +64,7 @@ function MyAllOrders() {
       key: 'reviewYn',
       header: '리뷰',
       render: (v, row) => {
-        console.log('행', row);
+        // console.log('행', row);
         return v === 'Y' && row.orderStatus === 'OS10' ? (
           <MyButton>리뷰보기</MyButton>
         ) : v === 'N' && row.orderStatus === 'OS10' ? (

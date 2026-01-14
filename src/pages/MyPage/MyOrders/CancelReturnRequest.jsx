@@ -52,7 +52,20 @@ export default function CancelReturnRequest() {
   // =====================================================================
   // 취소/반품 체크박스
   // =====================================================================
-  const enableCheckOrderStatus = ['OS01', 'OS03']; //체크박스 활성화 가능한 주문처리상태
+  // 체크박스 활성화 가능한 주문처리상태
+  const isCheckableCsType = {
+    CANCEL: ['OS01', 'OS04'],
+    RETURN: ['OS03', 'OS07'],
+  };
+
+  const getRemainQty = (row) => row.quantity - row.cancelQty - row.returnQty;
+  //체크박스 활성화 여부 판별 함수
+  const isCheckable = (row, csType) => {
+    const remainQty = getRemainQty(row);
+    if (remainQty <= 0) return false;
+    const checkableStatus = isCheckableCsType[csType] ?? [];
+    return checkableStatus.includes(row.orderStatus);
+  };
 
   //체크박스 변경 핸들러
   const handleCsCheckChange = (itemOrderNo, checked) => {
@@ -136,11 +149,12 @@ export default function CancelReturnRequest() {
       key: 'csSelect',
       header: '선택',
       render: (_, row) => {
-        const remainQty = row.quantity - row.cancelQty - row.returnQty;
+        // const remainQty = row.quantity - row.cancelQty - row.returnQty;
         //체크박스 활성화 여부 확인 (orderStatus가 주문완료/배송완료인 경우만 활성화 + 이미 취소/반품신청한 경우 비활성화)
         // const isEnabled =enableCheckOrderStatus.includes(row.orderStatus) && !row.csType;
-        const isEnabled =
-          enableCheckOrderStatus.includes(row.orderStatus) && remainQty > 0;
+        // const isEnabled =
+        //   enableCheckOrderStatus.includes(row.orderStatus) && remainQty > 0;
+        const isEnabled = isCheckable(row, cancelReturnType);
         return (
           <input
             type="checkbox"
@@ -162,46 +176,50 @@ export default function CancelReturnRequest() {
     {
       key: 'productInfo',
       header: '상품정보',
-      render: (_, row) => (
-        <div className="text-start flex flex-col gap-1 min-w-[200px]">
-          <div className="text-sm text-gray-600">
-            상품주문번호 : {row.itemOrderNo}
-          </div>
-          <div className="font-medium">{row.prodNm}</div>
-          <div className="text-sm text-gray-600">
-            수량/옵션 : {row.optionInfo}
-          </div>
-
-          <div className="text-sm font-semibold">
-            {/* 상품별 총금액 (구매단가-할인금액+옵션추가금)*수량)*/}
-            {row.totalPrice?.toLocaleString()}원
-          </div>
-
-          {/* 체크박스 체크 + 상품 수량 2개이상인 경우 수량 선택 셀렉트박스 노출 */}
-          {row.csChecked && row.quantity > 1 && (
-            <div className="mt-1">
-              <span>수량 선택 : </span>
-              <select
-                className="border border-gray-300 rounded px-2 py-1 text-sm w-24"
-                value={row.csQty}
-                onChange={(e) =>
-                  handleCsQtyChange(row.itemOrderNo, e.target.value)
-                }
-              >
-                {Array.from({ length: row.quantity }, (_, i) => i + 1).map(
-                  (qty) => (
-                    <option key={qty} value={qty}>
-                      {qty}개
-                    </option>
-                  )
-                )}
-              </select>
+      render: (_, row) => {
+        const csEnableQty = getRemainQty(row);
+        console.log('취소가능 수량', csEnableQty);
+        return (
+          <div className="text-start flex flex-col gap-1 min-w-[200px]">
+            <div className="text-sm text-gray-600">
+              상품주문번호 : {row.itemOrderNo}
             </div>
-          )}
-        </div>
-      ),
+            <div className="font-medium">{row.prodNm}</div>
+            <div className="text-sm text-gray-600">
+              수량/옵션 : {row.optionInfo}
+            </div>
+
+            <div className="text-sm font-semibold">
+              {/* 상품별 총금액 (구매단가-할인금액+옵션추가금)*수량)*/}
+              {row.csAppliedAmt?.toLocaleString()}원
+            </div>
+
+            {/* 체크박스 체크 + 상품 수량 2개이상인 경우 수량 선택 셀렉트박스 노출 */}
+            {row.csChecked && row.quantity > 1 && (
+              <div className="mt-1">
+                <span>수량 선택 : </span>
+                <select
+                  className="border border-gray-300 rounded px-2 py-1 text-sm w-24"
+                  value={row.csQty}
+                  onChange={(e) =>
+                    handleCsQtyChange(row.itemOrderNo, e.target.value)
+                  }
+                >
+                  {Array.from({ length: csEnableQty }, (_, i) => i + 1).map(
+                    (qty) => (
+                      <option key={qty} value={qty}>
+                        {qty}개
+                      </option>
+                    )
+                  )}
+                </select>
+              </div>
+            )}
+          </div>
+        );
+      },
     },
-    { key: 'orderStatusNm', header: '주문처리상태' },
+    { key: 'displayStatusNm', header: '주문처리상태' },
     {
       key: 'csStatusNm',
       header: '취소/반품상태',
@@ -263,21 +281,21 @@ export default function CancelReturnRequest() {
           canReturnYn: resData.canReturnYn,
         },
 
-        delivery: {
-          recipientNm: resData.recipientNm,
-          recipientTell: resData.recipientTell,
-          postCd: resData.postCd,
-          address: resData.address,
-          addressDetail: resData.addressDetail,
-        },
+        // delivery: {
+        //   recipientNm: resData.recipientNm,
+        //   recipientTell: resData.recipientTell,
+        //   postCd: resData.postCd,
+        //   address: resData.address,
+        //   addressDetail: resData.addressDetail,
+        // },
 
-        payment: {
-          totalAmt: resData.totalAmt ?? 0, //상품별 총금액의 합
-          deliveryFee: resData.deliveryFee ?? 0,
-          payAmt: resData.payAmt ?? 0, //총 결제 금액
-          payMethod: resData.payMethod ?? '',
-          payMethodNm: resData.payMethodNm ?? '',
-        },
+        // payment: {
+        //   totalAmt: resData.totalAmt ?? 0, //상품별 총금액의 합
+        //   deliveryFee: resData.deliveryFee ?? 0,
+        //   payAmt: resData.payAmt ?? 0, //총 결제 금액
+        //   payMethod: resData.payMethod ?? '',
+        //   payMethodNm: resData.payMethodNm ?? '',
+        // },
       });
 
       //상품목록
@@ -325,7 +343,7 @@ export default function CancelReturnRequest() {
   //주문정보 구조분해
   //(반드시 조건부 랜더링 아래 위치해야 함
   //데이터 조회 전 초기 랜더링 시 orderInfo = null로 인해 구조분해 단계에서 에러 발생 방지하기 위함)
-  const { order, delivery, payment } = orderInfo;
+  const { order } = orderInfo;
 
   return (
     <div className="w-full">
@@ -366,7 +384,7 @@ export default function CancelReturnRequest() {
             disabled={isRequestDisabled}
             className="w-full sm:w-auto"
           >
-            취소/반품요청
+            {`${csTitle[cancelReturnType]}요청`}
           </MyButton>
           <MyButton onClick={goToOrderList}>주문목록</MyButton>
         </div>
