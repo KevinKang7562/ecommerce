@@ -12,7 +12,7 @@ export default function CancelReturnRequest() {
   const { orderNo } = useParams();
 
   //api 호출은 context 이용
-  const { selectOrderDetail, cancelReturnRequest } = useContext(OrderContext);
+  const { selectOrderDetail, requestCancelReturn } = useContext(OrderContext);
 
   // =====================================================================
   // 상태
@@ -26,7 +26,6 @@ export default function CancelReturnRequest() {
   const [loadError, setLoadError] = useState(false); // 최초 조회 실패
   const [requestError, setRequestError] = useState(false); // 요청 실패
 
-  console.log('사유', selectedCsReason);
   // =====================================================================
   // 페이지이동 및 정보
   // =====================================================================
@@ -52,50 +51,43 @@ export default function CancelReturnRequest() {
   // =====================================================================
   // 취소/반품 체크박스
   // =====================================================================
-  // 체크박스 활성화 가능한 주문처리상태
-  const isCheckableCsType = {
-    CANCEL: ['OS01', 'OS04'],
-    RETURN: ['OS03', 'OS07'],
-  };
-
-  const getRemainQty = (row) => row.quantity - row.cancelQty - row.returnQty;
-  //체크박스 활성화 여부 판별 함수
-  const isCheckable = (row, csType) => {
-    const remainQty = getRemainQty(row);
-    if (remainQty <= 0) return false;
-    const checkableStatus = isCheckableCsType[csType] ?? [];
-    return checkableStatus.includes(row.orderStatus);
-  };
 
   //체크박스 변경 핸들러
-  const handleCsCheckChange = (itemOrderNo, checked) => {
-    //prev:업데이트 직전(현재 화면의 productitems)의 상태값
-    setProductitems((prev) => {
-      console.log('체크 변경 전:', prev);
-      const next = prev.map((item) =>
-        item.itemOrderNo === itemOrderNo
-          ? {
-              ...item, //스프레드 연산자 나머지 데이터는 그대로 유지
-              csChecked: checked,
-              csQty: checked ? item.csQty : 1, //체크 해제시 수량 1로 초기화
-            }
-          : item
-      );
+  const handleCsCheckChange = (rowKey, checked) => {
+    setProductitems((prev) =>
+      prev.map((item) => {
+        if (item.rowKey !== rowKey) return item;
 
-      console.log('체크 변경 후:', next);
-      return next;
-    });
+        const qty = checked ? item.newCsReqQty : 1; // 기본 1
+        const price = Number(item.itemPrice);
+        const reqAmt = checked ? price * qty : 0;
+
+        return {
+          ...item,
+          csChecked: checked,
+          newCsReqQty: qty,
+          csRequestAmt: reqAmt,
+        };
+      }),
+    );
   };
 
   //취소/반품 요청 수량 변경 핸들러
-  const handleCsQtyChange = (itemOrderNo, qty) => {
+  const handleNewCsReqQtyChange = (rowKey, newCsReqQty) => {
     setProductitems((prev) => {
       console.log('수량 변경 전:', prev);
-      const next = prev.map((item) =>
-        item.itemOrderNo === itemOrderNo
-          ? { ...item, csQty: Number(qty) }
-          : item
-      );
+      const next = prev.map((item) => {
+        if (item.rowKey !== rowKey) return item;
+
+        const qty = Number(newCsReqQty);
+        const price = Number(item.itemPrice);
+
+        return {
+          ...item,
+          newCsReqQty: qty,
+          csRequestAmt: price * qty,
+        };
+      });
       console.log('수량 변경 후:', next);
       return next;
     });
@@ -106,28 +98,31 @@ export default function CancelReturnRequest() {
   // =====================================================================
   const selectedItems = productitems.filter((item) => item.csChecked);
 
-  const totalCsQty = selectedItems.reduce((sum, item) => sum + item.csQty, 0);
+  const totalNewCsReqQty = selectedItems.reduce(
+    (sum, item) => sum + item.newCsReqQty,
+    0,
+  );
 
-  const csReqAmt = selectedItems.reduce((sum, item) => {
+  const totalCsReqAmt = selectedItems.reduce((sum, item) => {
     //상품 단가 = 상품별 총금액 / 주문수량
-    const unitPrice = item.totalPrice / item.quantity;
-    return sum + unitPrice * item.csQty;
+    // const unitPrice = item.totalPrice / item.quantity;
+    return sum + item.itemPrice * item.newCsReqQty;
   }, 0);
 
   //반품 배송비 = 임시로 기본 반품비 3000원 설정
   const returnFee =
     cancelReturnType === 'RETURN' && selectedItems.length > 0 ? 3000 : 0;
 
-  const refundAmt = csReqAmt - returnFee;
+  const reqRefundTotal = totalCsReqAmt - returnFee;
 
   const csInfo = [
     {
       label: `${csTitle[cancelReturnType]}수량`,
-      value: totalCsQty,
+      value: totalNewCsReqQty,
     },
     {
       label: `${csTitle[cancelReturnType]} 요청 금액`,
-      value: `${csReqAmt.toLocaleString()}원`,
+      value: `${totalCsReqAmt.toLocaleString()}원`,
     },
     ...(cancelReturnType === 'RETURN' //스프레드 연산자로 '반품'인 경우만 반품배송비 배열 추가
       ? [
@@ -139,7 +134,7 @@ export default function CancelReturnRequest() {
       : []),
     {
       label: '환불금액',
-      value: `${refundAmt.toLocaleString()}원`,
+      value: `${reqRefundTotal.toLocaleString()}원`,
     },
   ];
 
@@ -149,21 +144,20 @@ export default function CancelReturnRequest() {
       key: 'csSelect',
       header: '선택',
       render: (_, row) => {
-        // const remainQty = row.quantity - row.cancelQty - row.returnQty;
         //체크박스 활성화 여부 확인 (orderStatus가 주문완료/배송완료인 경우만 활성화 + 이미 취소/반품신청한 경우 비활성화)
-        // const isEnabled =enableCheckOrderStatus.includes(row.orderStatus) && !row.csType;
-        // const isEnabled =
-        //   enableCheckOrderStatus.includes(row.orderStatus) && remainQty > 0;
-        const isEnabled = isCheckable(row, cancelReturnType);
+        const isEnabled = row.canCheckYn === 'Y' ? true : false;
         return (
           <input
             type="checkbox"
-            className="w-4 h-4"
+            className={`w-4 h-4
+                        ${
+                          !isEnabled
+                            ? 'opacity-40 cursor-not-allowed'
+                            : 'cursor-pointer'
+                        }`}
             checked={row.csChecked}
             disabled={!isEnabled}
-            onChange={(e) =>
-              handleCsCheckChange(row.itemOrderNo, e.target.checked)
-            }
+            onChange={(e) => handleCsCheckChange(row.rowKey, e.target.checked)}
           />
         );
       },
@@ -177,8 +171,9 @@ export default function CancelReturnRequest() {
       key: 'productInfo',
       header: '상품정보',
       render: (_, row) => {
-        const csEnableQty = getRemainQty(row);
-        console.log('취소가능 수량', csEnableQty);
+        // const csEnableQty = getRemainQty(row);
+        console.log('단가', row.itemPrice);
+        const csEnableQty = row.remainQty;
         return (
           <div className="text-start flex flex-col gap-1 min-w-[200px]">
             <div className="text-sm text-gray-600">
@@ -195,14 +190,14 @@ export default function CancelReturnRequest() {
             </div>
 
             {/* 체크박스 체크 + 상품 수량 2개이상인 경우 수량 선택 셀렉트박스 노출 */}
-            {row.csChecked && row.quantity > 1 && (
+            {row.csChecked && row.remainQty > 1 && (
               <div className="mt-1">
                 <span>수량 선택 : </span>
                 <select
                   className="border border-gray-300 rounded px-2 py-1 text-sm w-24"
-                  value={row.csQty}
+                  value={row.newCsReqQty}
                   onChange={(e) =>
-                    handleCsQtyChange(row.itemOrderNo, e.target.value)
+                    handleNewCsReqQtyChange(row.rowKey, e.target.value)
                   }
                 >
                   {Array.from({ length: csEnableQty }, (_, i) => i + 1).map(
@@ -210,7 +205,7 @@ export default function CancelReturnRequest() {
                       <option key={qty} value={qty}>
                         {qty}개
                       </option>
-                    )
+                    ),
                   )}
                 </select>
               </div>
@@ -233,27 +228,38 @@ export default function CancelReturnRequest() {
   const isRequestDisabled = !selectedCsReason || selectedItems.length === 0;
 
   const handleCancelRefundRequest = async () => {
-    setLoading(true);
-    setRequestError(false);
     const params = {
       orderNo,
+      payNo: order.payNo,
       csType: cancelReturnType,
       csReason: selectedCsReason,
+      refundTotal: reqRefundTotal,
       items: selectedItems.map((item) => ({
         itemOrderNo: item.itemOrderNo,
-        requestQty: item.csQty,
+        requestQty: item.newCsReqQty,
+        csRequestAmt: item.csRequestAmt,
       })),
     };
     console.log('파라미터 : ', params);
+    const confirmed = window.confirm(
+      `${csTitle[cancelReturnType]} 요청을 진행하시겠습니까?`,
+    );
+
+    if (!confirmed) {
+      return; // 사용자가 취소를 누르면 여기서 종료
+    }
+    setLoading(true);
+    setRequestError(false);
+
     try {
-      const resData = await cancelReturnRequest(params);
+      const resData = await requestCancelReturn(params);
 
       console.log('취소/반품 요청 결과 : ', resData);
 
       alert(`${csTitle[cancelReturnType]} 요청이 완료되었습니다.`);
       navigate(-1);
     } catch (error) {
-      console.error('주문상세 조회 실패 : ', error);
+      console.error(`주문 ${csTitle[cancelReturnType]} 실패 : `, error);
       setRequestError(true);
       alert(`${csTitle[cancelReturnType]} 요청에 실패했습니다`);
     } finally {
@@ -276,26 +282,11 @@ export default function CancelReturnRequest() {
       setOrderInfo({
         order: {
           orderNo: resData.orderNo,
+          payNo: resData.payNo,
           orderDate: resData.orderDate,
           canCancelYn: resData.canCancelYn,
           canReturnYn: resData.canReturnYn,
         },
-
-        // delivery: {
-        //   recipientNm: resData.recipientNm,
-        //   recipientTell: resData.recipientTell,
-        //   postCd: resData.postCd,
-        //   address: resData.address,
-        //   addressDetail: resData.addressDetail,
-        // },
-
-        // payment: {
-        //   totalAmt: resData.totalAmt ?? 0, //상품별 총금액의 합
-        //   deliveryFee: resData.deliveryFee ?? 0,
-        //   payAmt: resData.payAmt ?? 0, //총 결제 금액
-        //   payMethod: resData.payMethod ?? '',
-        //   payMethodNm: resData.payMethodNm ?? '',
-        // },
       });
 
       //상품목록
@@ -303,8 +294,9 @@ export default function CancelReturnRequest() {
         (resData.items ?? []).map((item) => ({
           ...item,
           csChecked: false, //체크박스 초기상태
-          csQty: 1, //취소/반품 기본 선택 수량
-        }))
+          newCsReqQty: 1, //취소/반품 기본 선택 수량
+          csRequestAmt: 0,
+        })),
       );
     } catch (err) {
       console.error('주문상세 조회 실패 : ', err);
