@@ -24,7 +24,9 @@ export default function CancelReturnRequest() {
   const [selectedCsReason, setSelectedCsReason] = useState(''); //취소/반품사유
 
   const [loadError, setLoadError] = useState(false); // 최초 조회 실패
+  const [loadErrorMessage, setLoadErrorMessage] = useState(''); //조회 실패시 서버 메시지 표시용
   const [requestError, setRequestError] = useState(false); // 요청 실패
+  const [requestErrorMessage, setRequestErrorMessage] = useState(''); //요청 실패시 서버 메시지 표시용
 
   // =====================================================================
   // 페이지이동 및 정보
@@ -228,6 +230,8 @@ export default function CancelReturnRequest() {
   const isRequestDisabled = !selectedCsReason || selectedItems.length === 0;
 
   const handleCancelRefundRequest = async () => {
+    if (!orderInfo?.order) return;
+    const { order } = orderInfo; //이벤트 핸들러 발동되는 시점에 orderInfo 객체 상태 검증
     const params = {
       orderNo,
       payNo: order.payNo,
@@ -250,18 +254,21 @@ export default function CancelReturnRequest() {
     }
     setLoading(true);
     setRequestError(false);
+    setRequestErrorMessage('');
 
     try {
-      const resData = await requestCancelReturn(params);
-
-      console.log('취소/반품 요청 결과 : ', resData);
+      await requestCancelReturn(params);
 
       alert(`${csTitle[cancelReturnType]} 요청이 완료되었습니다.`);
       navigate(-1);
     } catch (error) {
       console.error(`주문 ${csTitle[cancelReturnType]} 실패 : `, error);
+
       setRequestError(true);
-      alert(`${csTitle[cancelReturnType]} 요청에 실패했습니다`);
+      setRequestErrorMessage(
+        error.response?.data?.message ??
+          `${csTitle[cancelReturnType]} 요청 중 오류가 발생했습니다.`,
+      ); //서버 메시지 표시
     } finally {
       setLoading(false);
     }
@@ -272,6 +279,7 @@ export default function CancelReturnRequest() {
   const fetchOrderDetail = async () => {
     setLoading(true);
     setLoadError(false);
+    setLoadErrorMessage('');
 
     try {
       const resData = await selectOrderDetail(orderNo);
@@ -301,6 +309,9 @@ export default function CancelReturnRequest() {
     } catch (err) {
       console.error('주문상세 조회 실패 : ', err);
       setLoadError(true);
+      setLoadErrorMessage(
+        err.response?.data?.message ?? '주문 정보를 불러오지 못했습니다.',
+      );
       setOrderInfo(null);
       setProductitems([]);
     } finally {
@@ -320,9 +331,7 @@ export default function CancelReturnRequest() {
   }
   if (loadError) {
     return (
-      <div className="py-20 text-center text-red-500">
-        주문 정보를 불러오지 못했습니다.
-      </div>
+      <div className="py-20 text-center text-red-500">{loadErrorMessage}</div>
     );
   }
   if (!orderInfo) {
@@ -332,7 +341,7 @@ export default function CancelReturnRequest() {
   // =====================================================================
   //데이터 가공
   // =====================================================================
-  //주문정보 구조분해
+  //주문정보 구조분해(jsx 화면 랜더링을 위한 데이터 접근)
   //(반드시 조건부 랜더링 아래 위치해야 함
   //데이터 조회 전 초기 랜더링 시 orderInfo = null로 인해 구조분해 단계에서 에러 발생 방지하기 위함)
   const { order } = orderInfo;
@@ -342,6 +351,14 @@ export default function CancelReturnRequest() {
       <h1 className="text-2xl sm:text-3xl font-bold mb-8 border-b pb-5">
         {csTitle[cancelReturnType]} 요청
       </h1>
+
+      {/* 🔧 FIX: 요청 실패 메시지 표시 */}
+      {requestError && (
+        <div className="mb-4 text-center text-red-500">
+          {csTitle[cancelReturnType]}요청 실패 : {requestErrorMessage}
+        </div>
+      )}
+
       <div className="flex flex-col gap-5">
         <div className="w-full">
           <div className="mb-3">

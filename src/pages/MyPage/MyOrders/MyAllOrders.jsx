@@ -5,18 +5,20 @@ import MyOrderBlock from '../../../components/MyPageCommon/MyOrder/MyOrderBlock'
 import { useCommCd } from '../../../hooks/useCommCd';
 import MyButton from '../../../components/MyPageCommon/Common/MyButton';
 import { OrderContext } from '../../../context/Order/Order';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 // 나의 전체 주문 목록
 function MyAllOrders() {
   //api는 context로 분리
   //context 사용 이유 : 동일한 api 중복 사용 및 로그인 여부에 대한 공통헤더 필요, 주문이라는 동일한 도메인을 사용하기 때문
-  const { selectOrderList } = useContext(OrderContext);
+  const { selectOrderList, requestPurchaseConfirm } = useContext(OrderContext);
 
   const [orderList, setOrderList] = useState([]); //주문목록
   // const [totalCount, setTotalCount] = useState(0); //전체주문목록 수
 
   const [loading, setLoading] = useState(false); //로딩 표시
   const [error, setError] = useState(false); //에러표시
+  const [errorMessage, setErrorMessage] = useState(''); //인라인 에러 메세지 표시
 
   const [currentPage, setCurrentPage] = useState(1); //현재 페이지
   const [totalPages, setTotalPages] = useState(0); //전체 페이지 수
@@ -28,6 +30,51 @@ function MyAllOrders() {
   const [searchTrigger, setSearchTrigger] = useState(0); //검색 버튼 클릭여부
 
   const itemsPerPage = 5; //페이지당 보일 항목 수
+
+  // =====================================================================
+  //페이지이동
+  // =====================================================================
+  const navigate = useNavigate(); //페이지 이동 훅(이벤트 발생)
+  const location = useLocation(); //현재 url, state 등 위치 정보 조회 훅(렌더링/조건 판단)
+  console.log('location.state:', location.state);
+  console.log('from:', location.state?.from);
+
+  //리뷰 페이지로 이동
+  const moveReview = (data, reviewYn) => {
+    navigate(`/mypage/Review/${data.itemOrderNo}`, {
+      // navigate(`/mypage/CancelReturnRequest/${order.orderNo}`, {
+      state: { from: 'ReviewYn', reviewYn }, //URL로 표현할 필요 없는 부가정보(context)
+    });
+  };
+
+  //구매확정 이벤트
+  const handlePurchaseConfirm = async (itemOrderNo) => {
+    if (loading) return; //연타 방지
+    if (itemOrderNo == null || itemOrderNo === '') {
+      alert('선택된 상품이 없습니다.');
+      return;
+    }
+
+    const confirmed = window.confirm('구매확정 하시겠습니까?');
+
+    if (!confirmed) {
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      await requestPurchaseConfirm(itemOrderNo);
+
+      alert(`구매 확정이 완료되었습니다.`);
+    } catch (error) {
+      // setError(true);
+      //에러 메세지 alert는 axios 인터셉터에서 자동 처리
+    } finally {
+      setLoading(false);
+      await fetchOrderList(); // 현재 필터/페이지 그대로 재조회
+    }
+  };
 
   //주문 목록 테이블 컬럼
   const orderColumns = [
@@ -66,11 +113,13 @@ function MyAllOrders() {
       render: (v, row) => {
         // console.log('행', row);
         return v === 'Y' && row.orderStatus === 'OS10' ? (
-          <MyButton>리뷰보기</MyButton>
+          <MyButton onClick={() => moveReview(row, 'Y')}>리뷰보기</MyButton>
         ) : v === 'N' && row.orderStatus === 'OS10' ? (
-          <MyButton>리뷰쓰기</MyButton>
+          <MyButton onClick={() => moveReview(row, 'N')}>리뷰쓰기</MyButton>
         ) : v === 'N' && row.orderStatus === 'OS03' ? (
-          <MyButton>구매확정</MyButton>
+          <MyButton onClick={() => handlePurchaseConfirm(row.itemOrderNo)}>
+            구매확정
+          </MyButton>
         ) : (
           <div className="w-[78px]"></div>
         );
@@ -88,6 +137,7 @@ function MyAllOrders() {
   const fetchOrderList = async () => {
     setLoading(true);
     setError(false);
+    setErrorMessage(null);
 
     try {
       const { list, totalPages } = await selectOrderList({
@@ -103,9 +153,13 @@ function MyAllOrders() {
       // console.log('주문목록', list);
       setOrderList(list); //주문목록 없는 경우 빈배열로 마운트/언마운트 시에만 실행
       setTotalPages(totalPages); //전체 페이지 수
-    } catch (err) {
-      console.error('주문 조회 실패:', err);
+    } catch (error) {
       setError(true);
+      const serverMessage =
+        error.response?.data?.message ??
+        '주문 내역 조회 중 오류가 발생했습니다.'; // ← 서버에서 보낸 메시지
+      setErrorMessage(serverMessage); //INLINE으로 표시
+      console.error('주문 조회 실패:', error);
       setOrderList([]);
     } finally {
       setLoading(false); //로딩완료
@@ -152,7 +206,7 @@ function MyAllOrders() {
           </div>
         ) : error ? (
           <div className="py-20 text-center text-red-500">
-            주문내역 조회 중 오류가 발생했습니다.
+            {errorMessage} {/*INLINE 에러 표시 */}
           </div>
         ) : orderList.length === 0 ? (
           <div className="py-20 text-center text-gray-500">

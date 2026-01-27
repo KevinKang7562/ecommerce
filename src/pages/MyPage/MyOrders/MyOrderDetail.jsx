@@ -16,6 +16,8 @@ export default function MyOrderDetail() {
   //상태
   const [loading, setLoading] = useState(false); //로딩표시
   const [error, setError] = useState(false); //에러표시
+  const [errorMessage, setErrorMessage] = useState(''); //인라인 에러 메세지 표시
+
   const [orderData, setOrderData] = useState(null); //주문상세내역
 
   // =====================================================================
@@ -143,16 +145,21 @@ export default function MyOrderDetail() {
         payment: {
           totalAmt: resData.totalAmt ?? 0, //상품별 총금액의 합
           deliveryFee: resData.deliveryFee ?? 0,
-          payAmt: resData.payAmt ?? 0, //총 결제 금액 (배송비 포함 금액인데 실제 배송비는 0원인 걸로 고려)
+          totalPayAmt: resData.totalPayAmt ?? 0, //총 결제 금액 (배송비 포함 금액인데 실제 배송비는 0원인 걸로 고려)
           payMethod: resData.payMethod ?? '',
           payMethodNm: resData.payMethodNm ?? '',
+          refundTotal: resData.refundTotal ?? '',
         },
 
         productitems: resData.items ?? [],
       });
-    } catch (err) {
-      console.error('주문상세 조회 실패 : ', err);
+    } catch (error) {
       setError(true);
+      const serverMessage =
+        error.response?.data?.message ??
+        '주문 상세 내역 조회 중 오류가 발생했습니다.';
+      setErrorMessage(serverMessage);
+      console.error('주문상세 조회 실패 : ', error);
       setOrderData(null);
     } finally {
       setLoading(false); //로딩완료
@@ -170,7 +177,7 @@ export default function MyOrderDetail() {
     return <div className="py-20 text-center">로딩중...</div>;
   }
   if (error) {
-    return <div className="py-20 text-center text-red-500">{error}</div>;
+    return <div className="py-20 text-center text-red-500">{errorMessage}</div>;
   }
   if (!orderData) {
     return <div className="py-20 text-center">주문 정보 없음</div>;
@@ -212,10 +219,14 @@ export default function MyOrderDetail() {
   const paymentInfoItems = [
     { label: '상품총액', value: `${payment.totalAmt.toLocaleString()}원` },
     { label: '배송비', value: `${payment.deliveryFee.toLocaleString()}원` }, //배송비는 따로 없는 상태라 무조건 0으로 나올 것...
-    { label: '총결제금액', value: `${payment.payAmt.toLocaleString()}원` },
+    { label: '총결제금액', value: `${payment.totalPayAmt.toLocaleString()}원` },
     { label: '결재수단', value: payment.payMethodNm },
   ];
 
+  //환불정보
+  const refundInfoItems = [
+    { label: '환불금액', value: `${payment.refundTotal.toLocaleString()}원` },
+  ];
   console.log('상세데이터 : ', orderData);
   return (
     <div className="w-full  ">
@@ -239,6 +250,7 @@ export default function MyOrderDetail() {
             title={'결제정보'}
             items={paymentInfoItems}
           ></InfoSection>
+          <InfoSection title={'환불정보'} items={refundInfoItems}></InfoSection>
         </div>
 
         {/* 주문상품목록 */}

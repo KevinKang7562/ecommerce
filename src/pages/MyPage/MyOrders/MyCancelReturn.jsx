@@ -24,6 +24,7 @@ export default function MyCancelReturn() {
 
   const [loading, setLoading] = useState(false); //로딩표시
   const [error, setError] = useState(false); //에러표시
+  const [errorMessage, setErrorMessage] = useState(''); //인라인 에러 메세지 표시
 
   const itemsPerPage = 5; //페이지당 보일 항목 수
 
@@ -69,6 +70,7 @@ export default function MyCancelReturn() {
   const fetchCancelReturnList = async () => {
     setLoading(true);
     setError(false);
+    setErrorMessage(null);
 
     try {
       const { list, totalPages } = await selectCancelReturnList({
@@ -83,9 +85,13 @@ export default function MyCancelReturn() {
 
       setCancleReturnList(list); //주문목록 없는 경우 빈배열로 마운트/언마운트 시에만 실행
       setTotalPages(totalPages);
-    } catch (err) {
-      console.error('주문 조회 실패:', err);
+    } catch (error) {
       setError(true);
+      const serverMessage =
+        error.response?.data?.message ??
+        '취소/반품 내역 조회 중 오류가 발생했습니다.';
+      setErrorMessage(serverMessage);
+      console.error('주문 조회 실패:', error);
       setCancleReturnList([]);
     } finally {
       setLoading(false);
@@ -125,7 +131,7 @@ export default function MyCancelReturn() {
           </div>
         ) : error ? (
           <div className="py-20 text-center text-red-500">
-            주문내역 조회 중 오류가 발생했습니다.
+            {errorMessage} {/*INLINE 에러 표시 */}
           </div>
         ) : cancleReturnList.length === 0 ? (
           <div className="py-20 text-center text-gray-500">
