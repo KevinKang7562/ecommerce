@@ -352,7 +352,7 @@ export default function CancelReturnRequest() {
         {csTitle[cancelReturnType]} 요청
       </h1>
 
-      {/* 🔧 FIX: 요청 실패 메시지 표시 */}
+      {/* 요청 실패 메시지 표시 */}
       {requestError && (
         <div className="mb-4 text-center text-red-500">
           {csTitle[cancelReturnType]}요청 실패 : {requestErrorMessage}

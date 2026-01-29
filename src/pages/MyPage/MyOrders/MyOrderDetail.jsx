@@ -50,11 +50,13 @@ export default function MyOrderDetail() {
   //팝업 상태
   const [csPopupOpen, setCsPopupOpen] = useState(false);
   const [selectedCsItem, setSelectedCsItem] = useState(null);
+
   //팝업열기 이벤트
   const handelOpenCsPopup = (item) => {
     setSelectedCsItem(item);
     setCsPopupOpen(true);
   };
+
   //팝업닫기 이벤트
   const handleCloseCsPopup = () => {
     setCsPopupOpen(false);
