@@ -19,8 +19,13 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('authToken');
+    //토큰 자동 첨부
     if (token) {
       config.headers.token = token;
+    }
+    // JSON 헤더 쓰면 안 되므로 제거
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
     }
     return config;
   },
