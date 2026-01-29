@@ -12,7 +12,7 @@ export const OrderContext = createContext(null);
 // Provider의 역할: 하위(감싸진) 컴포넌트들에게 value를 공급하여 Context를 공유
 //props.children 프로퍼티를 구조분해 할당(provider에선 props에서 childern 외엔 불필요)
 export default function OrderContextProvider({ children }) {
-  // const { userToken } = useContext(authContext);
+  // const { userToken } = useContext(authContext); //axios 인터셉터에서 토큰 자동 첨부
 
   // const headers = {
   //   token: userToken,
@@ -28,7 +28,7 @@ export default function OrderContextProvider({ children }) {
     });
     return {
       list: res.data.data ?? [],
-      totalPages: res.data.totalPages ?? 0,
+      totalPages: res.data.totalPages ?? 1,
     };
   }
 
@@ -42,7 +42,7 @@ export default function OrderContextProvider({ children }) {
 
     return {
       list: res.data.data ?? [],
-      totalPages: res.data.totalPages ?? 0,
+      totalPages: res.data.totalPages ?? 1,
     };
   }
 
