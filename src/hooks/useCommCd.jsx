@@ -4,17 +4,19 @@ import api from '../api/axios';
 
 //공통코드 조회 훅함수
 // hCd: 조회할 H_CD 값
-export const useCommCd = (hCd) => {
+export const useCommCd = ({ hCd, refCd }) => {
   const [codes, setCodes] = useState([]);
 
   useEffect(() => {
     if (!hCd) return;
 
     const fetchCodes = async () => {
+      const params = { hCd };
+      if (refCd) params.refCd = refCd; //참조 코드는 있는 경우만 추가
       console.log('useCommCd 함수 호출 ' + hCd);
 
       const response = await api.get('/api/commCd/selectCommCd.do', {
-        params: { hCd },
+        params,
         meta: { errorType: 'ALERT' },
       });
 
@@ -29,7 +31,7 @@ export const useCommCd = (hCd) => {
     };
 
     fetchCodes();
-  }, [hCd]);
+  }, [hCd, refCd]);
 
   return { codes };
 };

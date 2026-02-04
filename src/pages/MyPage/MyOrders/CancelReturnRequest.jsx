@@ -48,7 +48,7 @@ export default function CancelReturnRequest() {
   // =====================================================================
   // 취소/반품사유 셀렉트박스 공통코드 조회 훅
   // =====================================================================
-  const { codes: csReasonOption } = useCommCd('CS_REASON');
+  const { codes: csReasonOption } = useCommCd({ hCd: 'CS_REASON' });
 
   // =====================================================================
   // 취소/반품 체크박스

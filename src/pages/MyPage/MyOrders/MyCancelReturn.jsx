@@ -62,7 +62,7 @@ export default function MyCancelReturn() {
   // =====================================================================
   // useCommCd(공통코드 가져오는 함수) 훅을 사용해 주문처리상태 자동 로딩
   // =====================================================================
-  const { codes: csStatusOptions } = useCommCd('CS_STATUS');
+  const { codes: csStatusOptions } = useCommCd({ hCd: 'CS_STATUS' });
 
   // =====================================================================
   // 취소/반품 목록 조회 + 검색 버튼 이벤트
