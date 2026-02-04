@@ -12,7 +12,7 @@ import Cart from './pages/Cart/Cart';
 import CartContextProvider from './context/Cart/Cart';
 import WishlistContextProvider from './context/Wishlist/Wishlist';
 import OrderContextProvider from './context/Order/Order';
-import ReviewContextProvider from './context/Review/review';
+import ReviewContextProvider from './context/Review/Review';
 import { Toaster } from 'react-hot-toast';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
@@ -38,6 +38,8 @@ import MyCancelReturn from './pages/MyPage/MyOrders/MyCancelReturn';
 import MyOrdrerDetail from './pages/MyPage/MyOrders/MyOrderDetail';
 import CancelReturnRequest from './pages/MyPage/MyOrders/CancelReturnRequest';
 import Review from './pages/MyPage/MyOrders/Review';
+import MyInquiryContextProvider from './context/Inquiry/MyInquiry';
+import InquriyWrite from './pages/MyPage/MyInquiries/InquriyWrite';
 
 function App() {
   const queryClient = new QueryClient();
@@ -194,7 +196,7 @@ function App() {
               ),
             },
             {
-              path: 'CancelReturnRequest/:orderNo',
+              path: 'cancelReturnRequest/:orderNo',
               element: (
                 <ProtectedRoute>
                   <CancelReturnRequest />
@@ -202,7 +204,7 @@ function App() {
               ),
             },
             {
-              path: 'Review/:itemOrderNo',
+              path: 'review/:itemOrderNo',
               element: (
                 <ProtectedRoute>
                   <Review />
@@ -226,6 +228,14 @@ function App() {
               ),
             },
             {
+              path: 'inquriyWrite',
+              element: (
+                <ProtectedRoute>
+                  <InquriyWrite />
+                </ProtectedRoute>
+              ),
+            },
+            {
               path: 'myProductQnA',
               element: (
                 <ProtectedRoute>
@@ -245,13 +255,15 @@ function App() {
         <WishlistContextProvider>
           <OrderContextProvider>
             <ReviewContextProvider>
-              <QueryClientProvider client={queryClient}>
-                <ProductsContextProvider>
-                  <Toaster />
-                  {/* <ReactQueryDevtools initialIsOpen={false} /> */}
-                  <RouterProvider router={router} />
-                </ProductsContextProvider>
-              </QueryClientProvider>
+              <MyInquiryContextProvider>
+                <QueryClientProvider client={queryClient}>
+                  <ProductsContextProvider>
+                    <Toaster />
+                    {/* <ReactQueryDevtools initialIsOpen={false} /> */}
+                    <RouterProvider router={router} />
+                  </ProductsContextProvider>
+                </QueryClientProvider>
+              </MyInquiryContextProvider>
             </ReviewContextProvider>
           </OrderContextProvider>
         </WishlistContextProvider>
