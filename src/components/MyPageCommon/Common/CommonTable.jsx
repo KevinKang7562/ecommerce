@@ -1,12 +1,15 @@
 export default function CommonTable({ columns, data }) {
   return (
-    <table className="w-full border-collapse">
+    <table className="w-full border-collapse table-fixed">
       <thead>
         <tr className="bg-gray-100">
           {columns.map((col) => (
             <th
               key={col.key}
-              className="border px-3 py-2 text-sm text-center bg-green-950 text-white rounded"
+              // className="border px-3 py-2 text-sm text-center bg-green-950 text-white rounded"
+              className={`border px-3 py-2 text-sm text-center bg-green-950 text-white 
+                ${col.className ?? ''}`}
+              style={col.width ? { width: col.width } : undefined}
             >
               {col.header}
             </th>
@@ -26,7 +29,11 @@ export default function CommonTable({ columns, data }) {
         {data.map((row, idx) => (
           <tr key={idx}>
             {columns.map((col) => (
-              <td key={col.key} className="border px-3 py-2 text-center">
+              <td
+                key={col.key}
+                // className="border px-3 py-2 text-center"
+                className={`border px-3 py-2 text-center ${col.className ?? ''}`}
+              >
                 {col.render ? col.render(row[col.key], row) : row[col.key]}
               </td>
             ))}
