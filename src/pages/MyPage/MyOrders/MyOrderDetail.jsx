@@ -38,8 +38,8 @@ export default function MyOrderDetail() {
 
   //취소/반품요청 페이지로 이동
   const moveCancelReturnRequest = (cancelReturnType) => {
-    navigate(`/mypage/CancelReturnRequest/${orderNo}`, {
-      // navigate(`/mypage/CancelReturnRequest/${order.orderNo}`, {
+    navigate(`/mypage/cancelReturnRequest/${orderNo}`, {
+      // navigate(`/mypage/cancelReturnRequest/${order.orderNo}`, {
       state: { from: 'orderDetail', cancelReturnType }, //URL로 표현할 필요 없는 부가정보(context)
     });
   };

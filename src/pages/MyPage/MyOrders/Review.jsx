@@ -2,7 +2,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import CommonTable from '../../../components/MyPageCommon/Common/CommonTable';
 import { useContext, useEffect, useState } from 'react';
 import MyButton from '../../../components/MyPageCommon/Common/MyButton';
-import { ReviewContext } from '../../../context/Review/review';
+import { ReviewContext } from '../../../context/Review/Review';
 import { IMAGE_BASE_URL } from '../../../constants/api';
 
 export default function Review() {

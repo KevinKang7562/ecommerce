@@ -26,9 +26,10 @@ export default function OrderContextProvider({ children }) {
     const res = await api.post('/api/order/selectOrderList.do', params, {
       meta: { errorType: 'INLINE' },
     });
+    console.log('결과', res);
     return {
       list: res.data.data ?? [],
-      totalPages: res.data.totalPages ?? 1,
+      totalPages: res.data.totalPages ?? 0,
     };
   }
 
@@ -42,7 +43,7 @@ export default function OrderContextProvider({ children }) {
 
     return {
       list: res.data.data ?? [],
-      totalPages: res.data.totalPages ?? 1,
+      totalPages: res.data.totalPages ?? 0,
     };
   }
 

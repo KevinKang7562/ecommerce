@@ -41,8 +41,8 @@ function MyAllOrders() {
 
   //리뷰 페이지로 이동
   const moveReview = (data, reviewYn) => {
-    navigate(`/mypage/Review/${data.itemOrderNo}`, {
-      // navigate(`/mypage/CancelReturnRequest/${order.orderNo}`, {
+    navigate(`/mypage/review/${data.itemOrderNo}`, {
+      // navigate(`/mypage/cancelReturnRequest/${order.orderNo}`, {
       state: { from: 'ReviewYn', reviewYn }, //URL로 표현할 필요 없는 부가정보(context)
     });
   };
@@ -129,7 +129,7 @@ function MyAllOrders() {
   // =====================================================================
   // useCommCd(공통코드 가져오는 함수) 훅을 사용해 주문처리상태 자동 로딩
   // =====================================================================
-  const { codes: orderStatusOptions } = useCommCd('ORDER_STATUS');
+  const { codes: orderStatusOptions } = useCommCd({ hCd: 'ORDER_STATUS' });
 
   // ==========================================
   // 전체 주문목록 조회 + 검색 버튼 이벤트(context 활용)
