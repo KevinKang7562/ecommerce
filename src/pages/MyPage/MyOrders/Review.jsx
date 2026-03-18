@@ -11,8 +11,12 @@ export default function Review() {
 
   //api 호출은 context 이용
 
-  const { selectOrderItemReview, saveReview, updateReview } =
+  const { selectOrderItemReview, saveReview, updateReview, deleteReview } =
     useContext(ReviewContext);
+
+  const navigate = useNavigate();
+  const location = useLocation(); //현재 url, state 등 위치 정보 조회 훅(렌더링/조건 판단)
+  const reviewYn = location.state?.reviewYn;
 
   //상태
   const [loading, setLoading] = useState(false); //로딩표시
@@ -21,14 +25,16 @@ export default function Review() {
 
   const [orderItemData, setOrderItemData] = useState(null); //주문상세내역
 
-  const navigate = useNavigate();
-  const location = useLocation(); //현재 url, state 등 위치 정보 조회 훅(렌더링/조건 판단)
-  const reviewYn = location.state?.reviewYn;
+  const [rating, setRating] = useState(0); //별점
+  const [reviewContent, setReviewContent] = useState(''); //내용
 
   const [existingImages, setExistingImages] = useState([]); // 이미 등록된 이미지
   const [images, setImages] = useState([]); // 새로 추가한 파일
   const [previews, setPreviews] = useState([]); // 새 파일 미리보기
   const [deletedImages, setDeletedImages] = useState([]); // 서버에 삭제 요청할 이미지 목록
+
+  // [수정] 별점 호버 효과를 위한 상태 추가
+  const [hoverRating, setHoverRating] = useState(0);
 
   // 주문목록으로 이동
   const goToOrderList = () => {
@@ -39,12 +45,18 @@ export default function Review() {
     }
   };
 
-  const [rating, setRating] = useState(0); //별점
-  const [reviewContent, setReviewContent] = useState(''); //내용
-
-  //이미지 등록 핸들러
+  //이미지 등록
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
+
+    // [수정] 파일 타입 검증 추가 (이미지 전용)
+    const invalidFiles = files.filter(
+      (file) => !file.type.startsWith('image/'),
+    );
+    if (invalidFiles.length > 0) {
+      alert('이미지 파일만 등록 가능합니다.');
+      return;
+    }
 
     if (files.length + images.length + existingImages.length > 3) {
       alert('이미지는 최대 3장까지 등록할 수 있습니다.');
@@ -55,29 +67,49 @@ export default function Review() {
 
     setImages((prev) => [...prev, ...files]);
     setPreviews((prev) => [...prev, ...newPreviews]);
+
+    // [수정] 동일 파일 재선택 가능하도록 input 초기화
+    e.target.value = '';
   };
 
-  //기존 이미지 삭제
-  const handleRemoveExistingImage = (url) => {
-    // 화면에서 제거
-    setExistingImages((prev) => prev.filter((img) => img !== url));
+  // //기존 이미지 삭제
+  // const handleRemoveExistingImage = (url) => {
+  //   if (window.confirm('기존 이미지를 삭제하시겠습니까?')) {
+  //     // 화면에서 제거
+  //     setExistingImages((prev) => prev.filter((img) => img !== url));
 
-    // 삭제 대상 목록에 추가
-    setDeletedImages((prev) => [...prev, url]);
+  //     // 삭제 대상 목록에 추가
+  //     setDeletedImages((prev) => [...prev, url]);
+  //   }
+  // };
+
+  // [수정] 기존 이미지 삭제
+  const handleRemoveExistingImage = (img) => {
+    if (window.confirm('기존 이미지를 삭제하시겠습니까?')) {
+      // 1. 화면에서 제거 (imgNo 기준)
+      setExistingImages((prev) =>
+        prev.filter((item) => item.imgNo !== img.imgNo),
+      );
+
+      // 2. 삭제 대상 목록에 객체 추가 (No와 URL 둘 다 필요함)
+      setDeletedImages((prev) => [...prev, img]);
+    }
   };
 
   //새로 추가한 이미지 삭제
   const handleRemoveImage = (index) => {
+    // [수정] URL 객체 메모리 누수 방지
+    URL.revokeObjectURL(previews[index]);
+
     setImages((prev) => prev.filter((_, i) => i !== index));
     setPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   //리뷰 등록
   const handleSubmitReview = async () => {
-    if (!rating || !reviewContent) {
-      alert('별점과 리뷰 내용을 입력해주세요.');
-      return;
-    }
+    if (!rating) return alert('별점을 선택해주세요.');
+    if (reviewContent.trim().length < 10)
+      return alert('리뷰를 10자 이상 작성해주세요.');
 
     const formData = new FormData();
     formData.append('itemOrderNo', orderItemData.itemOrderNo);
@@ -98,7 +130,35 @@ export default function Review() {
     }
   };
 
-  //리뷰 수정
+  // //리뷰 수정
+  // const handleReviewUpdate = async () => {
+  //   const formData = new FormData();
+  //   formData.append('itemOrderNo', orderItemData.itemOrderNo);
+  //   formData.append('prodNo', orderItemData.prodNo);
+  //   formData.append('reviewNo', orderItemData.reviewNo);
+  //   formData.append('rating', rating);
+  //   formData.append('reviewContent', reviewContent);
+
+  //   // 새로 추가한 이미지
+  //   images.forEach((file) => {
+  //     formData.append('images', file);
+  //   });
+
+  //   // 삭제할 기존 이미지
+  //   deletedImages.forEach((url) => {
+  //     formData.append('deletedImages', url);
+  //   });
+
+  //   console.log('리뷰수정', formData);
+
+  //   try {
+  //     await updateReview(formData);
+  //     alert('리뷰가 수정되었습니다.');
+  //     goToOrderList(); //목록이동
+  //   } catch (error) {}
+  // };
+
+  // [수정] 리뷰 수정
   const handleReviewUpdate = async () => {
     const formData = new FormData();
     formData.append('itemOrderNo', orderItemData.itemOrderNo);
@@ -107,27 +167,51 @@ export default function Review() {
     formData.append('rating', rating);
     formData.append('reviewContent', reviewContent);
 
-    // 새로 추가한 이미지
+    // 새로 추가한 파일 이미지
     images.forEach((file) => {
       formData.append('images', file);
     });
 
-    // 삭제할 기존 이미지
-    deletedImages.forEach((url) => {
-      formData.append('deletedImages', url);
+    // [핵심 수정] 삭제할 기존 이미지의 No와 URL을 각각 분리해서 전송
+    deletedImages.forEach((img) => {
+      formData.append('deletedImgNos', img.imgNo); // DB 논리 삭제용 (Integer)
+      formData.append('deletedImgUrls', img.imgUrl); // FTP 물리 삭제용 (String)
     });
-
     console.log('리뷰수정', formData);
-
     try {
       await updateReview(formData);
       alert('리뷰가 수정되었습니다.');
-      goToOrderList(); //목록이동
-    } catch (error) {}
+      goToOrderList();
+    } catch (error) {
+      console.error('수정 실패:', error);
+    }
   };
 
   const handleReviewDelete = async () => {
-    alert('리뷰 삭제 API 아직 미구현');
+    if (
+      !window.confirm(
+        '정말 리뷰를 삭제하시겠습니까? 삭제후에는 복구할 수 없습니다',
+      )
+    ) {
+      return;
+    }
+
+    const params = {
+      reviewNo: orderItemData.reviewNo,
+      itemOrderNo: orderItemData.itemOrderNo,
+    };
+    try {
+      setLoading(true);
+      //삭제 API 호출
+      await deleteReview(params);
+
+      alert('리뷰글이 삭제되었습니다.');
+      goToOrderList(); // 삭제 후 목록으로 이동
+    } catch (error) {
+      console.error('삭제 실패:', error);
+    } finally {
+      setLoading(false);
+    }
   };
   // =====================================================================
   //주문상세 데이터 조회
@@ -169,13 +253,33 @@ export default function Review() {
     setRating(orderItemData.rating ?? 0);
     setReviewContent(orderItemData.reviewContent ?? '');
 
-    //기존 등록된 이미지 세팅
+    // //기존 등록된 이미지 세팅
+    // if (orderItemData.imgUrls) {
+    //   setExistingImages(orderItemData.imgUrls.split(','));
+    //   console.log(existingImages);
+    // [수정] 번호:URL 형태의 문자열을 객체 배열로 파싱
+    console.log('원래 이미지', orderItemData.imgUrls);
     if (orderItemData.imgUrls) {
-      setExistingImages(orderItemData.imgUrls.split(','));
+      const parsedImages = orderItemData.imgUrls.split(',').map((item) => {
+        const [imgNo, imgUrl] = item.split(':'); // ':'를 기준으로 번호와 경로 분리
+        return {
+          imgNo: parseInt(imgNo, 10),
+          imgUrl: imgUrl,
+        };
+      });
+      setExistingImages(parsedImages);
+      console.log('이미지', existingImages);
     } else {
       setExistingImages([]);
     }
   }, [orderItemData]);
+
+  // [추가] 컴포넌트 언마운트 시 미리보기 URL을 메모리에서 해제
+  useEffect(() => {
+    return () => {
+      previews.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [previews]);
 
   // =====================================================================
   //테이블: 주문상품목록 컬럼
@@ -185,21 +289,21 @@ export default function Review() {
     {
       key: 'imgUrl',
       header: '상품이미지',
-      render: (v) => <img src={v} className="w-24 h-24 object-cover-16" />,
+      render: (v) => (
+        <img src={v} className="w-24 h-24 object-cover rounded-lg border" />
+      ),
     },
     {
       key: 'productInfo',
       header: '상품정보',
       render: (_, row) => (
         <div className="text-start flex flex-col gap-1 min-w-[200px]">
-          <div className="text-sm text-gray-600">
-            상품주문번호 : {row.itemOrderNo}
+          <div className="text-xs text-gray-400">
+            상품주문번호: {row.itemOrderNo}
           </div>
-          <div className="font-medium">{row.prodNm}</div>
-          <div className="text-sm text-gray-600">
-            수량/옵션 : {row.optionInfo}
-          </div>
-          <div className="text-sm font-semibold">
+          <div className="font-bold text-gray-800">{row.prodNm}</div>
+          <div className="text-sm text-gray-500">{row.optionInfo}</div>
+          <div className="text-sm font-bold text-blue-600">
             {/* 상품별 총금액 ()(구매단가-할인금액+옵션추가금)*수량)*/}
             {row.csAppliedAmt?.toLocaleString()}원
           </div>
@@ -211,15 +315,25 @@ export default function Review() {
   // =====================================================================
   //조건부 랜더링(데이터 조회 전 orderItemData 구조분해 실행으로 인한 에러발생 방지하기 위해 초기 랜더링 시 구조분해 전에 return으로 함수 조기 종료)
   // =====================================================================
-  if (loading) {
-    return <div className="py-20 text-center">로딩중...</div>;
+  // [수정] 로딩 및 에러 처리 UX 개선
+  if (loading && !orderItemData) {
+    return (
+      <div className="w-full py-20 text-center">
+        <div className="animate-spin inline-block w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full mb-4"></div>
+        <p className="text-gray-500">리뷰 정보를 가져오는 중...</p>
+      </div>
+    );
   }
-  if (error) {
-    return <div className="py-20 text-center text-red-500">{errorMessage}</div>;
+  if (error && !orderItemData) {
+    return (
+      <div className="w-full py-20 text-center text-red-500">
+        <p className="mb-4 font-bold">{errorMessage}</p>
+        <MyButton onClick={() => navigate(-1)}>뒤로가기</MyButton>
+      </div>
+    );
   }
-  if (!orderItemData) {
-    return <div className="py-20 text-center">주문 정보 없음</div>;
-  }
+
+  if (!orderItemData) return null;
 
   return (
     <div className="w-full  ">
@@ -231,112 +345,142 @@ export default function Review() {
         {/* 주문정보 */}
 
         <div className="w-full lg:w-2/5">
-          <CommonTable columns={orderProductColumns} data={[orderItemData]} />
+          <div className="sticky top-10">
+            <h2 className="text-lg font-bold mb-4">주문 상품 정보</h2>
+            <CommonTable columns={orderProductColumns} data={[orderItemData]} />
+          </div>
         </div>
         <div className="w-full lg:w-3/5">
-          <div className="flex-1 border rounded-lg p-6 bg-white">
-            {/* 별점 */}
-            <div className="mb-6">
-              <div className="font-semibold text-red-600 mb-2">별점</div>
-              <div className="flex gap-1 text-2xl cursor-pointer">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <span
-                    key={star}
-                    onClick={() => setRating(star)}
-                    className={
-                      star <= rating ? 'text-red-500' : 'text-gray-300'
-                    }
-                  >
-                    ★
-                  </span>
-                ))}
-                <span className="ml-2 text-sm text-gray-600">{rating}</span>
+          <div className="border rounded-2xl p-8 bg-white shadow-sm">
+            {/* 별점 - 호버 애니메이션 추가 */}
+            <div className="mb-8">
+              <div className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                <span className="w-1 h-4 bg-red-500 rounded-full"></span>
+                상품은 어떠셨나요?
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex text-3xl">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onMouseEnter={() => setHoverRating(star)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      onClick={() => setRating(star)}
+                      className={`transition-transform hover:scale-125 ${
+                        star <= (hoverRating || rating)
+                          ? 'text-yellow-400'
+                          : 'text-gray-200'
+                      }`}
+                    >
+                      ★
+                    </button>
+                  ))}
+                </div>
+                <span className="text-lg font-bold text-gray-400 ml-2">
+                  {rating > 0 ? `${rating}점` : '선택해주세요'}
+                </span>
               </div>
             </div>
 
             {/* 리뷰 내용 */}
-            <div className="mb-6">
-              <div className="font-semibold text-red-600 mb-2">리뷰 내용</div>
-              <textarea
-                className="w-full h-40 border rounded-md p-3 resize-none focus:outline-none focus:ring-1 focus:ring-red-400"
-                placeholder="리뷰를 작성해 주세요!"
-                value={reviewContent}
-                onChange={(e) => setReviewContent(e.target.value)}
-              />
+            <div className="mb-8">
+              <div className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                <span className="w-1 h-4 bg-red-500 rounded-full"></span>
+                상세 리뷰
+              </div>
+              <div className="relative">
+                <textarea
+                  className="w-full h-48 border border-gray-200 rounded-xl p-4 resize-none focus:ring-2 focus:ring-red-100 focus:border-red-400 transition-all outline-none text-gray-700"
+                  placeholder="다른 구매자들에게 도움이 되도록 솔직한 평을 남겨주세요! (10자 이상)"
+                  value={reviewContent}
+                  onChange={(e) => setReviewContent(e.target.value)}
+                />
+                <div className="absolute bottom-3 right-4 text-xs text-gray-400">
+                  {reviewContent.length} / 500
+                </div>
+              </div>
             </div>
 
             {/* 이미지 업로드 */}
-            <div className="mb-6">
-              <div className="font-semibold text-red-600 mb-2">
-                이미지 첨부 (최대 3장)
+            {/* 이미지 첨부 */}
+            <div className="mb-8">
+              <div className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                <span className="w-1 h-4 bg-red-500 rounded-full"></span>
+                이미지 첨부
               </div>
 
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleImageChange}
-                className="mb-3"
-              />
+              <div className="flex gap-4 items-start">
+                {/* 커스텀 업로드 버튼 */}
+                <label className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors">
+                  <span className="text-2xl text-gray-400">+</span>
+                  <span className="text-xs text-gray-400">사진 추가</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                </label>
 
-              {/* 이미지 미리보기 영역 */}
-              <div className="mb-6">
-                {/* 기존 리뷰 이미지 */}
-                {existingImages.length > 0 && (
-                  <div className="mb-4">
-                    <div className="font-semibold text-red-600 mb-2">
-                      등록된 이미지
-                    </div>
-                    <div className="flex gap-3 flex-wrap">
-                      {existingImages.map((url, index) => (
-                        <div key={index} className="relative">
-                          <img
-                            src={`${IMAGE_BASE_URL}${url}`}
-                            className="w-24 h-24 object-cover rounded"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveExistingImage(url)}
-                            className="absolute top-0 right-0 bg-black bg-opacity-60 text-white text-xs px-1 rounded"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      ))}
-                    </div>
+                {/* 등록된 이미지 (기존) */}
+                {/* {existingImages.map((url, index) => (
+                  <div key={`exist-${index}`} className="relative group">
+                    <img
+                      src={`${IMAGE_BASE_URL}${url}`}
+                      className="w-24 h-24 object-cover rounded-xl border"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveExistingImage(url)}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center shadow-lg"
+                    >
+                      ✕
+                    </button>
                   </div>
-                )}
+                ))} */}
+                {/* 기존 리뷰 이미지 렌더링 */}
+                {existingImages.map((img) => (
+                  <div key={img.imgNo} className="relative group">
+                    <img
+                      src={`${IMAGE_BASE_URL}${img.imgUrl}`} // [수정] 객체의 imgUrl 사용
+                      className="w-24 h-24 object-cover rounded-xl border"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveExistingImage(img)} // [수정] 객체 전체 전달
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center shadow-lg"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
 
-                {/* 새로 추가한 이미지 미리보기 */}
-                {previews.length > 0 && (
-                  <div>
-                    <div className="font-semibold text-red-600 mb-2">
-                      추가 이미지
-                    </div>
-                    <div className="flex gap-3 flex-wrap">
-                      {previews.map((src, index) => (
-                        <div key={index} className="relative">
-                          <img
-                            src={src}
-                            alt={`preview-${index}`}
-                            className="w-24 h-24 object-cover rounded"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveImage(index)}
-                            className="absolute top-0 right-0 bg-black bg-opacity-60 text-white text-xs px-1 rounded"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      ))}
-                    </div>
+                {/* 추가된 이미지 (새로) */}
+                {previews.map((src, index) => (
+                  <div key={`new-${index}`} className="relative group">
+                    <img
+                      src={src}
+                      className="w-24 h-24 object-cover rounded-xl border border-blue-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage(index)}
+                      className="absolute -top-2 -right-2 bg-gray-800 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center shadow-lg"
+                    >
+                      ✕
+                    </button>
                   </div>
-                )}
+                ))}
               </div>
+              <p className="text-xs text-gray-400 mt-3">
+                * 최대 3장까지 등록 가능합니다.
+              </p>
             </div>
 
-            <div className="flex justify-center gap-10 mt-20">
+            {/* 버튼 영역 */}
+            <div className="flex justify-center gap-4 mt-12">
               {reviewYn === 'Y' ? (
                 <>
                   <MyButton onClick={handleReviewUpdate}>리뷰 수정</MyButton>

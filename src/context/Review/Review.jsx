@@ -91,12 +91,24 @@ export default function ReviewContextProvider({ children }) {
     return res.data;
   }
 
+  // =====================================================================
+  // 리뷰 삭제
+  // =====================================================================
+  async function deleteReview(params) {
+    const res = await api.post('/api/review/deleteReview.do', params, {
+      meta: { errorType: 'ALERT' },
+    });
+
+    return res.data;
+  }
+
   return (
     <ReviewContext.Provider
       value={{
         selectOrderItemReview,
         saveReview,
         updateReview,
+        deleteReview,
       }}
     >
       {children}
