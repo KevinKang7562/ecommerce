@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 export default function MyPageLayout() {
   const location = useLocation();
   const currentMenu = myPageMenus.find(
-    (menu) => menu.path === location.pathname
+    (menu) => menu.path === location.pathname,
   );
   const title = currentMenu ? currentMenu.label : '';
   const [isOpen, setIsOpen] = useState(false);
