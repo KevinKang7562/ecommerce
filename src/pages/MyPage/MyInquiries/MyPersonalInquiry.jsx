@@ -20,12 +20,12 @@ export default function MyPersonalInquiry() {
   // const movePersonal;
 
   const itemsPerPage = 5; //페이지당 보일 항목 수
-
+  const inquiryType = 'IT002';
   const navigate = useNavigate();
 
   //1:1문의하기 이동
   const moveMyInquiryForm = () => {
-    navigate(`/mypage/inquriyWrite`, {
+    navigate(`/mypage/inquiryWrite`, {
       state: {
         from: 'myInquiryList',
         mode: 'CREATE',
@@ -34,8 +34,9 @@ export default function MyPersonalInquiry() {
   };
 
   //문의 내용 상세보기 이동
-  const moveMyInquiryDetail = (row) => {
-    navigate(`/mypage/myInquiryDetail/${row.inquiryNo}`);
+  const moveMyInquiryDetail = (inquiryNo) => {
+    console.log(inquiryNo);
+    navigate(`/mypage/myInquiryDetail/${inquiryNo}`);
   };
 
   const myInquirycolumns = [
@@ -57,20 +58,22 @@ export default function MyPersonalInquiry() {
     {
       key: 'inquiryTitle',
       header: '제목',
-      render: (value, row) => (
-        <span
-          className="text-blue-600 cursor-pointer hover:underline"
-          onClick={() => moveMyInquiryDetail(row.inquiryNo)}
-        >
-          {value}
-        </span>
-      ),
+      render: (value, row) => {
+        return (
+          <span
+            className="text-blue-600 cursor-pointer hover:underline"
+            onClick={() => moveMyInquiryDetail(row.inquiryNo)}
+          >
+            {value}
+          </span>
+        );
+      },
     },
-    {
-      key: 'inquiryUserNm',
-      header: '작성자',
-      width: '150px',
-    },
+    // {
+    //   key: 'inquiryUserNm',
+    //   header: '작성자',
+    //   width: '150px',
+    // },
     {
       key: 'inquiryDate',
       header: '작성일',
@@ -86,6 +89,7 @@ export default function MyPersonalInquiry() {
 
     try {
       const { list, totalPages } = await selectMyInquiryList({
+        inquiryType: inquiryType,
         currentPage: currentPage,
         pageSize: itemsPerPage,
       });

@@ -39,7 +39,8 @@ import MyOrdrerDetail from './pages/MyPage/MyOrders/MyOrderDetail';
 import CancelReturnRequest from './pages/MyPage/MyOrders/CancelReturnRequest';
 import Review from './pages/MyPage/MyOrders/Review';
 import MyInquiryContextProvider from './context/Inquiry/MyInquiry';
-import InquriyWrite from './pages/MyPage/MyInquiries/InquriyWrite';
+import InquiryWrite from './pages/MyPage/MyInquiries/InquiryWrite';
+import MyInquiryDetail from './pages/MyPage/MyInquiries/MyInquiryDetail';
 
 function App() {
   const queryClient = new QueryClient();
@@ -228,10 +229,18 @@ function App() {
               ),
             },
             {
-              path: 'inquriyWrite',
+              path: 'inquiryWrite/:inquiryNo?',
               element: (
                 <ProtectedRoute>
-                  <InquriyWrite />
+                  <InquiryWrite />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: 'myInquiryDetail/:inquiryNo',
+              element: (
+                <ProtectedRoute>
+                  <MyInquiryDetail />
                 </ProtectedRoute>
               ),
             },
