@@ -45,10 +45,6 @@ export default function MyProductQnA() {
         <div className="text-start flex flex-col gap-1 min-w-[200px]">
           <div className="text-sm text-gray-600">상품번호 : {row.prodNo}</div>
           <div className="font-medium">{row.prodNm}</div>
-          <div className="text-sm text-gray-600">옵션 : {row.optionInfo}</div>
-          {/* <div className="text-sm font-semibold">
-            {row.csAppliedAmt?.toLocaleString()}원
-          </div> */}
         </div>
       ),
     },
