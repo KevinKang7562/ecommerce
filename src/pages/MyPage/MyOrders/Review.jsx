@@ -274,12 +274,69 @@ export default function Review() {
     }
   }, [orderItemData]);
 
-  // [추가] 컴포넌트 언마운트 시 미리보기 URL을 메모리에서 해제
+  // [추가] 이미지 확대 팝업 상태
+  const [selectedImage, setSelectedImage] = useState(null); // 선택된 이미지
+  const [imageIndex, setImageIndex] = useState(0); // 현재 보는 이미지 인덱스
+  const [allImages, setAllImages] = useState([]); // 모든 이미지 배열 (기존 + 새로)
+
+  // [추가] 모든 이미지 배열 업데이트 (기존 이미지 + 새 이미지)
   useEffect(() => {
-    return () => {
-      previews.forEach((url) => URL.revokeObjectURL(url));
+    const combined = [
+      ...existingImages.map((img) => ({
+        type: 'existing',
+        imgNo: img.imgNo,
+        src: `${IMAGE_BASE_URL}${img.imgUrl}`,
+      })),
+      ...previews.map((preview) => ({
+        type: 'new',
+        src: preview,
+      })),
+    ];
+    setAllImages(combined);
+  }, [existingImages, previews]);
+
+  // [추가] 이미지 팝업 열기
+  const openImageModal = (index) => {
+    setImageIndex(index);
+    setSelectedImage(allImages[index]);
+  };
+
+  // [추가] 이미지 팝업 닫기
+  const closeImageModal = () => {
+    setSelectedImage(null);
+  };
+
+  // [추가] 다음 이미지
+  const nextImage = () => {
+    if (imageIndex < allImages.length - 1) {
+      const nextIdx = imageIndex + 1;
+      setImageIndex(nextIdx);
+      setSelectedImage(allImages[nextIdx]);
+    }
+  };
+
+  // [추가] 이전 이미지
+  const prevImage = () => {
+    if (imageIndex > 0) {
+      const prevIdx = imageIndex - 1;
+      setImageIndex(prevIdx);
+      setSelectedImage(allImages[prevIdx]);
+    }
+  };
+
+  // [추가] 키보드 네비게이션
+  useEffect(() => {
+    if (!selectedImage) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowRight') nextImage();
+      if (e.key === 'ArrowLeft') prevImage();
+      if (e.key === 'Escape') closeImageModal();
     };
-  }, [previews]);
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [imageIndex, allImages]);
 
   // =====================================================================
   //테이블: 주문상품목록 컬럼
@@ -336,7 +393,72 @@ export default function Review() {
   if (!orderItemData) return null;
 
   return (
-    <div className="w-full  ">
+    <div className="w-full">
+      {/* [추가] 이미지 확대 모달 팝업 */}
+      {selectedImage && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4"
+          onClick={closeImageModal}
+        >
+          {/* 모달 내용 */}
+          <div
+            className="bg-white rounded-2xl shadow-2xl max-w-4xl max-h-[90vh] overflow-auto relative animate-in fade-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 닫기 버튼 */}
+            <button
+              onClick={closeImageModal}
+              className="absolute top-4 right-4 bg-red-500 text-white rounded-full w-10 h-10 flex items-center justify-center hover:bg-red-600 transition-colors z-10 shadow-lg"
+              title="Close (ESC)"
+            >
+              ✕
+            </button>
+
+            {/* 이미지 영역 */}
+            <div className="flex items-center justify-center bg-gray-100 p-4 min-h-[400px]">
+              <img
+                src={selectedImage.src}
+                alt={`Enlarged view ${imageIndex + 1}`}
+                className="max-w-full max-h-[70vh] object-contain rounded-lg"
+              />
+            </div>
+
+            {/* 네비게이션 및 정보 영역 */}
+            <div className="p-6 bg-white border-t">
+              {/* 이미지 정보 */}
+              <div className="text-center mb-4 text-gray-600 text-sm">
+                {imageIndex + 1} / {allImages.length}
+              </div>
+
+              {/* 네비게이션 버튼 */}
+              <div className="flex justify-center gap-4">
+                <button
+                  onClick={prevImage}
+                  disabled={imageIndex === 0}
+                  className="px-6 py-2 bg-gray-300 hover:bg-gray-400 disabled:bg-gray-200 disabled:cursor-not-allowed text-gray-800 rounded-lg font-semibold transition-colors"
+                >
+                  ← 이전
+                </button>
+
+                <button
+                  onClick={nextImage}
+                  disabled={imageIndex === allImages.length - 1}
+                  className="px-6 py-2 bg-gray-300 hover:bg-gray-400 disabled:bg-gray-200 disabled:cursor-not-allowed text-gray-800 rounded-lg font-semibold transition-colors"
+                >
+                  다음 →
+                </button>
+              </div>
+
+              {/* 키보드 단축키 안내 */}
+              <p className="text-center text-xs text-gray-400 mt-4 flex justify-center gap-4">
+                <span>← → 키로 네비게이션</span>
+                <span>ESC로 닫기</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <h1 className="text-2xl sm:text-3xl font-bold mb-8 border-b pb-5">
         {reviewYn === 'Y' ? '리뷰보기' : '리뷰쓰기'}
       </h1>
@@ -441,15 +563,25 @@ export default function Review() {
                   </div>
                 ))} */}
                 {/* 기존 리뷰 이미지 렌더링 */}
-                {existingImages.map((img) => (
-                  <div key={img.imgNo} className="relative group">
+                {existingImages.map((img, idx) => (
+                  <div
+                    key={img.imgNo}
+                    className="relative group cursor-pointer"
+                    onClick={() => openImageModal(idx)}
+                  >
                     <img
-                      src={`${IMAGE_BASE_URL}${img.imgUrl}`} // [수정] 객체의 imgUrl 사용
-                      className="w-24 h-24 object-cover rounded-xl border"
+                      src={`${IMAGE_BASE_URL}${img.imgUrl}`}
+                      className="w-24 h-24 object-cover rounded-xl border hover:opacity-75 transition-opacity"
                     />
+                    <div className="absolute inset-0 rounded-xl bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+                      <span className="text-white text-2xl">🔍</span>
+                    </div>
                     <button
                       type="button"
-                      onClick={() => handleRemoveExistingImage(img)} // [수정] 객체 전체 전달
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveExistingImage(img);
+                      }}
                       className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center shadow-lg"
                     >
                       ✕
@@ -459,14 +591,26 @@ export default function Review() {
 
                 {/* 추가된 이미지 (새로) */}
                 {previews.map((src, index) => (
-                  <div key={`new-${index}`} className="relative group">
+                  <div
+                    key={`new-${index}`}
+                    className="relative group cursor-pointer"
+                    onClick={() =>
+                      openImageModal(existingImages.length + index)
+                    }
+                  >
                     <img
                       src={src}
-                      className="w-24 h-24 object-cover rounded-xl border border-blue-200"
+                      className="w-24 h-24 object-cover rounded-xl border border-blue-200 hover:opacity-75 transition-opacity"
                     />
+                    <div className="absolute inset-0 rounded-xl bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+                      <span className="text-white text-2xl">🔍</span>
+                    </div>
                     <button
                       type="button"
-                      onClick={() => handleRemoveImage(index)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveImage(index);
+                      }}
                       className="absolute -top-2 -right-2 bg-gray-800 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center shadow-lg"
                     >
                       ✕
