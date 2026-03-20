@@ -1,0 +1,306 @@
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import './App.css';
+import MainLayout from './pages/MainLayout/MainLayout';
+import Login from './pages/Login/Login';
+import Register from './pages/Register/Register';
+import NotFound from './pages/NotFound/NotFound';
+import AuthContextProvider from './context/Auth/Auth';
+import Home from './pages/Home/Home';
+import ProtectedRoute from './pages/ProtectedRoute/ProtectedRoute';
+import ProductDetails from './pages/ProductDetails/ProductDetails';
+import Cart from './pages/Cart/Cart';
+import CartContextProvider from './context/Cart/Cart';
+import WishlistContextProvider from './context/Wishlist/Wishlist';
+import OrderContextProvider from './context/Order/Order';
+import ReviewContextProvider from './context/Review/Review';
+import { Toaster } from 'react-hot-toast';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import ForgotPassword from './pages/ForgotPassword/ForgotPassword';
+import ResetPassword from './pages/ResetPassword/ResetPassword';
+import VerifyCode from './pages/VerifyCode/VerifyCode';
+import Checkout from './pages/Checkout/Checkout';
+import Wishlist from './pages/Wishlist/Wishlist';
+import Brands from './pages/Brands/Brands';
+import Categories from './pages/Categories/Categories';
+import Event from './pages/Board/Event';
+import EventDetail from './pages/Board/EventDetail';
+import ProductsContextProvider from './context/Products/Products';
+import Search from './pages/Search/Search';
+import RedirectIfAuthenticated from './components/RedirectIfAuthenticated/RedirectIfAuthenticated';
+import Board from './pages/Board/Board';
+import BoardDetail from './pages/Board/BoardDetail';
+import MyPageLayout from './pages/MyPage/MyPageLayout';
+import MyProfileEdit from './pages/MyPage/MyProfileEdit';
+import MyPersonalInquiry from './pages/MyPage/MyInquiries/MyPersonalInquiry';
+import MyProductQnA from './pages/MyPage/MyInquiries/MyProductQnA';
+import MyAllOrders from './pages/MyPage/MyOrders/MyAllOrders';
+import MyCancelReturn from './pages/MyPage/MyOrders/MyCancelReturn';
+import MyOrdrerDetail from './pages/MyPage/MyOrders/MyOrderDetail';
+import CancelReturnRequest from './pages/MyPage/MyOrders/CancelReturnRequest';
+import Review from './pages/MyPage/MyOrders/Review';
+import MyInquiryContextProvider from './context/Inquiry/MyInquiry';
+import InquiryWrite from './pages/MyPage/MyInquiries/InquiryWrite';
+import MyInquiryDetail from './pages/MyPage/MyInquiries/MyInquiryDetail';
+
+function App() {
+  const queryClient = new QueryClient();
+
+  const router = createBrowserRouter([
+    {
+      path: '',
+      element: <MainLayout />,
+      children: [
+        {
+          index: true,
+          element: (
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: 'login',
+          element: (
+            <RedirectIfAuthenticated>
+              <Login />
+            </RedirectIfAuthenticated>
+          ),
+        },
+        {
+          path: 'register',
+          element: (
+            <RedirectIfAuthenticated>
+              <Register />
+            </RedirectIfAuthenticated>
+          ),
+        },
+        {
+          path: 'forgotPassword',
+          element: (
+            <RedirectIfAuthenticated>
+              <ForgotPassword />
+            </RedirectIfAuthenticated>
+          ),
+        },
+        {
+          path: 'forgotPassword/verifyCode',
+          element: (
+            <RedirectIfAuthenticated>
+              <VerifyCode />
+            </RedirectIfAuthenticated>
+          ),
+        },
+        {
+          path: 'forgotPassword/verifyCode/resetPassword',
+          element: (
+            <RedirectIfAuthenticated>
+              <ResetPassword />
+            </RedirectIfAuthenticated>
+          ),
+        },
+        {
+          path: 'product/:id',
+          element: (
+            <ProtectedRoute>
+              <ProductDetails />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: '/checkout/:id',
+          element: (
+            <ProtectedRoute>
+              <Checkout />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: 'cart',
+          element: (
+            <ProtectedRoute>
+              <Cart />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: 'wishlist',
+          element: (
+            <ProtectedRoute>
+              <Wishlist />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: 'brands',
+          element: (
+            <ProtectedRoute>
+              <Brands />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: 'categories',
+          element: (
+            <ProtectedRoute>
+              <Categories />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: 'event',
+          element: (
+            <ProtectedRoute>
+              <Event />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: 'eventdetail/:boardNo',
+          element: (
+            <ProtectedRoute>
+              <EventDetail />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: 'search',
+          element: (
+            <ProtectedRoute>
+              <Search />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: 'board',
+          element: (
+            <ProtectedRoute>
+              <Board />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: 'boarddetail/:boardNo',
+          element: (
+            <ProtectedRoute>
+              <BoardDetail />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: 'mypage',
+          element: (
+            <ProtectedRoute>
+              <MyPageLayout />
+            </ProtectedRoute>
+          ),
+          children: [
+            {
+              index: true,
+              element: (
+                <ProtectedRoute>
+                  <MyProfileEdit />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: 'myAllOrders',
+              element: (
+                <ProtectedRoute>
+                  <MyAllOrders />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: 'myOrderDetail/:orderNo',
+              element: (
+                <ProtectedRoute>
+                  <MyOrdrerDetail />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: 'cancelReturnRequest/:orderNo',
+              element: (
+                <ProtectedRoute>
+                  <CancelReturnRequest />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: 'review/:itemOrderNo',
+              element: (
+                <ProtectedRoute>
+                  <Review />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: 'myCancelReturn',
+              element: (
+                <ProtectedRoute>
+                  <MyCancelReturn />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: 'myPersonalInquiry',
+              element: (
+                <ProtectedRoute>
+                  <MyPersonalInquiry />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: 'inquiryWrite/:inquiryNo?',
+              element: (
+                <ProtectedRoute>
+                  <InquiryWrite />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: 'myInquiryDetail/:inquiryNo',
+              element: (
+                <ProtectedRoute>
+                  <MyInquiryDetail />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: 'myProductQnA',
+              element: (
+                <ProtectedRoute>
+                  <MyProductQnA />
+                </ProtectedRoute>
+              ),
+            },
+          ],
+        },
+        { path: '*', element: <NotFound /> },
+      ],
+    },
+  ]);
+
+  return (
+    <AuthContextProvider>
+      <CartContextProvider>
+        <WishlistContextProvider>
+          <OrderContextProvider>
+            <ReviewContextProvider>
+              <MyInquiryContextProvider>
+                <QueryClientProvider client={queryClient}>
+                  <ProductsContextProvider>
+                    <Toaster />
+                    <RouterProvider router={router} />
+                  </ProductsContextProvider>
+                </QueryClientProvider>
+              </MyInquiryContextProvider>
+            </ReviewContextProvider>
+          </OrderContextProvider>
+        </WishlistContextProvider>
+      </CartContextProvider>
+    </AuthContextProvider>
+  );
+}
+
+export default App;

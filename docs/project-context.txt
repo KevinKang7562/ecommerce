@@ -1,0 +1,152 @@
+# ZIN Project Context
+
+## 1. 개발 환경
+
+- 프론트엔드: React + Vite
+- 프론트 경로: `C:\dev\react\ecommerce`
+- 백엔드: eGovFrame 3.8
+- 백엔드 경로: `C:\dev\eGovFrameDev-3.8.0-64bit\workspace\zin_api`
+- DB: Oracle
+
+## 2. 프론트 API 설정
+
+- API Base URL: `http://localhost:7080/zin_api`
+- 인증 API Prefix: `/api/user/auth`
+- 쇼핑 API Prefix: `/api/shopping`
+
+관련 파일:
+- `src/config/api.js`
+- `.env.development`
+
+## 3. 현재 프로젝트 상태 요약
+
+이 프로젝트는 쇼핑몰 전체 구조를 목표로 설계되어 있다.
+
+- 회원가입/로그인/로그아웃/비밀번호 재설정은 ZIN 백엔드 연동이 진행되어 있음
+- 카테고리 일부는 ZIN API 전환 시도 흔적이 있음
+- 상품 목록, 상품 상세, 장바구니, 위시리스트, 브랜드, 체크아웃은 아직 외부 샘플 API 의존 코드가 남아 있음
+
+즉, 인증은 로컬 백엔드 기준으로 움직이고 있고, 쇼핑 도메인은 아직 완전 전환 전 상태로 보는 것이 맞다.
+
+## 4. DB 핵심 테이블
+
+원본 스키마 파일:
+- `docs/db-schema.md.sql`
+
+주요 테이블 분류:
+
+### 회원/인증
+- `USERS`
+- `LOGIN_HISTORY`
+- `USER_PWD_RESET`
+
+### 상품/카테고리
+- `PRODUCTS_MST`
+- `PRODUCT_OPTION`
+- `PRODUCT_IMG`
+- `T_CATEGORIES`
+
+### 장바구니/주문/결제/배송
+- `CART`
+- `ORDERS_MST`
+- `ORDER_ITEM`
+- `PAYMENT`
+- `DELIVERY_MST`
+- `ORDER_HISTORY`
+
+### 리뷰/문의/게시판
+- `REVIEW`
+- `REVIEW_IMG`
+- `QNA`
+- `INQUIRY`
+- `INQUIRY_ANSWER`
+- `BOARD`
+- `BOARD_IMG`
+
+### 공통코드/CS
+- `COMM_H_CD`
+- `COMM_D_CD`
+- `CS_MST`
+
+## 5. 주요 테이블 메모
+
+### USERS
+- 회원 기본 정보 저장
+- 주요 컬럼: `USER_NO`, `USER_NM`, `USER_ID`, `PASSWORD`, `PHONE`, `EMAIL`, `ADDRESS`, `USER_TYPE`
+
+### PRODUCTS_MST
+- 상품 마스터
+- 주요 컬럼: `PROD_NO`, `PROD_NM`, `SHORT_DESC`, `DETAIL_DESC`, `PRICE`, `DISCOUNT_PRICE`, `SALE_STATE`, `LAGE_CD`, `MID_CD`, `DET_CD`, `STOCK_QTY`
+
+### PRODUCT_OPTION
+- 상품 옵션
+- 주요 컬럼: `OPTION_NO`, `PROD_NO`, `OPTION_NM`, `OPTION_VALUE`, `ADD_PRICE`, `STOCK_QTY`
+
+### PRODUCT_IMG
+- 상품 이미지
+- 주요 컬럼: `PROD_IMG_NO`, `PROD_NO`, `IMG_URL`, `MAIN_YN`, `SORT_IDX`
+
+### T_CATEGORIES
+- 카테고리 관리
+- 주요 컬럼: `ID`, `NAME`, `SLUG`, `IMAGE`
+
+### CART
+- 장바구니
+- 주요 컬럼: `CART_NO`, `USER_NO`, `PROD_NO`, `OPTION_NO`, `QUANTITY`
+- `USER_NO + PROD_NO + OPTION_NO` 기준 유니크 인덱스 존재
+
+### ORDERS_MST
+- 주문 마스터
+- 주요 컬럼: `ORDER_NO`, `USER_NO`, `ORDER_DATE`, `ORDER_STATUS_SUM`, `TOTAL_AMT`, `PAY_METHOD`, `PAY_STATUS_SUM`, `RECIPIENT_NM`, `ADDRESS`
+
+### ORDER_ITEM
+- 주문 상품 상세
+- 주요 컬럼: `ITEM_ORDER_NO`, `ORDER_NO`, `PROD_NO`, `OPTION_NO`, `QUANTITY`, `PRICE`, `DISCOUNT_PRICE`, `TOTAL_PRICE`, `ORDER_STATUS`
+
+### PAYMENT
+- 결제 정보
+- 주요 컬럼: `PAY_NO`, `ORDER_NO`, `PAY_AMT`, `PAY_METHOD`, `PAY_STATUS`, `PAY_DATE`
+
+## 6. 공통 규칙
+
+- Oracle 문법 기준으로 SQL 작성
+- 소프트 삭제 컬럼 `DELETE_YN` 존재 여부 확인 후 기본 조회 조건에 반영
+- 등록/수정 컬럼 `I_DATE`, `I_USER`, `U_DATE`, `U_USER` 패턴 자주 사용
+- 상태값, 유형값은 `COMM_H_CD`, `COMM_D_CD` 공통코드 테이블 기준으로 보는 것이 우선
+
+## 7. 프론트 연동 상태
+
+### ZIN 백엔드 사용 중인 영역
+- 로그인: `src/pages/Login/Login.jsx`
+- 회원가입: `src/pages/Register/Register.jsx`
+- 로그인 세션 확인: `src/context/Auth/Auth.jsx`
+- 로그아웃: `src/components/Navbar/Navbar.jsx`
+- 비밀번호 찾기/검증/변경:
+  - `src/pages/ForgotPassword/ForgotPassword.jsx`
+  - `src/pages/VerifyCode/VerifyCode.jsx`
+  - `src/pages/ResetPassword/ResetPassword.jsx`
+
+### 아직 외부 샘플 API 사용 중인 영역
+- 상품 목록: `src/context/Products/Products.jsx`
+- 상품 상세: `src/pages/ProductDetails/ProductDetails.jsx`
+- 장바구니: `src/context/Cart/Cart.jsx`
+- 위시리스트: `src/context/Wishlist/Wishlist.jsx`
+- 브랜드: `src/pages/Brands/Brands.jsx`
+- 카테고리 슬라이더: `src/components/CategorySlider/CategorySlider.jsx`
+- 체크아웃: `src/pages/Checkout/Checkout.jsx`
+
+### 부분 전환된 영역
+- 카테고리 페이지: `src/pages/Categories/Categories.jsx`
+- `selectCategories.do` 호출 코드가 있으나, 화면 필드 구조는 외부 API 흔적이 일부 남아 있음
+
+## 8. 작업 우선순위 제안
+
+1. 상품 목록/상품 상세를 ZIN 백엔드 기준으로 전환
+2. 장바구니를 `CART` 테이블 기준 API로 전환
+3. 주문/결제/배송을 `ORDERS_MST`, `ORDER_ITEM`, `PAYMENT`, `DELIVERY_MST` 기준으로 연결
+4. 프론트 데이터 모델에서 외부 API 필드명 의존 제거
+
+## 9. 참고
+
+- 현재 루트 `README.md`는 일반 프론트 프로젝트 소개 성격이 강함
+- 실제 작업 기준 문서는 이 파일과 `docs/db-schema.md.sql`을 함께 보는 것이 좋음
