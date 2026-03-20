@@ -1,76 +1,105 @@
-import axios from 'axios';
 import { createContext, useContext } from 'react';
 import { toast } from 'react-hot-toast';
 import { authContext } from '../Auth/Auth';
 
 export const wishlistContext = createContext(null);
 
-export default function WishlistContextProvider(props) {
-  const { userToken } = useContext(authContext);
+const STORAGE_KEY = 'wishlistItems';
 
-  const headers = {
-    token: userToken,
+function readWishlist() {
+  try {
+    const storedValue = localStorage.getItem(STORAGE_KEY);
+    const parsedValue = storedValue ? JSON.parse(storedValue) : [];
+
+    return Array.isArray(parsedValue) ? parsedValue : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeWishlist(items) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+}
+
+function normalizeWishlistItem(productOrId) {
+  if (typeof productOrId === 'object' && productOrId !== null) {
+    const id = productOrId._id ?? productOrId.id ?? productOrId.prodNo;
+
+    if (id == null) {
+      throw new Error('상품 식별자가 없습니다.');
+    }
+
+    return {
+      _id: String(id),
+      title:
+        productOrId.title ??
+        productOrId.prodNm ??
+        productOrId.name ??
+        'Wishlist Product',
+      imageCover:
+        productOrId.imageCover ??
+        productOrId.mainImage ??
+        productOrId.imgUrl ??
+        '',
+      price: Number(productOrId.price ?? productOrId.discountPrice ?? 0),
+    };
+  }
+
+  if (productOrId == null || productOrId === '') {
+    throw new Error('상품 식별자가 없습니다.');
+  }
+
+  return {
+    _id: String(productOrId),
+    title: 'Wishlist Product',
+    imageCover: '',
+    price: 0,
   };
-  const URL = 'https://ecommerce.routemisr.com/api/v1/wishlist';
+}
 
-  function addToWishlist(id) {
-    const data = {
-      productId: id,
-    };
+export default function WishlistContextProvider(props) {
+  useContext(authContext);
 
-    const config = {
-      method: 'post',
-      url: URL,
-      headers: headers,
-      data: data,
-    };
+  function addToWishlist(productOrId) {
     return toast.promise(
-      axios(config)
-        .then((response) => response.data)
-        .catch((error) => {
-          throw error;
-        }),
+      Promise.resolve().then(() => {
+        const nextItem = normalizeWishlistItem(productOrId);
+        const wishlistItems = readWishlist();
+        const exists = wishlistItems.some((item) => item._id === nextItem._id);
+
+        if (!exists) {
+          writeWishlist([...wishlistItems, nextItem]);
+        }
+
+        return { data: readWishlist() };
+      }),
       {
         loading: 'Adding product to wishlist...',
         success: 'Product added successfully!',
         error: 'Error adding product',
-      }
+      },
     );
   }
 
   function deleteWishlistItem(id) {
-    const config = {
-      method: 'delete',
-      url: `${URL}/${id}`,
-      headers: headers,
-    };
-
     return toast.promise(
-      axios(config)
-        .then((response) => response.data)
-        .catch((error) => {
-          throw error;
-        }),
+      Promise.resolve().then(() => {
+        const nextItems = readWishlist().filter(
+          (item) => item._id !== String(id),
+        );
+        writeWishlist(nextItems);
+        return { data: nextItems };
+      }),
       {
         loading: 'Removing product from wishlist...',
         success: 'Product removed successfully!',
         error: 'Error removing product',
-      }
+      },
     );
   }
 
   function getWishlist() {
-    let config = {
-      method: 'get',
-      url: URL,
-      headers: headers,
-    };
-
-    return axios(config)
-      .then((response) => response.data.data)
-      .catch((error) => {
-        throw error;
-      });
+    return Promise.resolve(readWishlist());
   }
 
   return (

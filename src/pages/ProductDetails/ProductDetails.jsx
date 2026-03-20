@@ -69,8 +69,9 @@ export default function ProductDetails() {
               >
                 Add to cart
               </button>
-              <button className="w-1/2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white py-2 px-4 rounded-lg font-bold hover:bg-gray-300 dark:hover:bg-gray-600"
-                onClick={() => addToWishlist(ProdDetails.id)}
+              <button
+                className="w-1/2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white py-2 px-4 rounded-lg font-bold hover:bg-gray-300 dark:hover:bg-gray-600"
+                onClick={() => addToWishlist(ProdDetails)}
               >
                 Add to Wishlist
               </button>
@@ -101,7 +102,7 @@ export default function ProductDetails() {
                         <span key={index} className="transform scale-150">
                           {star}
                         </span>
-                      )
+                      ),
                     )}
                   </span>
                   <span className="bg-gray-100 text-gray-800 text-xl font-semibold mr-2 px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800 ml-3">

@@ -1,10 +1,12 @@
 import logo from '../../assets/freshcart-logo.svg';
+import axios from 'axios';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useContext, useEffect } from 'react';
 import { authContext } from '../../context/Auth/Auth';
 import { initFlowbite } from 'flowbite';
 import { productsContext } from '../../context/Products/Products';
 import Search from '../../pages/Search/Search';
+import { AUTH_BASE_URL } from '../../config/api';
 
 export function logout() {
   localStorage.removeItem('authToken');
@@ -12,22 +14,40 @@ export function logout() {
 
 export default function Navbar() {
   const { userToken, setUserToken } = useContext(authContext);
-  const location = useLocation(); //현재 url 가져오는 훅(React Router)
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  const { data, setSearchRes, searchRes } = useContext(productsContext);
+  const { data, setSearchRes } = useContext(productsContext);
 
-  function logout() {
-    setUserToken(null);
-    localStorage.removeItem('authToken');
+  function handleLogout(e) {
+    e.preventDefault();
+    axios
+      .post(
+        `${AUTH_BASE_URL}/logout.do`,
+        {},
+        {
+          withCredentials: true,
+        },
+      )
+      .catch(() => null)
+      .finally(() => {
+        setUserToken(null);
+        logout();
+        localStorage.removeItem('email');
+        navigate('/login');
+      });
   }
 
-  const navigate = useNavigate(); //페이지 이동 훅(React Router)
   function handleSearch(e) {
     if (e.key === 'Enter') {
-      const query = e.target.value;
+      const query = e.target.value.trim();
+
+      if (!data) {
+        return;
+      }
 
       const filteredProducts = data.filter((product) =>
-        product.title.toLowerCase().includes(query.toLowerCase().trim())
+        product.title.toLowerCase().includes(query.toLowerCase()),
       );
 
       setSearchRes(filteredProducts);
@@ -103,7 +123,7 @@ export default function Navbar() {
                   </div>
                   <input
                     type="text"
-                    onKeyUp={(e) => handleSearch(e)}
+                    onKeyUp={handleSearch}
                     id="search-navbar"
                     className="block w-full p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500"
                     placeholder="Search..."
@@ -163,8 +183,8 @@ export default function Navbar() {
                 </div>
                 <input
                   type="text"
-                  onKeyUp={(e) => handleSearch(e)}
-                  id="search-navbar"
+                  onKeyUp={handleSearch}
+                  id="mobile-search-navbar"
                   className="block w-full p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500"
                   placeholder="Search..."
                 />
@@ -175,11 +195,10 @@ export default function Navbar() {
             <ul
               className={`flex flex-col p-4 lg:p-0 mt-4 ${
                 userToken ? '' : 'mr-40'
-              } w-full  font-medium border border-gray-100 rounded-lg bg-gray-50 lg:space-x-8 rtl:space-x-reverse lg:flex-row lg:mt-0 lg:border-0 lg:bg-white dark:bg-gray-800 lg:dark:bg-gray-900 dark:border-gray-700`}
+              } w-full font-medium border border-gray-100 rounded-lg bg-gray-50 lg:space-x-8 rtl:space-x-reverse lg:flex-row lg:mt-0 lg:border-0 lg:bg-white dark:bg-gray-800 lg:dark:bg-gray-900 dark:border-gray-700`}
             >
               {userToken ? (
                 <>
-                  {' '}
                   <li>
                     <Link
                       to="/"
@@ -218,9 +237,17 @@ export default function Navbar() {
                   </li>
                   <li>
                     <Link
-                      to="event"
-                      className={getLinkClass('/event')}
+                      to="categories"
+                      className={getLinkClass('/categories')}
                     >
+                      <div className="flex lg:flex-col lg:justify-center items-center space-x-1">
+                        <i className="fa-solid fa-list" />
+                        <span>Categories</span>
+                      </div>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="event" className={getLinkClass('/event')}>
                       <div className="flex lg:flex-col lg:justify-center items-center space-x-1">
                         <i className="fa-solid fa-list" />
                         <span>이벤트</span>
@@ -238,7 +265,7 @@ export default function Navbar() {
                   <li>
                     <Link
                       to="login"
-                      onClick={logout}
+                      onClick={handleLogout}
                       className={getLinkClass('/login')}
                     >
                       <div className="flex lg:flex-col lg:justify-center items-center space-x-1">

@@ -1,9 +1,9 @@
+import { useContext } from 'react';
 import { Navigate } from 'react-router-dom';
 import { authContext } from '../../context/Auth/Auth';
-import { useContext } from 'react';
 
 export default function ProtectedRoute(props) {
-  const { userToken, isTokenLoading } = useContext(authContext);
+  const { userToken, authLoading, isTokenLoading } = useContext(authContext);
 
   // [수정 이유] 새로고침 시 리액트 상태 초기화에 따른 원치 않는 리다이렉트 방지
   // 1. 새로고침 시 AuthContext가 로컬 스토리지에서 토큰을 읽어오는 동안 userToken은 잠시 null이 됨.
@@ -12,28 +12,17 @@ export default function ProtectedRoute(props) {
   // 4. 따라서 isTokenLoading 상태를 도입하여 토큰 확인이 끝날 때까지 렌더링을 대기함.
 
   // 로딩 중이라면 리다이렉트 시키지 않고 null이나 로딩 바를 보여줍니다.
-  if (isTokenLoading) {
+  if (authLoading || isTokenLoading) {
     return null; // 혹은 <LoadingSpinner /> 같은 컴포넌트
   }
 
   if (userToken) {
     return props.children;
-  } else {
-    // 토큰 확인이 확실히 끝났는데(isTokenLoading: false) 없을 때만 로그인으로 보냄
-    return <Navigate to="/login" />;
   }
+  //   } else {
+  //     // 토큰 확인이 확실히 끝났는데(isTokenLoading: false) 없을 때만 로그인으로 보냄
+  //     return <Navigate to="/login" />;
+  //   }
+  // }
+  return <Navigate to="/login" />;
 }
-
-// import { Navigate } from 'react-router-dom';
-// import { authContext } from '../../context/Auth/Auth';
-// import { useContext } from 'react';
-
-// export default function ProtectedRoute(props) {
-//   const { userToken } = useContext(authContext);
-
-//   if (userToken) {
-//     return props.children;
-//   } else {
-//     return <Navigate to="/login" />;
-//   }
-// }

@@ -1,16 +1,15 @@
 import { useFormik } from 'formik';
 import axios from 'axios';
 import * as Yup from 'yup';
-import { useContext, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authContext } from '../../context/Auth/Auth';
 import { Helmet } from 'react-helmet';
 import toast from 'react-hot-toast';
+import { AUTH_BASE_URL } from '../../config/api';
 
 export default function ResetPassword() {
   const [err, setErr] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { setUserToken } = useContext(authContext);
 
   const buttonProps = {
     type: 'submit',
@@ -20,46 +19,56 @@ export default function ResetPassword() {
 
   const navigate = useNavigate();
 
-  function handleRegister(data) {
+  useEffect(() => {
+    if (
+      !localStorage.getItem('resetUserId') ||
+      !localStorage.getItem('resetVerifyCode')
+    ) {
+      navigate('/forgotPassword', { replace: true });
+    }
+  }, [navigate]);
+
+  function handleResetPassword(data) {
     setIsLoading(true);
     axios
-      .put('https://ecommerce.routemisr.com/api/v1/auth/resetPassword', data)
-      .then((res) => {
+      .post(
+        `${AUTH_BASE_URL}/changePassword.do`,
+        {
+          userId: localStorage.getItem('resetUserId') || '',
+          verifyCode: localStorage.getItem('resetVerifyCode') || '',
+          newPassword: data.newPassword,
+        },
+        {
+          withCredentials: true,
+        },
+      )
+      .then(() => {
         setErr(null);
         toast.success('Password has been reset successfully');
-        localStorage.removeItem('email');
-        setUserToken(res.data.token);
-        localStorage.setItem('authToken', res.data.token);
+        localStorage.removeItem('resetUserId');
+        localStorage.removeItem('resetEmail');
+        localStorage.removeItem('resetVerifyCode');
         setIsLoading(false);
-        if (res.status === 200) {
-          navigate('/');
-        }
+        navigate('/login');
       })
       .catch((err) => {
         toast.error('Something went wrong, please try again');
         setIsLoading(false);
-        setErr(err.response.data.message);
+        setErr(err.response?.data?.message || 'Reset password failed');
       });
   }
 
   const validate = Yup.object({
     newPassword: Yup.string()
-      .min(8, 'Password must be at least 8 characters long')
-      .matches(/[A-Za-z]/, 'Password must contain at least one letter')
-      .matches(/\d/, 'Password must contain at least one number')
-      .matches(
-        /[!@#$%^&*(),.?":{}|<>+\-_]/,
-        'Password must contain at least one special character'
-      )
+      .min(4, 'Password must be at least 4 characters long')
       .required('Password is required'),
   });
 
   const formik = useFormik({
     initialValues: {
-      email: localStorage.getItem('email'),
       newPassword: '',
     },
-    onSubmit: handleRegister,
+    onSubmit: handleResetPassword,
     validationSchema: validate,
   });
 

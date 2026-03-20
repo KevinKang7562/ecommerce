@@ -1,9 +1,11 @@
 import { useFormik } from 'formik';
 import axios from 'axios';
 import * as Yup from 'yup';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
+import toast from 'react-hot-toast';
+import { AUTH_BASE_URL } from '../../config/api';
 
 export default function VerifyCode() {
   const [err, setErr] = useState(null);
@@ -17,28 +19,46 @@ export default function VerifyCode() {
 
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (!localStorage.getItem('resetUserId')) {
+      navigate('/forgotPassword', { replace: true });
+    }
+  }, [navigate]);
+
   function handleResetCode(data) {
     setIsLoading(true);
 
     axios
-      .post('https://ecommerce.routemisr.com/api/v1/auth/verifyResetCode', data)
-      .then((data) => {
+      .post(
+        `${AUTH_BASE_URL}/verifyResetCode.do`,
+        {
+          userId: localStorage.getItem('resetUserId') || '',
+          verifyCode: data.resetCode,
+        },
+        {
+          withCredentials: true,
+        },
+      )
+      .then(() => {
         setErr(null);
         setIsLoading(false);
-        if (data.data.status === 'Success') {
-          navigate('resetPassword');
-        }
+        toast.success('Code verified successfully');
+        localStorage.setItem('resetVerifyCode', data.resetCode);
+        navigate('resetPassword');
       })
       .catch((err) => {
         setIsLoading(false);
-        setErr(err.response.data.message);
+        setErr(err.response?.data?.message || 'Verification failed');
       });
   }
 
   const validate = Yup.object({
     resetCode: Yup.string()
       .required('Code is required')
-      .matches(/^[0-9]{6}$/, 'Code must be 6 digits'),
+      .matches(
+        /^[A-Z0-9]{8}$/,
+        'Code must be 8 characters using uppercase letters and numbers',
+      ),
   });
 
   const formik = useFormik({
@@ -80,7 +100,7 @@ export default function VerifyCode() {
             htmlFor="resetCode"
             className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto peer-focus:text-green-600 peer-focus:dark:text-green-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
           >
-            6 Digit Code
+            8 Character Code
           </label>
           {formik.errors.resetCode && formik.touched.resetCode && (
             <span className="text-red-600 font-light text-sm">
@@ -92,7 +112,8 @@ export default function VerifyCode() {
           id="helper-text-explanation"
           className="mt-2 mb-5 text-sm text-gray-500 dark:text-gray-400"
         >
-          Please enter the 6 digit code we sent via email.
+          Please enter the 8-character verification code shown on the previous
+          screen.
         </p>
 
         {isLoading ? (

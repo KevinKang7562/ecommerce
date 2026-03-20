@@ -16,7 +16,8 @@ export default function Products() {
     if (wishlistIds?.indexOf(id) !== -1) {
       await deleteWishlistItem(id);
     } else {
-      await addToWishlist(id);
+      const product = data?.find((item) => item._id === id);
+      await addToWishlist(product ?? id);
     }
     main();
   }

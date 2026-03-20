@@ -1,45 +1,70 @@
+import axios from 'axios';
 import { createContext, useEffect, useState } from 'react';
+import { AUTH_BASE_URL } from '../../config/api';
 
 export const authContext = createContext(null);
 
+function extractToken(payload) {
+  if (!payload) {
+    return null;
+  }
+
+  if (typeof payload === 'string') {
+    return payload;
+  }
+
+  return payload.token || payload.authToken || payload.accessToken || null;
+}
+
 export default function AuthContextProvider(props) {
   const [userToken, setUserToken] = useState(null);
-  // 추가: 초기 로딩 상태 (true일 때는 아직 토큰 확인 중임을 의미)
+  const [authLoading, setAuthLoading] = useState(true);
   const [isTokenLoading, setIsTokenLoading] = useState(true);
 
   useEffect(() => {
     const savedToken = localStorage.getItem('authToken');
+
     if (savedToken) {
       setUserToken(savedToken);
     }
-    // 토큰이 있든 없든 확인이 끝났으므로 로딩 완료
-    setIsTokenLoading(false);
+
+    axios
+      .post(
+        `${AUTH_BASE_URL}/me.do`,
+        {},
+        {
+          withCredentials: true,
+        },
+      )
+      .then((response) => {
+        const sessionUser = response.data?.data;
+
+        if (sessionUser?.authenticated) {
+          setUserToken(savedToken || extractToken(sessionUser) || sessionUser);
+        } else {
+          setUserToken(null);
+        }
+      })
+      .catch(() => {
+        setUserToken(savedToken || null);
+      })
+      .finally(() => {
+        setAuthLoading(false);
+        setIsTokenLoading(false);
+      });
   }, []);
 
   return (
-    // value에 isTokenLoading을 추가로 넘겨줍니다.
-    <authContext.Provider value={{ userToken, setUserToken, isTokenLoading }}>
+    <authContext.Provider
+      value={{
+        userToken,
+        setUserToken,
+        authLoading,
+        setAuthLoading,
+        isTokenLoading,
+      }}
+    >
       {props.children}
     </authContext.Provider>
   );
 }
-
-// import { createContext, useEffect, useState } from 'react';
-
-// export const authContext = createContext(null);
-
-// export default function AuthContextProvider(props) {
-//   const [userToken, setUserToken] = useState(null);
-
-//   useEffect(() => {
-//     if (localStorage.getItem('authToken')) {
-//       setUserToken(localStorage.getItem('authToken'));
-//     }
-//   }, []);
-
-//   return (
-//     <authContext.Provider value={{ userToken, setUserToken }}>
-//       {props.children}
-//     </authContext.Provider>
-//   );
-// }

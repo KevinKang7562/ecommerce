@@ -22,6 +22,7 @@ import VerifyCode from './pages/VerifyCode/VerifyCode';
 import Checkout from './pages/Checkout/Checkout';
 import Wishlist from './pages/Wishlist/Wishlist';
 import Brands from './pages/Brands/Brands';
+import Categories from './pages/Categories/Categories';
 import Event from './pages/Board/Event';
 import EventDetail from './pages/Board/EventDetail';
 import ProductsContextProvider from './context/Products/Products';
@@ -76,12 +77,27 @@ function App() {
         },
         {
           path: 'forgotPassword',
-          element: <ForgotPassword />,
+          element: (
+            <RedirectIfAuthenticated>
+              <ForgotPassword />
+            </RedirectIfAuthenticated>
+          ),
         },
-        { path: 'forgotPassword/verifyCode', element: <VerifyCode /> },
+        {
+          path: 'forgotPassword/verifyCode',
+          element: (
+            <RedirectIfAuthenticated>
+              <VerifyCode />
+            </RedirectIfAuthenticated>
+          ),
+        },
         {
           path: 'forgotPassword/verifyCode/resetPassword',
-          element: <ResetPassword />,
+          element: (
+            <RedirectIfAuthenticated>
+              <ResetPassword />
+            </RedirectIfAuthenticated>
+          ),
         },
         {
           path: 'product/:id',
@@ -120,6 +136,14 @@ function App() {
           element: (
             <ProtectedRoute>
               <Brands />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: 'categories',
+          element: (
+            <ProtectedRoute>
+              <Categories />
             </ProtectedRoute>
           ),
         },
@@ -258,6 +282,7 @@ function App() {
       ],
     },
   ]);
+
   return (
     <AuthContextProvider>
       <CartContextProvider>

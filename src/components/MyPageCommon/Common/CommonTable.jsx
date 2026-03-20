@@ -78,7 +78,7 @@ export default function CommonTable({
 
         {data.map((row, idx) => (
           // React Fragment를 사용하여 한 쌍의 <tr>을 묶어줍니다.
-          <React.Fragment key={row[keyName] || idx}>
+          <React.Fragment key={`${String(row?.[keyName] ?? 'row')}-${idx}`}>
             <tr>
               {columns.map((col) => (
                 <td
