@@ -8,6 +8,7 @@ console.log('[api] axios instance loaded');
 //axios 인스턴스 생성
 const api = axios.create({
   baseURL: API_BASE_URL,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -40,6 +41,13 @@ api.interceptors.response.use(
   (error) => {
     const message =
       error.response?.data?.message ?? '서버 오류가 발생했습니다.';
+
+    // 401 Unauthorized: 로그인 필요(SessionCheckInterceptor에서 세션 없을 때 401 반환)
+    if (error.response?.status === 401) {
+      alert(message);
+      window.location.href = '/login';
+      return Promise.reject(error);
+    }
 
     //사용자 정의 필드인 meta로 에러메세지 표시 방식 alert와 ui inline 표시 중 선택
     const errorType = error.config?.meta?.errorType ?? 'ALERT';
