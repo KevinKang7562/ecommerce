@@ -5,9 +5,11 @@ import CommonTable from '../../../components/MyPageCommon/Common/CommonTable';
 import MyButton from '../../../components/MyPageCommon/Common/MyButton';
 import Pagination from '../../../components/MyPageCommon/Common/Pagination';
 import { MyInquiryContext } from '../../../context/Inquiry/MyInquiry';
+// import { authContext } from '../../../context/Auth/Auth';
 import { useNavigate } from 'react-router-dom';
 export default function MyPersonalInquiry() {
   const { selectMyInquiryList } = useContext(MyInquiryContext);
+  // const { userNo } = useContext(authContext);
 
   const [loading, setLoading] = useState(false); //로딩 표시
   const [error, setError] = useState(false); //에러표시
@@ -90,6 +92,7 @@ export default function MyPersonalInquiry() {
     try {
       const { list, totalPages } = await selectMyInquiryList({
         inquiryType: inquiryType,
+        // userNo: userNo, //로그인 사용자의 userNo로 조회
         currentPage: currentPage,
         pageSize: itemsPerPage,
       });

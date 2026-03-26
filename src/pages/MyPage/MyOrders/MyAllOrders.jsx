@@ -142,7 +142,6 @@ function MyAllOrders() {
     try {
       const { list, totalPages } = await selectOrderList({
         orderNo: null, //추후 특정 주문번호로 검색 기능 필요시 수정 필요
-        userNo: null, //추후 로그인기능 완성 시 수정 필요!
         orderStatus: selected || null, //검색필터의 주문상태 조건
         searchStartDate: searchStartDate || null,
         searchEndDate: searchEndDate || null,

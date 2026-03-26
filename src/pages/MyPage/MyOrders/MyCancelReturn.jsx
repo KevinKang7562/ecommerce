@@ -4,12 +4,14 @@ import { useCommCd } from '../../../hooks/useCommCd';
 import Pagenation from '../../../components/MyPageCommon/Common/Pagination';
 import MyOrderBlock from '../../../components/MyPageCommon/MyOrder/MyOrderBlock';
 import { OrderContext } from '../../../context/Order/Order';
+// import { authContext } from '../../../context/Auth/Auth';
 
 // 나의 취소/반품 목록
 export default function MyCancelReturn() {
   //api는 context로 분리
   //context 사용 이유 : 동일한 api 중복 사용 및 로그인 여부에 대한 공통헤더 필요, 주문이라는 동일한 도메인을 사용하기 때문
   const { selectCancelReturnList } = useContext(OrderContext);
+  // const { userNo } = useContext(authContext);
 
   const [cancleReturnList, setCancleReturnList] = useState([]); //취소반품목록
 
@@ -75,7 +77,7 @@ export default function MyCancelReturn() {
     try {
       const { list, totalPages } = await selectCancelReturnList({
         orderNo: null, //추후 특정 주문번호로 검색 기능 필요시 수정 필요
-        userNo: null, //추후 로그인기능 완성 시 수정 필요!
+        // userNo: userNo, //로그인 사용자의 userNo로 조회
         csStatus: selected || null, //검색필터의 주문상태 조건
         searchStartDate: searchStartDate || null,
         searchEndDate: searchEndDate || null,

@@ -18,6 +18,7 @@ function extractToken(payload) {
 
 export default function AuthContextProvider(props) {
   const [userToken, setUserToken] = useState(null);
+  // const [userNo, setUserNo] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [isTokenLoading, setIsTokenLoading] = useState(true);
 
@@ -41,12 +42,18 @@ export default function AuthContextProvider(props) {
 
         if (sessionUser?.authenticated) {
           setUserToken(savedToken || extractToken(sessionUser) || sessionUser);
+          // userNo 저장 (sessionUser 객체 또는 savedToken 기반)
+          // if (sessionUser?.userNo) {
+          //   setUserNo(sessionUser.userNo);
+          // }
         } else {
           setUserToken(null);
+          // setUserNo(null);
         }
       })
       .catch(() => {
         setUserToken(savedToken || null);
+        // setUserNo(null);
       })
       .finally(() => {
         setAuthLoading(false);
@@ -59,6 +66,8 @@ export default function AuthContextProvider(props) {
       value={{
         userToken,
         setUserToken,
+        // userNo,
+        // setUserNo,
         authLoading,
         setAuthLoading,
         isTokenLoading,

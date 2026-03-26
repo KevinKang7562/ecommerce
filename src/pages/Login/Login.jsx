@@ -11,6 +11,7 @@ export default function Login() {
   const [err, setErr] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
+  // const { setUserToken, setUserNo } = useContext(authContext);
   const { setUserToken } = useContext(authContext);
   const navigate = useNavigate();
 
@@ -68,6 +69,7 @@ export default function Login() {
       .then((response) => {
         const authData = response.data.data;
         setUserToken(authData);
+        // setUserNo(authData?.userNo || null);
         persistAuthToken(authData);
         setErr(null);
         toast.success('Logged in successfully');

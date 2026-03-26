@@ -2,10 +2,12 @@ import { useContext, useEffect, useState } from 'react';
 import CommonTable from '../../../components/MyPageCommon/Common/CommonTable';
 import Pagination from '../../../components/MyPageCommon/Common/Pagination';
 import { MyInquiryContext } from '../../../context/Inquiry/MyInquiry';
+// import { authContext } from '../../../context/Auth/Auth';
 
 //나의 상품 문의 목록
 export default function MyProductQnA() {
   const { selectMyProductQnAList } = useContext(MyInquiryContext);
+  // const { userNo } = useContext(authContext);
 
   const [loading, setLoading] = useState(false); //로딩 표시
   const [error, setError] = useState(false); //에러표시
@@ -18,11 +20,6 @@ export default function MyProductQnA() {
   // ... 기존 useState들
   const [expandedId, setExpandedId] = useState(null); // 펼쳐진 문의의 ID(inquiryNo) 저장
 
-  // 제목 클릭 시 실행될 함수
-  const handleTitleClick = (id) => {
-    // 이미 열려있는 걸 다시 누르면 닫고, 아니면 새로 엽니다.
-    setExpandedId(expandedId === id ? null : id);
-  };
   const itemsPerPage = 5;
   const inquiryType = 'IT001';
   const myProductQnAcolumns = [
@@ -114,6 +111,7 @@ export default function MyProductQnA() {
     try {
       const { list, totalPages } = await selectMyProductQnAList({
         inquiryType: inquiryType,
+        // userNo: userNo, //로그인 사용자의 userNo로 조회
         currentPage: currentPage,
         pageSize: itemsPerPage,
       });
@@ -152,10 +150,6 @@ export default function MyProductQnA() {
             {errorMessage} {/*INLINE 에러 표시 */}
           </div>
         ) : (
-          // <CommonTable
-          //   columns={myProductQnAcolumns}
-          //   data={MyProductQnA}
-          // ></CommonTable>
           <CommonTable
             columns={myProductQnAcolumns}
             data={MyProductQnA}
