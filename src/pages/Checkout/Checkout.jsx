@@ -51,7 +51,7 @@ export default function Checkout() {
       .required('Phone number is required')
       .matches(
         /^01[0-2|5]{1}[0-9]{8}$/,
-        'Phone number is not valid (01234567891)'
+        'Phone number is not valid (01234567891)',
       ),
   });
 
@@ -67,9 +67,9 @@ export default function Checkout() {
 
   return (
     <>
-      <Helmet>
+      {/* <Helmet>
         <title>Checkout</title>
-      </Helmet>
+      </Helmet> */}
 
       <div className="container">
         <form

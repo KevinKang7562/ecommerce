@@ -74,9 +74,9 @@ export default function ResetPassword() {
 
   return (
     <>
-      <Helmet>
+      {/* <Helmet>
         <title>Reset Password</title>
-      </Helmet>
+      </Helmet> */}
 
       <form
         method="post"

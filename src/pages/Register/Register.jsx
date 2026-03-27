@@ -142,9 +142,9 @@ export default function Register() {
 
   return (
     <>
-      <Helmet>
+      {/* <Helmet>
         <title>Register</title>
-      </Helmet>
+      </Helmet> */}
 
       <div className="container">
         <form

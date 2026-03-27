@@ -65,9 +65,9 @@ export default function ForgotPassword() {
 
   return (
     <>
-      <Helmet>
+      {/* <Helmet>
         <title>Forgot Password</title>
-      </Helmet>
+      </Helmet> */}
 
       <form
         method="post"
