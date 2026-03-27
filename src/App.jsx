@@ -54,9 +54,9 @@ function App() {
         {
           index: true,
           element: (
-            <ProtectedRoute>
-              <Home />
-            </ProtectedRoute>
+            // <ProtectedRoute>
+            <Home />
+            // </ProtectedRoute>
           ),
         },
         {
@@ -102,13 +102,13 @@ function App() {
         {
           path: 'product/:id',
           element: (
-            <ProtectedRoute>
-              <ProductDetails />
-            </ProtectedRoute>
+            // <ProtectedRoute>
+            <ProductDetails />
+            // </ProtectedRoute>
           ),
         },
         {
-          path: '/checkout/:id',
+          path: '/checkout/:id', //구매시 이동하는 페이지
           element: (
             <ProtectedRoute>
               <Checkout />
@@ -118,73 +118,73 @@ function App() {
         {
           path: 'cart',
           element: (
-            <ProtectedRoute>
-              <Cart />
-            </ProtectedRoute>
+            // <ProtectedRoute>
+            <Cart />
+            // </ProtectedRoute>
           ),
         },
         {
           path: 'wishlist',
           element: (
-            <ProtectedRoute>
-              <Wishlist />
-            </ProtectedRoute>
+            // <ProtectedRoute>
+            <Wishlist />
+            // </ProtectedRoute>
           ),
         },
         {
           path: 'brands',
           element: (
-            <ProtectedRoute>
-              <Brands />
-            </ProtectedRoute>
+            // <ProtectedRoute>
+            <Brands />
+            // </ProtectedRoute>
           ),
         },
         {
           path: 'categories',
           element: (
-            <ProtectedRoute>
-              <Categories />
-            </ProtectedRoute>
+            // <ProtectedRoute>
+            <Categories />
+            // </ProtectedRoute>
           ),
         },
         {
           path: 'event',
           element: (
-            <ProtectedRoute>
-              <Event />
-            </ProtectedRoute>
+            // <ProtectedRoute>
+            <Event />
+            // </ProtectedRoute>
           ),
         },
         {
           path: 'eventdetail/:boardNo',
           element: (
-            <ProtectedRoute>
-              <EventDetail />
-            </ProtectedRoute>
+            // <ProtectedRoute>
+            <EventDetail />
+            // </ProtectedRoute>
           ),
         },
         {
           path: 'search',
           element: (
-            <ProtectedRoute>
-              <Search />
-            </ProtectedRoute>
+            // <ProtectedRoute>
+            <Search />
+            // </ProtectedRoute>
           ),
         },
         {
           path: 'board',
           element: (
-            <ProtectedRoute>
-              <Board />
-            </ProtectedRoute>
+            // <ProtectedRoute>
+            <Board />
+            // </ProtectedRoute>
           ),
         },
         {
           path: 'boarddetail/:boardNo',
           element: (
-            <ProtectedRoute>
-              <BoardDetail />
-            </ProtectedRoute>
+            // <ProtectedRoute>
+            <BoardDetail />
+            // </ProtectedRoute>
           ),
         },
         {
