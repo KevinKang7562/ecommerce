@@ -49,7 +49,7 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    //사용자 정의 필드인 meta로 에러메세지 표시 방식 alert와 ui inline 표시 중 선택
+    //사용자 정의 필드인 meta로 에러메세지 표시 방식 alert와 ui inline 표시 중 선택(api 요청 시 meta: { errorType: 'INLINE' } 같이 설정, 없으면 기본값 ALERT)
     const errorType = error.config?.meta?.errorType ?? 'ALERT';
     if (errorType === 'ALERT') {
       alert(message);

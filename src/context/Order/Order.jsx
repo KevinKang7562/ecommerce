@@ -83,53 +83,6 @@ export default function OrderContextProvider({ children }) {
     return res.data;
   }
 
-  // // =====================================================================
-  // // 리뷰 등록
-  // // =====================================================================
-  // async function submitReview(formData) {
-  //   console.log('리뷰등록 컨텍스트', formData);
-  //   const res = await axios.post(
-  //     `${API_BASE_URL}/api/order/saveReview.do`,
-  //     formData,
-  //     {
-  //       headers: {
-  //         token: userToken, // ⚠️ JSON 헤더 쓰면 안 됨
-  //       },
-  //     },
-  //   );
-  //   if (!res.data || res.data.code !== 'OK') {
-  //     throw new Error('리뷰 등록 실패');
-  //   }
-  //   return res.data;
-  // }
-  // // =====================================================================
-  // // 리뷰 수정
-  // // =====================================================================
-  // async function updateReview(formData) {
-  //   console.log('리뷰수정 컨텍스트', formData);
-  //   formData.forEach((value, key) => {
-  //     if (value instanceof File) {
-  //       console.log(key, value.name, value.size, value.type);
-  //     } else {
-  //       console.log(key, value);
-  //     }
-  //   });
-
-  //   const res = await axios.post(
-  //     `${API_BASE_URL}/api/order/updateReview.do`,
-  //     formData,
-  //     {
-  //       headers: {
-  //         token: userToken, // ⚠️ JSON 헤더 쓰면 안 됨
-  //         // 'Content-Type': 'multipart/form-data',
-  //       },
-  //     },
-  //   );
-  //   if (!res.data || res.data.code !== 'OK') {
-  //     throw new Error('리뷰 등록 실패');
-  //   }
-  //   return res.data;
-  // }
   return (
     <OrderContext.Provider
       value={{
