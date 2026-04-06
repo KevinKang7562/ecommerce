@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '../../api/axios';
 import { authContext } from '../../context/Auth/Auth';
+import DaumPostcode from 'react-daum-postcode';
 
 // =========================================================================
 // API 함수들 (백엔드와 통신)
@@ -76,6 +77,9 @@ export default function MyProfileEdit() {
   const [verificationCode, setVerificationCode] = useState(''); // 사용자가 입력한 인증번호
   const [isEmailVerified, setIsEmailVerified] = useState(false); // 인증 완료 여부
   const [originalEmail, setOriginalEmail] = useState(''); // 원래 이메일 주소 (변경 여부 확인용)
+
+  //주소 검색 모달 상태
+  const [isOpenPost, setIsOpenPost] = useState(false);
 
   // =========================================================================
   // 2. React Query - Mutations & Queries
@@ -237,10 +241,14 @@ export default function MyProfileEdit() {
   };
 
   // 주소 검색 팝업 (가상)
-  const handleAddressEdit = () => {
-    alert('다음/카카오 우편번호 API 연동 로직이 들어갈 자리입니다.');
-    // 연동 예시:
-    // setFormData(prev => ({ ...prev, postNo: '00000', address: '검색된 주소' }));
+  const handleCompletePost = (data) => {
+    // 기존 데이터(...prev)는 유지하고, 우편번호와 주소만 덮어씌웁니다.
+    setFormData((prev) => ({
+      ...prev,
+      postNo: data.zonecode,
+      address: data.address,
+    }));
+    setIsOpenPost(false); // 팝업 닫기
   };
 
   // [A] 이메일 인증번호 발송 핸들러
@@ -609,7 +617,7 @@ export default function MyProfileEdit() {
               />
               <button
                 type="button"
-                onClick={handleAddressEdit}
+                onClick={() => setIsOpenPost(true)}
                 className="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-4 py-2.5 flex items-center gap-1"
               >
                 주소수정 <i className="fa-solid fa-chevron-right text-xs" />
@@ -652,6 +660,26 @@ export default function MyProfileEdit() {
           </div>
         </form>
       </div>
+      {/* 우편번호 모달 */}
+      {isOpenPost && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="bg-white p-5 rounded-lg w-full max-w-lg relative">
+            <button
+              type="button"
+              onClick={() => setIsOpenPost(false)}
+              className="absolute top-3 right-4 text-gray-500 hover:text-gray-900 text-xl font-bold"
+            >
+              ✕
+            </button>
+            <h2 className="text-lg font-bold mb-4">주소 검색</h2>
+            {/* 카카오에서 만든 우편번호 검색 컴포넌트 */}
+            <DaumPostcode
+              onComplete={handleCompletePost}
+              style={{ height: '450px' }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
