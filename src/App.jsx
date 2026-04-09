@@ -1,5 +1,6 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import './App.css';
+import { useEffect } from 'react';
 import MainLayout from './pages/MainLayout/MainLayout';
 import Login from './pages/Login/Login';
 import Register from './pages/Register/Register';
@@ -9,17 +10,18 @@ import Home from './pages/Home/Home';
 import ProtectedRoute from './pages/ProtectedRoute/ProtectedRoute';
 import ProductDetails from './pages/ProductDetails/ProductDetails';
 import Cart from './pages/Cart/Cart';
-import CartContextProvider from './context/Cart/Cart';
+import CartContextProvider from './context/Cart/CartContextProvider';
 import WishlistContextProvider from './context/Wishlist/Wishlist';
 import OrderContextProvider from './context/Order/Order';
 import ReviewContextProvider from './context/Review/Review';
-import { Toaster } from 'react-hot-toast';
+import { Toaster, toast, useToasterStore } from 'react-hot-toast';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import ForgotPassword from './pages/ForgotPassword/ForgotPassword';
 import ResetPassword from './pages/ResetPassword/ResetPassword';
 import VerifyCode from './pages/VerifyCode/VerifyCode';
 import Checkout from './pages/Checkout/Checkout';
+import CheckoutComplete from './pages/Checkout/CheckoutComplete';
 import Wishlist from './pages/Wishlist/Wishlist';
 import Brands from './pages/Brands/Brands';
 import Categories from './pages/Categories/Categories';
@@ -42,6 +44,32 @@ import Review from './pages/MyPage/MyOrders/Review';
 import MyInquiryContextProvider from './context/Inquiry/MyInquiry';
 import InquiryWrite from './pages/MyPage/MyInquiries/InquiryWrite';
 import MyInquiryDetail from './pages/MyPage/MyInquiries/MyInquiryDetail';
+
+function ToastLayer() {
+  const { toasts } = useToasterStore();
+
+  useEffect(() => {
+    const visibleToasts = toasts.filter((t) => t.visible);
+    if (visibleToasts.length > 3) {
+      visibleToasts
+        .slice(0, visibleToasts.length - 3)
+        .forEach((t) => toast.dismiss(t.id));
+    }
+  }, [toasts]);
+
+  return (
+    <Toaster
+      toastOptions={{
+        removeDelay: 500,
+      }}
+      gutter={8}
+      containerStyle={{
+        maxHeight: '240px',
+        overflow: 'hidden',
+      }}
+    />
+  );
+}
 
 function App() {
   const queryClient = new QueryClient();
@@ -105,6 +133,14 @@ function App() {
             // <ProtectedRoute>
             <ProductDetails />
             // </ProtectedRoute>
+          ),
+        },
+        {
+          path: '/checkout/complete',
+          element: (
+            <ProtectedRoute>
+              <CheckoutComplete />
+            </ProtectedRoute>
           ),
         },
         {
@@ -292,7 +328,7 @@ function App() {
               <MyInquiryContextProvider>
                 <QueryClientProvider client={queryClient}>
                   <ProductsContextProvider>
-                    <Toaster />
+                    <ToastLayer />
                     {/* <ReactQueryDevtools initialIsOpen={false} /> */}
                     <RouterProvider router={router} />
                   </ProductsContextProvider>

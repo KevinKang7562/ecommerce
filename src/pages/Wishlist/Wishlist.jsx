@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from 'react';
 import { wishlistContext } from '../../context/Wishlist/Wishlist';
 import Spinner from '../../components/Spinner/Spinner';
-import { cartContext } from '../../context/Cart/Cart';
+import { cartContext } from '../../context/Cart/CartContextProvider';
 import { Link } from 'react-router-dom';
 
 export default function Wishlist() {
