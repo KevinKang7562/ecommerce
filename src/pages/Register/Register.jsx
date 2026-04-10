@@ -6,8 +6,7 @@ import * as Yup from 'yup';
 import toast from 'react-hot-toast';
 import DaumPostcode from 'react-daum-postcode';
 import api from '../../api/axios';
-import { AUTH_BASE_URL } from '../../config/api';
-import axios from 'axios';
+import { AUTH_PATH } from '../../constants/api';
 
 // =========================================================================
 // [API 함수들]
@@ -15,28 +14,48 @@ import axios from 'axios';
 
 /** 1. 아이디 중복 확인 [신규] */
 const checkUserId = async (userId) => {
-  const res = await axios.post(`${AUTH_BASE_URL}/checkUserId.do`, { userId });
+  const res = await api.post(
+    `${AUTH_PATH}/checkUserId.do`,
+    { userId },
+    {
+      meta: { errorType: 'INLINE' },
+    },
+  );
   return res.data.data;
 };
 
 /** 2. 회원가입 실행 [신규] */
 const signup = async (data) => {
-  const res = await axios.post(`${AUTH_BASE_URL}/signup.do`, data);
+  const res = await api.post(`${AUTH_PATH}/signup.do`, data, {
+    meta: { errorType: 'INLINE' },
+  });
   return res.data;
 };
 
 /** 3. 이메일 인증번호 발송 */
 const sendEmailCode = async (email) => {
-  const res = await api.post('/api/user/auth/send-email-code.do', { email });
+  const res = await api.post(
+    `${AUTH_PATH}/send-email-code.do`,
+    { email },
+    {
+      meta: { errorType: 'INLINE' },
+    },
+  );
   return res.data.data;
 };
 
 /** 4. 이메일 인증번호 검증 */
 const verifyEmailCode = async (email, code) => {
-  const res = await api.post('/api/user/auth/verify-email-code.do', {
-    email,
-    code,
-  });
+  const res = await api.post(
+    `${AUTH_PATH}/verify-email-code.do`,
+    {
+      email,
+      code,
+    },
+    {
+      meta: { errorType: 'INLINE' },
+    },
+  );
   return res.data.data;
 };
 

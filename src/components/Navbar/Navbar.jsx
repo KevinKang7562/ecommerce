@@ -1,12 +1,13 @@
 import logo from '../../assets/freshcart-logo.svg';
-import axios from 'axios';
+
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useContext, useEffect } from 'react';
 import { authContext } from '../../context/Auth/Auth';
 import { initFlowbite } from 'flowbite';
 import { productsContext } from '../../context/Products/Products';
 import Search from '../../pages/Search/Search';
-import { AUTH_BASE_URL } from '../../config/api';
+import { AUTH_PATH } from '../../constants/api';
+import api from '../../api/axios';
 
 export function logout() {
   localStorage.removeItem('authToken');
@@ -21,9 +22,9 @@ export default function Navbar() {
 
   function handleLogout(e) {
     e.preventDefault();
-    axios
+    api
       .post(
-        `${AUTH_BASE_URL}/logout.do`,
+        `${AUTH_PATH}/logout.do`,
         {},
         {
           withCredentials: true,

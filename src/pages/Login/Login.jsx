@@ -1,11 +1,11 @@
-import axios from 'axios';
 import * as Yup from 'yup';
 import { useContext, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authContext } from '../../context/Auth/Auth';
-import { Helmet } from 'react-helmet';
+// import { Helmet } from 'react-helmet';
 import toast from 'react-hot-toast';
-import { AUTH_BASE_URL } from '../../config/api';
+import { AUTH_PATH } from '../../constants/api';
+import api from '../../api/axios';
 
 export default function Login() {
   const [err, setErr] = useState(null);
@@ -62,10 +62,8 @@ export default function Login() {
     }
 
     setIsLoading(true);
-    axios
-      .post(`${AUTH_BASE_URL}/login.do`, data, {
-        withCredentials: true,
-      })
+    api
+      .post(`${AUTH_PATH}/login.do`, data, { meta: { errorType: 'INLINE' } })
       .then((response) => {
         const authData = response.data.data;
         setUserToken(authData);

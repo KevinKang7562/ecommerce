@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { useContext, useEffect, useState } from 'react';
 import Slider from 'react-slick/lib/slider.js';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
@@ -8,6 +7,7 @@ import { useCommCd } from '../../hooks/useCommCd';
 import { cartContext } from '../../context/Cart/CartContextProvider';
 import { productsContext } from '../../context/Products/Products.jsx';
 import { authContext } from '../../context/Auth/Auth.jsx';
+import { SHOPPING_PATH } from '../../constants/api';
 
 export default function ProductDetails() {
   const { addProduct } = useContext(cartContext);
@@ -43,11 +43,11 @@ export default function ProductDetails() {
   const isDbProduct = Boolean(prodNo);
   const hasExtraDetailInfo = Boolean(
     ProdDetails?.detailDesc ||
-      ProdDetails?.shortDesc ||
-      ProdDetails?.stockQty ||
-      ProdDetails?.deliveryType ||
-      ProdDetails?.deliveryFee ||
-      ProdDetails?.saleState,
+    ProdDetails?.shortDesc ||
+    ProdDetails?.stockQty ||
+    ProdDetails?.deliveryType ||
+    ProdDetails?.deliveryFee ||
+    ProdDetails?.saleState,
   );
 
   const formatWon = (value) => `${Number(value || 0).toLocaleString()} 원`;
@@ -60,7 +60,9 @@ export default function ProductDetails() {
         if (!trimmed) {
           return '';
         }
-        return trimmed.includes(':') ? trimmed.split(':').slice(1).join(':') : trimmed;
+        return trimmed.includes(':')
+          ? trimmed.split(':').slice(1).join(':')
+          : trimmed;
       })
       .filter(Boolean);
 
@@ -179,6 +181,7 @@ export default function ProductDetails() {
       setQnaErrorMessage('');
       setQnaSuccessMessage('');
 
+      ///api/inquiry/saveMyInquiry.do는 1:1문의 등록이므로 상품QnA등록용 api 생성 필요
       await api.post('/api/inquiry/saveMyInquiry.do', formData, {
         meta: { errorType: 'ALERT' },
       });
@@ -193,7 +196,8 @@ export default function ProductDetails() {
       await fetchProductExtraData(prodNo);
     } catch (error) {
       setQnaErrorMessage(
-        error.response?.data?.message || '상품 Q&A 등록 중 오류가 발생했습니다.',
+        error.response?.data?.message ||
+          '상품 Q&A 등록 중 오류가 발생했습니다.',
       );
     } finally {
       setQnaSubmitting(false);
@@ -221,7 +225,7 @@ export default function ProductDetails() {
       }
 
       try {
-        const dbResponse = await api.get(`/api/shopping/products/${id}`, {
+        const dbResponse = await api.get(`${SHOPPING_PATH}}/products/${id}`, {
           meta: { errorType: 'INLINE' },
         });
 
@@ -229,20 +233,12 @@ export default function ProductDetails() {
           setProdDetails(dbResponse.data?.data ?? dbResponse.data ?? {});
         }
         return;
-      } catch (dbError) {
-        try {
-          const response = await axios.get(
-            `https://ecommerce.routemisr.com/api/v1/products/${id}`,
-          );
-          if (isMounted) {
-            setProdDetails(response.data.data);
-          }
-        } catch (error) {
-          if (isMounted) {
-            setProdDetails({});
-          }
-          console.error(error);
+      } catch (error) {
+        // ❌  외부 API로 넘어가지 않고, 여기서 깔끔하게 에러 처리!
+        if (isMounted) {
+          setProdDetails({});
         }
+        console.error('상품 정보를 불러오지 못했습니다:', error);
       }
     };
 
@@ -355,7 +351,9 @@ export default function ProductDetails() {
               상품 설명 :
             </span>
             <p className="text-xl text-gray-600 dark:text-gray-300 mb-5">
-              {ProdDetails.shortDesc || ProdDetails.detailDesc || ProdDetails.description}
+              {ProdDetails.shortDesc ||
+                ProdDetails.detailDesc ||
+                ProdDetails.description}
             </p>
 
             <div className="mb-4">
@@ -365,13 +363,13 @@ export default function ProductDetails() {
                 </div>
                 <div className="flex items-center">
                   <span className="flex">
-                    {renderStars(Math.round(ProdDetails.ratingsAverage || 0)).map(
-                      (star, index) => (
-                        <span key={index} className="transform scale-150">
-                          {star}
-                        </span>
-                      ),
-                    )}
+                    {renderStars(
+                      Math.round(ProdDetails.ratingsAverage || 0),
+                    ).map((star, index) => (
+                      <span key={index} className="transform scale-150">
+                        {star}
+                      </span>
+                    ))}
                   </span>
                   <span className="bg-gray-100 text-gray-800 text-xl font-semibold mr-2 px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800 ml-3">
                     {ProdDetails.ratingsAverage || 0}
@@ -455,7 +453,9 @@ export default function ProductDetails() {
           <div className="mt-10 space-y-6 pb-8">
             <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
               <div className="mb-4 flex items-center justify-between gap-3">
-                <h3 className="text-2xl font-bold text-gray-900">상품상세 정보</h3>
+                <h3 className="text-2xl font-bold text-gray-900">
+                  상품상세 정보
+                </h3>
                 <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
                   DB 연동 상품
                 </span>
@@ -465,34 +465,48 @@ export default function ProductDetails() {
                 <>
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                     <div className="rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-700">
-                      <span className="font-semibold text-gray-900">상품번호</span>
+                      <span className="font-semibold text-gray-900">
+                        상품번호
+                      </span>
                       <div className="mt-1">{ProdDetails.prodNo}</div>
                     </div>
                     <div className="rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-700">
-                      <span className="font-semibold text-gray-900">판매상태</span>
+                      <span className="font-semibold text-gray-900">
+                        판매상태
+                      </span>
                       <div className="mt-1">{ProdDetails.saleState || '-'}</div>
                     </div>
                     <div className="rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-700">
-                      <span className="font-semibold text-gray-900">재고수량</span>
+                      <span className="font-semibold text-gray-900">
+                        재고수량
+                      </span>
                       <div className="mt-1">{ProdDetails.stockQty || '-'}</div>
                     </div>
                     <div className="rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-700">
-                      <span className="font-semibold text-gray-900">배송비</span>
+                      <span className="font-semibold text-gray-900">
+                        배송비
+                      </span>
                       <div className="mt-1">
-                        {ProdDetails.deliveryFee ? formatWon(ProdDetails.deliveryFee) : '무료'}
+                        {ProdDetails.deliveryFee
+                          ? formatWon(ProdDetails.deliveryFee)
+                          : '무료'}
                       </div>
                     </div>
                   </div>
 
                   <div className="mt-4 rounded-xl bg-gray-50 p-4">
-                    <h4 className="text-base font-semibold text-gray-900">상세 설명</h4>
+                    <h4 className="text-base font-semibold text-gray-900">
+                      상세 설명
+                    </h4>
                     <p className="mt-2 whitespace-pre-line text-sm leading-6 text-gray-700">
                       {ProdDetails.detailDesc || ProdDetails.shortDesc}
                     </p>
                   </div>
                 </>
               ) : (
-                <p className="text-sm text-gray-500">등록된 상세 정보가 없습니다.</p>
+                <p className="text-sm text-gray-500">
+                  등록된 상세 정보가 없습니다.
+                </p>
               )}
             </section>
 
@@ -505,7 +519,9 @@ export default function ProductDetails() {
               </div>
 
               {reviewsLoading ? (
-                <p className="text-sm text-gray-500">리뷰를 불러오는 중입니다...</p>
+                <p className="text-sm text-gray-500">
+                  리뷰를 불러오는 중입니다...
+                </p>
               ) : productReviews.length > 0 ? (
                 <div className="space-y-3">
                   {productReviews.map((review) => {
@@ -513,7 +529,10 @@ export default function ProductDetails() {
                     const isOpen = openReviewNo === review.reviewNo;
 
                     return (
-                      <div key={review.reviewNo} className="overflow-hidden rounded-xl border border-gray-200">
+                      <div
+                        key={review.reviewNo}
+                        className="overflow-hidden rounded-xl border border-gray-200"
+                      >
                         <button
                           type="button"
                           onClick={() =>
@@ -529,14 +548,16 @@ export default function ProductDetails() {
                                 {review.userNm || '구매자'}
                               </span>
                               <span className="flex text-sm">
-                                {renderStars(Math.round(Number(review.rating || 0))).map(
-                                  (star, index) => (
-                                    <span key={index}>{star}</span>
-                                  ),
-                                )}
+                                {renderStars(
+                                  Math.round(Number(review.rating || 0)),
+                                ).map((star, index) => (
+                                  <span key={index}>{star}</span>
+                                ))}
                               </span>
                             </div>
-                            <p className="mt-1 text-sm text-gray-500">{review.reviewDate || '-'}</p>
+                            <p className="mt-1 text-sm text-gray-500">
+                              {review.reviewDate || '-'}
+                            </p>
                           </div>
                           <span className="text-sm font-medium text-green-700">
                             {isOpen ? '접기' : '상세보기'}
@@ -568,7 +589,9 @@ export default function ProductDetails() {
                   })}
                 </div>
               ) : (
-                <p className="text-sm text-gray-500">해당 상품에 등록된 리뷰가 없습니다.</p>
+                <p className="text-sm text-gray-500">
+                  해당 상품에 등록된 리뷰가 없습니다.
+                </p>
               )}
             </section>
 
@@ -603,7 +626,9 @@ export default function ProductDetails() {
                   className="mb-5 space-y-3 rounded-xl border border-gray-200 bg-gray-50 p-4"
                 >
                   <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">문의유형</label>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">
+                      문의유형
+                    </label>
                     <select
                       name="inquiryCategory"
                       value={qnaForm.inquiryCategory}
@@ -620,7 +645,9 @@ export default function ProductDetails() {
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">제목</label>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">
+                      제목
+                    </label>
                     <input
                       type="text"
                       name="inquiryTitle"
@@ -632,7 +659,9 @@ export default function ProductDetails() {
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">내용</label>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">
+                      내용
+                    </label>
                     <textarea
                       name="inquiryContent"
                       value={qnaForm.inquiryContent}
@@ -648,10 +677,14 @@ export default function ProductDetails() {
                   </div>
 
                   {qnaErrorMessage && (
-                    <p className="text-sm font-medium text-red-600">{qnaErrorMessage}</p>
+                    <p className="text-sm font-medium text-red-600">
+                      {qnaErrorMessage}
+                    </p>
                   )}
                   {qnaSuccessMessage && (
-                    <p className="text-sm font-medium text-green-600">{qnaSuccessMessage}</p>
+                    <p className="text-sm font-medium text-green-600">
+                      {qnaSuccessMessage}
+                    </p>
                   )}
 
                   <div className="flex justify-end gap-2">
@@ -674,7 +707,9 @@ export default function ProductDetails() {
               )}
 
               {qnaLoading ? (
-                <p className="text-sm text-gray-500">상품 Q&A를 불러오는 중입니다...</p>
+                <p className="text-sm text-gray-500">
+                  상품 Q&A를 불러오는 중입니다...
+                </p>
               ) : productQnAs.length > 0 ? (
                 <div className="space-y-3">
                   {productQnAs.map((qna) => {
@@ -682,7 +717,10 @@ export default function ProductDetails() {
                     const isAnswered = Boolean(qna.answerContent);
 
                     return (
-                      <div key={qna.inquiryNo} className="overflow-hidden rounded-xl border border-gray-200">
+                      <div
+                        key={qna.inquiryNo}
+                        className="overflow-hidden rounded-xl border border-gray-200"
+                      >
                         <button
                           type="button"
                           onClick={() =>
@@ -703,10 +741,13 @@ export default function ProductDetails() {
                               >
                                 {isAnswered ? '답변완료' : '답변대기'}
                               </span>
-                              <span className="font-semibold text-gray-900">{qna.inquiryTitle}</span>
+                              <span className="font-semibold text-gray-900">
+                                {qna.inquiryTitle}
+                              </span>
                             </div>
                             <p className="mt-1 text-sm text-gray-500">
-                              {qna.inquiryCategoryNm || '상품문의'} · {qna.inquiryDate || '-'}
+                              {qna.inquiryCategoryNm || '상품문의'} ·{' '}
+                              {qna.inquiryDate || '-'}
                             </p>
                           </div>
                           <span className="text-sm font-medium text-green-700">
@@ -717,7 +758,9 @@ export default function ProductDetails() {
                         {isOpen && (
                           <div className="space-y-3 border-t border-gray-100 bg-gray-50 p-4">
                             <div>
-                              <p className="text-xs font-semibold text-gray-500">문의 내용</p>
+                              <p className="text-xs font-semibold text-gray-500">
+                                문의 내용
+                              </p>
                               <p className="mt-1 whitespace-pre-line text-sm leading-6 text-gray-700">
                                 {qna.inquiryContent || '문의 내용이 없습니다.'}
                               </p>
@@ -730,12 +773,17 @@ export default function ProductDetails() {
                                   : 'border border-dashed border-gray-200 bg-white'
                               }`}
                             >
-                              <p className="text-xs font-semibold text-gray-500">답변</p>
+                              <p className="text-xs font-semibold text-gray-500">
+                                답변
+                              </p>
                               <p className="mt-1 whitespace-pre-line text-sm leading-6 text-gray-700">
-                                {qna.answerContent || '아직 등록된 답변이 없습니다.'}
+                                {qna.answerContent ||
+                                  '아직 등록된 답변이 없습니다.'}
                               </p>
                               {qna.answerDate && (
-                                <p className="mt-2 text-xs text-gray-500">답변일 {qna.answerDate}</p>
+                                <p className="mt-2 text-xs text-gray-500">
+                                  답변일 {qna.answerDate}
+                                </p>
                               )}
                             </div>
                           </div>

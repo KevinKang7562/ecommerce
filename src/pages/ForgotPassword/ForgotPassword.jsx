@@ -1,11 +1,12 @@
 import { useFormik } from 'formik';
-import axios from 'axios';
+
 import * as Yup from 'yup';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import toast from 'react-hot-toast';
-import { AUTH_BASE_URL } from '../../config/api';
+import { AUTH_PATH } from '../../constants/api';
+import api from '../../api/axios';
 
 export default function ForgotPassword() {
   const [err, setErr] = useState(null);
@@ -23,9 +24,9 @@ export default function ForgotPassword() {
   function handleForgotPassword(data) {
     setIsLoading(true);
 
-    axios
-      .post(`${AUTH_BASE_URL}/requestPasswordReset.do`, data, {
-        withCredentials: true,
+    api
+      .post(`${AUTH_PATH}/requestPasswordReset.do`, data, {
+        meta: { errorType: 'INLINE' },
       })
       .then(() => {
         setErr(null);

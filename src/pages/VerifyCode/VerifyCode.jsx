@@ -1,11 +1,12 @@
 import { useFormik } from 'formik';
-import axios from 'axios';
+
 import * as Yup from 'yup';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import toast from 'react-hot-toast';
-import { AUTH_BASE_URL } from '../../config/api';
+import { AUTH_PATH } from '../../constants/api';
+import api from '../../api/axios';
 
 export default function VerifyCode() {
   const [err, setErr] = useState(null);
@@ -28,15 +29,15 @@ export default function VerifyCode() {
   function handleResetCode(data) {
     setIsLoading(true);
 
-    axios
+    api
       .post(
-        `${AUTH_BASE_URL}/verifyResetCode.do`,
+        `${AUTH_PATH}/verifyResetCode.do`,
         {
           userId: localStorage.getItem('resetUserId') || '',
           verifyCode: data.resetCode,
         },
         {
-          withCredentials: true,
+          meta: { errorType: 'INLINE' },
         },
       )
       .then(() => {

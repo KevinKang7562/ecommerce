@@ -1,11 +1,12 @@
 import { useFormik } from 'formik';
-import axios from 'axios';
+
 import * as Yup from 'yup';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import toast from 'react-hot-toast';
-import { AUTH_BASE_URL } from '../../config/api';
+import { AUTH_PATH } from '../../constants/api';
+import api from '../../api/axios';
 
 export default function ResetPassword() {
   const [err, setErr] = useState(null);
@@ -30,16 +31,16 @@ export default function ResetPassword() {
 
   function handleResetPassword(data) {
     setIsLoading(true);
-    axios
+    api
       .post(
-        `${AUTH_BASE_URL}/changePassword.do`,
+        `${AUTH_PATH}/changePassword.do`,
         {
           userId: localStorage.getItem('resetUserId') || '',
           verifyCode: localStorage.getItem('resetVerifyCode') || '',
           newPassword: data.newPassword,
         },
         {
-          withCredentials: true,
+          meta: { errorType: 'INLINE' },
         },
       )
       .then(() => {
