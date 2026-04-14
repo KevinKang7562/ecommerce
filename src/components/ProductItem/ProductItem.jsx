@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { cartContext } from '../../context/Cart/CartContextProvider';
 
 import StarRating from '../StarRating/StarRating';
+import { DEFAULT_PRODUCT_IMAGE } from '../../constants/api';
 
 export default function ProductItem({ product, isWished, handleWishlist }) {
   const { addProduct } = useContext(cartContext);
@@ -35,20 +36,15 @@ export default function ProductItem({ product, isWished, handleWishlist }) {
         </div>
         {/* 상품이미지 */}
         <Link to={`/product/${product.prodNo}`} state={{ product: product }}>
-          {product.imgUrl ? (
-            <img
-              className="rounded-t-2xl"
-              src={product.imgUrl}
-              alt={product.prodNm}
-              loading="lazy"
-              style={{ width: '100%', height: '320px', objectFit: 'cover' }}
-            />
-          ) : (
-            <div
-              className="rounded-t-2xl bg-gray-200"
-              style={{ width: '100%', height: '320px' }}
-            />
-          )}
+          <img
+            src={product.imgUrl || DEFAULT_PRODUCT_IMAGE}
+            className="w-full aspect-square object-cover rounded-t-lg bg-gray-100"
+            alt={product.prodNm || '상품 이미지'}
+            loading="lazy"
+            onError={(e) => {
+              e.target.src = DEFAULT_PRODUCT_IMAGE;
+            }}
+          />
         </Link>
         {/* 상품 정보 */}
         <div className="px-5 pb-5" style={{ marginTop: '0.75rem' }}>
