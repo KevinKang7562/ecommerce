@@ -3,6 +3,7 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../constants/api';
 // import { authContext } from '../Auth/Auth';
+import toast from 'react-hot-toast';
 console.log('[api] axios instance loaded');
 
 //axios 인스턴스 생성
@@ -44,15 +45,18 @@ api.interceptors.response.use(
 
     // 401 Unauthorized: 로그인 필요(SessionCheckInterceptor에서 세션 없을 때 401 반환)
     if (error.response?.status === 401) {
-      alert(message);
-      window.location.href = '/login';
+      toast.error(message);
+      // 토스트가 보여질 시간 1.5초 정도 벌어준 뒤에 페이지 이동
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 1500);
       return Promise.reject(error);
     }
 
     //사용자 정의 필드인 meta로 에러메세지 표시 방식 alert와 ui inline 표시 중 선택(api 요청 시 meta: { errorType: 'INLINE' } 같이 설정, 없으면 기본값 ALERT)
     const errorType = error.config?.meta?.errorType ?? 'ALERT';
     if (errorType === 'ALERT') {
-      alert(message);
+      toast.error(message);
     }
     return Promise.reject(error);
   },
