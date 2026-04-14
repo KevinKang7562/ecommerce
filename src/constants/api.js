@@ -4,6 +4,8 @@ export const IMAGE_BASE_URL =
   // import.meta.env.VITE_IMAGE_BASE_URL || 'http://10.100.102.27';
   import.meta.env.VITE_IMAGE_BASE_URL || 'http://10.100.101.165'; //사무실 이전으로 아이피 변경
 
+export const DEFAULT_PRODUCT_IMAGE = `${IMAGE_BASE_URL}/zin_user1/productImg/default_product_image.png`;
+
 const trimTrailingSlash = (value) => value.replace(/\/+$/, '');
 
 const API_BASE_URL = trimTrailingSlash(
