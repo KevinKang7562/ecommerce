@@ -1,14 +1,17 @@
 import { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { cartContext } from '../../context/Cart/CartContextProvider';
-import { productsContext } from '../../context/Products/Products';
+
+import StarRating from '../StarRating/StarRating';
 
 export default function ProductItem({ product, isWished, handleWishlist }) {
   const { addProduct } = useContext(cartContext);
-  const { renderStars } = useContext(productsContext);
 
+  // 백엔드에서 받아온 리뷰 통계 데이터 꺼내기 (없으면 0으로 안전하게 처리)
+  const reviewAvg = product.reviewAvg || 0;
+  const reviewCount = product.reviewCount || 0;
   const handleAddToCart = () => {
-    const productId = product?.prodNo || product?._id || product?.id;
+    const productId = product?.prodNo;
     if (!productId) {
       return;
     }
@@ -20,7 +23,7 @@ export default function ProductItem({ product, isWished, handleWishlist }) {
       <div className="relative bg-white mx-auto hover:scale-105 transition-all duration-400 hover:shadow-green-300 shadow-md rounded-lg max-w-sm dark:bg-gray-800 dark:border-gray-700">
         <div className="text-right absolute top-3 left-3">
           <button
-            onClick={() => handleWishlist(product._id)}
+            onClick={() => handleWishlist(product.prodNo)}
             className="p-2 rounded-full bg-green-500 bg-opacity-25 hover:bg-opacity-50"
           >
             {isWished ? (
@@ -30,13 +33,13 @@ export default function ProductItem({ product, isWished, handleWishlist }) {
             )}
           </button>
         </div>
-
-        <Link to={`/product/${product._id}`} state={{ product: product }}>
-          {product.imgUrl || product.imageCover ? (
+        {/* 상품이미지 */}
+        <Link to={`/product/${product.prodNo}`} state={{ product: product }}>
+          {product.imgUrl ? (
             <img
               className="rounded-t-2xl"
-              src={product.imgUrl || product.imageCover}
-              alt={product.prodNm || product.title}
+              src={product.imgUrl}
+              alt={product.prodNm}
               loading="lazy"
               style={{ width: '100%', height: '320px', objectFit: 'cover' }}
             />
@@ -47,19 +50,27 @@ export default function ProductItem({ product, isWished, handleWishlist }) {
             />
           )}
         </Link>
+        {/* 상품 정보 */}
         <div className="px-5 pb-5" style={{ marginTop: '0.75rem' }}>
-          <Link to={`/product/${product._id}`} className="hover:underline">
+          <Link to={`/product/${product.prodNo}`} className="hover:underline">
             <h3 className="text-gray-900 overflow-hidden text-ellipsis whitespace-nowrap font-semibold text-xl tracking-tight dark:text-white">
-              {product.prodNm || product.title}
+              {product.prodNm}
             </h3>
           </Link>
-          <div className="flex items-center justify-between mt-2.5 mb-5">
-            <span className="flex">
-              {renderStars(Math.round(product.ratingsAverage))}
+          {/* 리뷰 통계표시 */}
+          <div className="flex items-center mt-2.5 mb-5">
+            {/*  새로 만든 별점 컴포넌트 호출 (평균 점수 반올림해서 전달) */}
+            <span className="flex items-center">
+              <StarRating rating={Math.round(reviewAvg)} />
             </span>
-            <span className="bg-green-100 text-green-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800 ml-3">
-              {product.ratingsAverage}
+
+            {/*  평균 점수 소수점 1자리까지 표시 (예: 4.0) */}
+            <span className="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800 ml-3">
+              {reviewAvg.toFixed(1)}
             </span>
+
+            {/*  총 리뷰 갯수 표시 */}
+            <span className="text-sm text-gray-500 ml-2">({reviewCount})</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="md:text-xl text-2xl font-bold text-gray-900 dark:text-white">
