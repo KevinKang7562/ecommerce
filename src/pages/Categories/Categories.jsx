@@ -3,13 +3,12 @@ import { useContext, useEffect } from 'react';
 import Spinner from '../../components/Spinner/Spinner';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { productsContext } from '../../context/Products/Products';
+
 import { SHOPPING_PATH } from '../../constants/api';
 import api from '../../api/axios';
 
 export default function Categories() {
   const navigate = useNavigate();
-  const { data: products, setSearchRes } = useContext(productsContext);
 
   async function getCategories() {
     // axios.js의 인터셉터가 헤더 붙이고, 에러 나면 alert까지 처리
@@ -28,16 +27,11 @@ export default function Categories() {
 
   const handleCategoryClick = (category) => {
     // DB에서 카테고리 상품 조회를 위해 카테고리ID와 이름으로 쿼리 파라미터 전달
-    setSearchRes(null);
+
     navigate(
       `/search?categoryId=${category.categoriesId}&categoryName=${encodeURIComponent(category.name)}`,
     );
   };
-
-  //불필요 getCategories는 state로 관리할 필요가 없고, react-query의 useQuery 훅이 데이터를 캐싱하고 관리하기 때문에 useEffect로 getCategories를 호출할 필요가 없습니다.
-  // useEffect(() => {
-  //   getCategories();
-  // }, []);
 
   return (
     <div className="container flex flex-wrap items-center">
@@ -46,7 +40,7 @@ export default function Categories() {
         data.map((category) => (
           <div
             className="w-full lg:md:w-1/4 md:w-1/3 sm:w-1/2 p-3 cursor-pointer"
-            key={category._id}
+            key={category.categoriesId}
             onClick={() => handleCategoryClick(category)}
           >
             <div className="relative bg-white mx-auto hover:shadow-green-300 transition-shadow shadow-md rounded-lg max-w-sm dark:bg-gray-800 dark:border-gray-700 hover:-translate-y-1 transform transition-transform duration-200">
