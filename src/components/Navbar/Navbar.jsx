@@ -1,11 +1,11 @@
 import logo from '../../assets/freshcart-logo.svg';
 
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useContext, useEffect } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { authContext } from '../../context/Auth/Auth';
 import { initFlowbite } from 'flowbite';
-import { productsContext } from '../../context/Products/Products';
-import Search from '../../pages/Search/Search';
+// import { productsContext } from '../../context/Products/Products';
+// import Search from '../../pages/Search/Search';
 import { AUTH_PATH } from '../../constants/api';
 import api from '../../api/axios';
 
@@ -18,7 +18,9 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { data, setSearchRes } = useContext(productsContext);
+  const [searchTerm, setSearchTerm] = useState(''); // ✨ 검색어 상태 관리 추가
+
+  // const { data, setSearchRes } = useContext(productsContext);
 
   function handleLogout(e) {
     e.preventDefault();
@@ -39,22 +41,35 @@ export default function Navbar() {
       });
   }
 
-  function handleSearch(e) {
+  // 엔터키와 마우스 클릭 모두를 처리할 통합 검색 함수
+  const executeSearch = () => {
+    if (!searchTerm.trim()) return; // 빈칸이면 무시
+    navigate(`/search?keyword=${encodeURIComponent(searchTerm.trim())}`);
+    setSearchTerm(''); //검색 후 입력창 비우기
+  };
+  const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
-      const query = e.target.value.trim();
-
-      if (!data) {
-        return;
-      }
-
-      const filteredProducts = data.filter((product) =>
-        product.title.toLowerCase().includes(query.toLowerCase()),
-      );
-
-      setSearchRes(filteredProducts);
-      navigate('/search');
+      executeSearch();
     }
-  }
+  };
+
+  // function handleSearch(e) {
+  //   if (e.key === 'Enter') {
+  //     const query = e.target.value.trim();
+
+  //     // 빈 검색어 방지
+  //     if (!query) {
+  //       return;
+  //     }
+
+  //     // ✨ 기존의 복잡한 filter, setSearchRes 다 지우고 딱 한 줄만 남깁니다!
+  //     // "검색어를 주소창에 달아서 /search 페이지로 이동시켜라!"
+  //     navigate(`/search?keyword=${encodeURIComponent(query)}`);
+
+  //     // (선택) 검색 후 입력창을 비워주고 싶다면:
+  //     // e.target.value = '';
+  //   }
+  // }
 
   useEffect(() => {
     initFlowbite();
@@ -106,7 +121,12 @@ export default function Navbar() {
                 <span className="sr-only">Search</span>
               </button>
               <div className="relative hidden lg:block">
-                <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                {/* <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none"> */}
+                <button
+                  type="button" // 폼 제출 방지용
+                  onClick={executeSearch} // 마우스 클릭 시 실행
+                  className="absolute inset-y-0 start-0 flex items-center ps-3 cursor-pointer hover:text-green-600 transition-colors"
+                >
                   <svg
                     className="w-4 h-4 text-gray-500 dark:text-gray-400"
                     aria-hidden="true"
@@ -123,13 +143,16 @@ export default function Navbar() {
                     />
                   </svg>
                   <span className="sr-only">Search icon</span>
-                </div>
+                  {/* </div> */}
+                </button>
                 <input
                   type="text"
-                  onKeyUp={handleSearch}
+                  value={searchTerm} // useState와 연결
+                  onChange={(e) => setSearchTerm(e.target.value)} //  글자 입력할 때마다 상태 업데이트
+                  onKeyDown={handleKeyDown} // 엔터키 감지용 (onKeyUp 대신 onKeyDown 권장)
                   id="search-navbar"
                   className="block w-full p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500"
-                  placeholder="Search..."
+                  placeholder="상품명 검색"
                 />
               </div>
             </>
@@ -167,7 +190,11 @@ export default function Navbar() {
           >
             {/* {userToken ? ( */}
             <div className="relative mt-3 lg:hidden">
-              <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+              <button
+                type="button" // 폼 제출 방지용
+                onClick={executeSearch} // 마우스 클릭 시 실행
+                className="absolute inset-y-0 start-0 flex items-center ps-3 cursor-pointer hover:text-green-600 transition-colors"
+              >
                 <svg
                   className="w-4 h-4 text-gray-500 dark:text-gray-400"
                   aria-hidden="true"
@@ -183,13 +210,15 @@ export default function Navbar() {
                     d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
                   />
                 </svg>
-              </div>
+              </button>
               <input
                 type="text"
-                onKeyUp={handleSearch}
-                id="mobile-search-navbar"
+                value={searchTerm} // useState와 연결
+                onChange={(e) => setSearchTerm(e.target.value)} //  글자 입력할 때마다 상태 업데이트
+                onKeyDown={handleKeyDown} // 엔터키 감지용 (onKeyUp 대신 onKeyDown 권장)
+                id="search-navbar"
                 className="block w-full p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500"
-                placeholder="Search..."
+                placeholder="상품명 검색"
               />
             </div>
             {/* ) : (
@@ -225,14 +254,14 @@ export default function Navbar() {
                   </div>
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link to="brands" className={getLinkClass('/brands')}>
                   <div className="flex lg:flex-col lg:justify-center items-center space-x-1">
                     <i className="fa-solid fa-tags" />
                     <span>브랜드</span>
                   </div>
                 </Link>
-              </li>
+              </li> */}
               <li>
                 <Link to="categories" className={getLinkClass('/categories')}>
                   <div className="flex lg:flex-col lg:justify-center items-center space-x-1">
