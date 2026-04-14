@@ -4,82 +4,92 @@ import api from '../../api/axios';
 import { wishlistContext } from '../../context/Wishlist/Wishlist';
 import Spinner from '../../components/Spinner/Spinner';
 import ProductItem from '../../components/ProductItem/ProductItem';
-import { productsContext } from '../../context/Products/Products';
+
+import { useQuery } from '@tanstack/react-query';
+
+import { SHOPPING_PATH } from '../../constants/api';
 
 export default function Search() {
-  const location = useLocation();
+  // const location = useLocation();
   const [searchParams] = useSearchParams();
-  const { searchRes } = useContext(productsContext);
+  // const { searchRes } = useContext(productsContext);
   const categoryIdFromQuery = searchParams.get('categoryId');
   const categoryNameFromQuery = searchParams.get('categoryName');
-
-  const [products, setProducts] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const keywordFromQuery = searchParams.get('keyword'); // 네비바 검색어 쿼리 파라미터
 
   const { getWishlist, addToWishlist, deleteWishlistItem } =
     useContext(wishlistContext);
 
   const [wishlistIds, setWishlistIds] = useState(null);
 
-  async function handleWishlist(id) {
-    if (wishlistIds?.indexOf(id) !== -1) {
-      await deleteWishlistItem(id);
-    } else {
-      const product = searchRes?.find((item) => item._id === id);
-      await addToWishlist(product ?? id);
+  // 위시리스트 초기 로딩 함수 (헷갈리던 main() 이름을 직관적으로 변경)
+  const fetchWishlist = async () => {
+    try {
+      const wishlistItems = await getWishlist();
+      const ids = wishlistItems.map((item) => item._id);
+      setWishlistIds(ids);
+    } catch (err) {
+      console.error('위시리스트 로딩 에러:', err);
     }
-    main();
-  }
-
-  async function main() {
-    const wishlistItems = await getWishlist();
-    const ids = wishlistItems.map((item) => item._id);
-    setWishlistIds(ids);
-  }
+  };
 
   useEffect(() => {
-    main();
+    fetchWishlist();
   }, []);
 
-  useEffect(() => {
-    const fetchCategoryProducts = async () => {
-      if (!categoryIdFromQuery) {
-        setProducts(searchRes || []);
-        return;
-      }
+  // 위시리스트 추가/삭제 핸들러
+  async function handleWishlist(id) {
+    if (wishlistIds?.includes(id)) {
+      await deleteWishlistItem(id);
+    } else {
+      // 옛날의 searchRes(Context) 대신, 방금 useQuery로 가져온 products에서 상품을 찾습니다
+      const product = products?.find((item) => item._id === id);
+      await addToWishlist(product ?? id);
+    }
+    fetchWishlist(); // 하트 색깔 갱신
+  }
 
-      setLoading(true);
-      setError(null);
+  // useQuery 도입: useState 3개(products, loading, error)와 useEffect를 이거 하나로 압축
+  const {
+    data: products,
+    isLoading: loading,
+    isError: error,
+  } = useQuery({
+    // categoryIdFromQuery가 바뀔 때마다 알아서 쿼리를 다시 실행하고 캐싱합니다.
+    queryKey: ['products', categoryIdFromQuery, keywordFromQuery], // 검색어도 쿼리 키에 추가해서 검색어 변경 시에도 데이터 갱신
+    queryFn: async () => {
+      // if (!categoryIdFromQuery) return []; // 카테고리 ID가 없으면 빈 배열 반환
 
-      try {
-        console.log('=== selectProducts 호출 ===');
-        console.log('categoryIdFromQuery:', categoryIdFromQuery);
-        
-        const response = await api.post('/api/shopping/selectProducts.do', {
-          categoriesId: categoryIdFromQuery,  // DTO의 categoriesId 필드로 조회
-        });
+      // const response = await api.post('/api/shopping/selectProducts.do', {
+      //   categoriesId: categoryIdFromQuery,
+      // });
+      //위에서 아래로 수정(네비바에 검색어로 검색하는 것 추가됨)
+      if (!categoryIdFromQuery && !keywordFromQuery) return [];
 
-        console.log('응답 데이터:', response.data);
-        const resData = response?.data?.data ?? response?.data;
-        setProducts(Array.isArray(resData) ? resData : []);
-      } catch (err) {
-        console.error('에러:', err);
-        setError('상품 조회 중 오류가 발생했습니다.');
-        setProducts([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+      // ✨ 4. 서버로 보낼 택배 상자(데이터) 조립
+      const requestData = {};
+      if (categoryIdFromQuery) requestData.categoriesId = categoryIdFromQuery;
 
-    fetchCategoryProducts();
-  }, [categoryIdFromQuery, searchRes]);
+      // 주의: 'searchKeyword' 부분은 질문자님의 Spring 백엔드 DTO 변수명과 똑같이 맞춰주세요!
+      if (keywordFromQuery) requestData.searchKeyword = keywordFromQuery;
+
+      const response = await api.post(
+        `${SHOPPING_PATH}/selectProducts.do`,
+        requestData,
+      );
+      return response?.data?.data ?? response?.data ?? [];
+    },
+  });
 
   return (
     <>
       <div className="container flex flex-wrap items-center">
         <h3 className="text-3xl font-medium mb-5 w-full">
-          {categoryIdFromQuery ? `${categoryNameFromQuery} 상품 리스트` : 'Search Results:'}
+          {categoryIdFromQuery
+            ? `${categoryNameFromQuery} 상품 리스트`
+            : keywordFromQuery
+              ? `"${keywordFromQuery}" 검색 결과`
+              : 'Search Results'}
         </h3>
         {loading ? (
           <div className="w-full">
