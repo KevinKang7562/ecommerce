@@ -6,7 +6,11 @@ import api from '../../api/axios';
 import { useCommCd } from '../../hooks/useCommCd';
 import { cartContext } from '../../context/Cart/CartContextProvider';
 import { authContext } from '../../context/Auth/Auth.jsx';
-import { DEFAULT_PRODUCT_IMAGE, SHOPPING_PATH } from '../../constants/api';
+import {
+  DEFAULT_PRODUCT_IMAGE,
+  IMAGE_BASE_URL,
+  SHOPPING_PATH,
+} from '../../constants/api';
 import StarRating from '../../components/StarRating/StarRating';
 
 export default function ProductDetails() {
@@ -37,6 +41,14 @@ export default function ProductDetails() {
     inquiryTitle: '',
     inquiryContent: '',
   });
+  const [currentReviewPage, setCurrentReviewPage] = useState(1);
+  const [totalReviewPages, setTotalReviewPages] = useState(1);
+  const [totalReviewCount, setTotalReviewCount] = useState(0);
+
+  // 이미지 확대 팝업 상태
+  const [selectedReviewImage, setSelectedReviewImage] = useState(null);
+  const [imageIndex, setImageIndex] = useState(0);
+  const [allReviewImages, setAllReviewImages] = useState([]);
 
   const { id } = useParams();
 
@@ -56,19 +68,27 @@ export default function ProductDetails() {
   const imageUrls = Array.isArray(ProdDetails.images)
     ? ProdDetails.images
         .map((item) =>
-          typeof item === 'string' ? item : item?.IMG_URL || item?.imgUrl || '',
+          normalizeImageUrl(
+            typeof item === 'string'
+              ? item
+              : item?.IMG_URL || item?.imgUrl || '',
+          ),
         )
         .filter(Boolean)
     : [];
 
-  const mainImage = ProdDetails.imgUrl || imageUrls[0] || DEFAULT_PRODUCT_IMAGE;
+  const mainImage =
+    normalizeImageUrl(ProdDetails.imgUrl) ||
+    imageUrls[0] ||
+    DEFAULT_PRODUCT_IMAGE;
 
   // 메인 이미지를 포함한 전체 이미지 리스트를 만들고, Set으로 중복된 이미지를 제거
   // const rawThumbnails = [ProdDetails.imgUrl, ...imageUrls].filter(Boolean);
   // ✨ 수정: DB에 등록된 '진짜' 이미지만 필터링 (기본 이미지는 걸러냄)
-  const rawThumbnails = [ProdDetails.imgUrl, ...imageUrls].filter(
-    (img) => img && img !== DEFAULT_PRODUCT_IMAGE,
-  );
+  const rawThumbnails = [
+    normalizeImageUrl(ProdDetails.imgUrl),
+    ...imageUrls,
+  ].filter((img) => img && img !== DEFAULT_PRODUCT_IMAGE);
   const thumbnailImages = [...new Set(rawThumbnails)];
 
   const [selectedImage, setSelectedImage] = useState(mainImage);
@@ -80,21 +100,29 @@ export default function ProductDetails() {
   const reviewAvg = Number(ProdDetails.reviewAvg || 0);
   const reviewCount = Number(ProdDetails.reviewCount || 0);
 
+  function normalizeImageUrl(imgUrl) {
+    const trimmed = String(imgUrl || '').trim();
+    if (!trimmed) return '';
+    if (/^https?:\/\//i.test(trimmed) || /^data:/i.test(trimmed))
+      return trimmed;
+    const path = trimmed.includes(':')
+      ? trimmed.split(':').slice(1).join(':')
+      : trimmed;
+    return path ? `${IMAGE_BASE_URL}${path}` : '';
+  }
+
   const getReviewImages = (imgUrls) =>
     String(imgUrls || '')
       .split(',')
-      .map((value) => {
-        const trimmed = value.trim();
-        if (!trimmed) {
-          return '';
-        }
-        return trimmed.includes(':')
-          ? trimmed.split(':').slice(1).join(':')
-          : trimmed;
-      })
+      .map((value) => normalizeImageUrl(value))
       .filter(Boolean);
 
-  const fetchProductExtraData = async (targetProdNo) => {
+  const maskUserId = (userId) => {
+    if (!userId || userId.length <= 3) return userId || '구매자';
+    return userId.substring(0, 3) + '*'.repeat(userId.length - 3);
+  };
+
+  const fetchProductExtraData = async (targetProdNo, reviewPage = 1) => {
     if (!targetProdNo) {
       setProductReviews([]);
       setProductQnAs([]);
@@ -109,10 +137,13 @@ export default function ProductDetails() {
     try {
       const [reviewResponse, qnaResponse] = await Promise.all([
         api
-          .get(`/api/review/product/${targetProdNo}`, {
-            meta: { errorType: 'INLINE' },
-          })
-          .catch(() => ({ data: { data: [] } })),
+          .get(
+            `/api/review/product/${targetProdNo}?page=${reviewPage}&size=5`,
+            {
+              meta: { errorType: 'INLINE' },
+            },
+          )
+          .catch(() => ({ data: { data: { reviews: [], totalCount: 0 } } })),
         api
           .get(`/api/inquiry/product/${targetProdNo}/qna`, {
             meta: { errorType: 'INLINE' },
@@ -120,12 +151,19 @@ export default function ProductDetails() {
           .catch(() => ({ data: { data: [] } })),
       ]);
 
-      const nextReviews = reviewResponse.data?.data ?? [];
+      const reviewData = reviewResponse.data?.data ?? {
+        reviews: [],
+        totalCount: 0,
+      };
+      const nextReviews = reviewData.reviews ?? [];
+      const totalCount = reviewData.totalCount ?? 0;
       const nextQnAs = qnaResponse.data?.data ?? [];
 
       setProductReviews(nextReviews);
+      setTotalReviewCount(totalCount);
+      setTotalReviewPages(Math.ceil(totalCount / 5));
       setProductQnAs(nextQnAs);
-      setOpenReviewNo(nextReviews[0]?.reviewNo ?? null);
+      setOpenReviewNo(null);
       setOpenInquiryNo(nextQnAs[0]?.inquiryNo ?? null);
     } finally {
       setReviewsLoading(false);
@@ -243,7 +281,7 @@ export default function ProductDetails() {
       {
         breakpoint: 768,
         settings: {
-          slidesToShow: Math.min3, // 태블릿 화면에서도 3칸 기준 고정
+          slidesToShow: 3, // 태블릿 화면에서도 3칸 기준 고정
         },
       },
       {
@@ -285,14 +323,21 @@ export default function ProductDetails() {
   }, [id]);
 
   useEffect(() => {
-    if (!prodNo) {
-      setProductReviews([]);
-      setProductQnAs([]);
-      return;
-    }
-
-    fetchProductExtraData(prodNo);
+    if (!prodNo) return;
+    fetchProductExtraData(prodNo, currentReviewPage);
   }, [prodNo]);
+
+  useEffect(() => {
+    const combined = productReviews.flatMap((review) => {
+      const reviewImages = getReviewImages(review.imgUrls);
+      return reviewImages.map((src) => ({
+        src,
+        reviewNo: review.reviewNo,
+        userId: review.userId,
+      }));
+    });
+    setAllReviewImages(combined);
+  }, [productReviews]);
 
   const handleDecreaseQuantity = () => {
     setQuantity((prev) => Math.max(1, prev - 1));
@@ -309,6 +354,52 @@ export default function ProductDetails() {
     }
     setQuantity(Math.min(99, Math.max(1, value)));
   };
+
+  // 이미지 팝업 열기
+  const openImageModal = (imageUrl) => {
+    const index = allReviewImages.findIndex((img) => img.src === imageUrl);
+    if (index !== -1) {
+      setImageIndex(index);
+      setSelectedReviewImage(imageUrl);
+    }
+  };
+
+  // 이미지 팝업 닫기
+  const closeImageModal = () => {
+    setSelectedReviewImage(null);
+  };
+
+  // 다음 이미지
+  const nextImage = () => {
+    if (imageIndex < allReviewImages.length - 1) {
+      const nextIdx = imageIndex + 1;
+      setImageIndex(nextIdx);
+      setSelectedReviewImage(allReviewImages[nextIdx].src);
+    }
+  };
+
+  // 이전 이미지
+  const prevImage = () => {
+    if (imageIndex > 0) {
+      const prevIdx = imageIndex - 1;
+      setImageIndex(prevIdx);
+      setSelectedReviewImage(allReviewImages[prevIdx].src);
+    }
+  };
+
+  // 키보드 네비게이션
+  useEffect(() => {
+    if (!selectedReviewImage) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowRight') nextImage();
+      if (e.key === 'ArrowLeft') prevImage();
+      if (e.key === 'Escape') closeImageModal();
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [imageIndex, allReviewImages, selectedReviewImage]);
 
   return (
     <>
@@ -572,7 +663,7 @@ export default function ProductDetails() {
               <div className="mb-4 flex items-center justify-between gap-3">
                 <h3 className="text-2xl font-bold text-gray-900">상품 리뷰</h3>
                 <span className="text-sm font-medium text-gray-500">
-                  총 {productReviews.length}건
+                  총 {totalReviewCount}건
                 </span>
               </div>
 
@@ -603,7 +694,7 @@ export default function ProductDetails() {
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="font-semibold text-gray-900">
-                                {review.userNm || '구매자'}
+                                {maskUserId(review.userId || review.userNm)}
                               </span>
                               <span className="flex text-sm gap-1">
                                 {[...Array(5)].map((_, i) => (
@@ -636,7 +727,8 @@ export default function ProductDetails() {
                                     key={`${review.reviewNo}-${index}`}
                                     src={imageUrl}
                                     alt="리뷰 이미지"
-                                    className="h-28 w-full rounded-lg object-cover bg-white"
+                                    className="w-full aspect-square cursor-pointer rounded-lg object-cover bg-white transition-transform hover:scale-105"
+                                    onClick={() => openImageModal(imageUrl)}
                                   />
                                 ))}
                               </div>
@@ -651,6 +743,73 @@ export default function ProductDetails() {
                 <p className="text-sm text-gray-500">
                   해당 상품에 등록된 리뷰가 없습니다.
                 </p>
+              )}
+
+              {/* 페이지네이션 */}
+              {totalReviewPages > 1 && (
+                <div className="mt-6 flex justify-center">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newPage = Math.max(1, currentReviewPage - 5);
+                        setCurrentReviewPage(newPage);
+                        fetchProductExtraData(prodNo, newPage);
+                      }}
+                      disabled={currentReviewPage <= 5}
+                      className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      이전
+                    </button>
+
+                    {Array.from(
+                      {
+                        length: Math.min(
+                          5,
+                          totalReviewPages -
+                            Math.floor((currentReviewPage - 1) / 5) * 5,
+                        ),
+                      },
+                      (_, i) => {
+                        const pageNum =
+                          Math.floor((currentReviewPage - 1) / 5) * 5 + i + 1;
+                        return (
+                          <button
+                            key={pageNum}
+                            type="button"
+                            onClick={() => {
+                              setCurrentReviewPage(pageNum);
+                              fetchProductExtraData(prodNo, pageNum);
+                            }}
+                            className={`rounded-lg border px-3 py-2 text-sm font-medium ${
+                              currentReviewPage === pageNum
+                                ? 'border-green-500 bg-green-50 text-green-700'
+                                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      },
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newPage = Math.min(
+                          totalReviewPages,
+                          Math.floor((currentReviewPage - 1) / 5) * 5 + 6,
+                        );
+                        setCurrentReviewPage(newPage);
+                        fetchProductExtraData(prodNo, newPage);
+                      }}
+                      disabled={currentReviewPage > totalReviewPages - 5}
+                      className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      다음
+                    </button>
+                  </div>
+                </div>
               )}
             </section>
 
@@ -860,6 +1019,57 @@ export default function ProductDetails() {
           </div>
         )}
       </div>
+
+      {/* 이미지 확대 모달 */}
+      {selectedReviewImage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
+          <div className="relative max-h-full max-w-4xl">
+            <img
+              src={selectedReviewImage}
+              alt="확대된 리뷰 이미지"
+              className="max-h-full max-w-full object-contain"
+            />
+
+            {/* 닫기 버튼 */}
+            <button
+              type="button"
+              onClick={closeImageModal}
+              className="absolute -top-12 right-0 text-white hover:text-gray-300"
+            >
+              <i className="fa fa-times text-2xl" />
+            </button>
+
+            {/* 이전/다음 버튼 */}
+            {allReviewImages.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={prevImage}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 disabled:opacity-50"
+                  disabled={imageIndex === 0}
+                >
+                  <i className="fa fa-chevron-left text-3xl" />
+                </button>
+                <button
+                  type="button"
+                  onClick={nextImage}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 disabled:opacity-50"
+                  disabled={imageIndex === allReviewImages.length - 1}
+                >
+                  <i className="fa fa-chevron-right text-3xl" />
+                </button>
+              </>
+            )}
+
+            {/* 이미지 카운터 */}
+            {allReviewImages.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white">
+                {imageIndex + 1} / {allReviewImages.length}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }
