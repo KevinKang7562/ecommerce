@@ -5,18 +5,20 @@ import { Helmet } from 'react-helmet';
 import api from '../../api/axios';
 import { useCommCd } from '../../hooks/useCommCd';
 import { cartContext } from '../../context/Cart/CartContextProvider';
-import { productsContext } from '../../context/Products/Products.jsx';
+// import { productsContext } from '../../context/Products/Products.jsx';
 import { authContext } from '../../context/Auth/Auth.jsx';
-import { SHOPPING_PATH } from '../../constants/api';
+import { DEFAULT_PRODUCT_IMAGE, SHOPPING_PATH } from '../../constants/api';
+import StarRating from '../../components/StarRating/StarRating';
 
 export default function ProductDetails() {
   const { addProduct } = useContext(cartContext);
-  const { renderStars } = useContext(productsContext);
+  // const { renderStars } = useContext(productsContext);
   const { userToken } = useContext(authContext);
   const { codes: inquiryCategoryOptions } = useCommCd({
     hCd: 'INQUIRY_CATEGORY',
     refCd: 'IT002',
   });
+
   const navigate = useNavigate();
   const [ProdDetails, setProdDetails] = useState({});
   const [quantity, setQuantity] = useState(1);
@@ -51,6 +53,29 @@ export default function ProductDetails() {
   );
 
   const formatWon = (value) => `${Number(value || 0).toLocaleString()} 원`;
+
+  const imageUrls = Array.isArray(ProdDetails.images)
+    ? ProdDetails.images
+        .map((item) =>
+          typeof item === 'string' ? item : item?.IMG_URL || item?.imgUrl || '',
+        )
+        .filter(Boolean)
+    : [];
+
+  const mainImage = ProdDetails.imgUrl || imageUrls[0] || DEFAULT_PRODUCT_IMAGE;
+
+  // 메인 이미지를 포함한 전체 이미지 리스트를 만들고, Set으로 중복된 이미지를 제거
+  const rawThumbnails = [ProdDetails.imgUrl, ...imageUrls].filter(Boolean);
+  const thumbnailImages = [...new Set(rawThumbnails)];
+
+  const [selectedImage, setSelectedImage] = useState(mainImage);
+
+  useEffect(() => {
+    setSelectedImage(mainImage);
+  }, [mainImage]);
+
+  const reviewAvg = Number(ProdDetails.reviewAvg || 0);
+  const reviewCount = Number(ProdDetails.reviewCount || 0);
 
   const getReviewImages = (imgUrls) =>
     String(imgUrls || '')
@@ -204,15 +229,27 @@ export default function ProductDetails() {
     }
   };
 
-  const settings = {
-    dots: true,
+  const thumbnailSettings = {
+    dots: false,
     infinite: true,
-    slidesToShow: 1,
+    slidesToShow: Math.min(4, thumbnailImages.length || 1),
     slidesToScroll: 1,
-    arrows: false,
-    autoplay: true,
-    autoplaySpeed: 1500,
-    pauseOnHover: true,
+    arrows: true,
+    swipeToSlide: true,
+    responsive: [
+      {
+        breakpoint: 768,
+        settings: {
+          slidesToShow: Math.min(3, thumbnailImages.length || 1),
+        },
+      },
+      {
+        breakpoint: 480,
+        settings: {
+          slidesToShow: 2,
+        },
+      },
+    ],
   };
 
   useEffect(() => {
@@ -220,12 +257,11 @@ export default function ProductDetails() {
 
     const loadProduct = async () => {
       if (location.state?.product) {
-        setProdDetails(location.state.product);
-        return;
+        // setProdDetails(location.state.product);
       }
 
       try {
-        const dbResponse = await api.get(`${SHOPPING_PATH}}/products/${id}`, {
+        const dbResponse = await api.get(`${SHOPPING_PATH}/products/${id}`, {
           meta: { errorType: 'INLINE' },
         });
 
@@ -309,146 +345,175 @@ export default function ProductDetails() {
       )}
 
       <Helmet>
-        <title>{ProdDetails.prodNm || ProdDetails.title || '상품 상세'}</title>
+        <title>{ProdDetails.prodNm || '상품 상세'}</title>
       </Helmet>
 
-      <div className="container dark:bg-gray-800">
-        <div className="flex flex-col md:flex-row md:space-x-8">
-          <div className="w-full md:w-1/3 mb-8 md:mb-0">
-            <div className="rounded-xl overflow-hidden mb-7 dark:bg-gray-700">
-              {ProdDetails.imgUrl ? (
-                <div className="w-full h-[460px]">
-                  <img
-                    className="w-full h-full object-contain rounded-xl"
-                    src={ProdDetails.imgUrl}
-                    alt={ProdDetails.prodNm || ProdDetails.title}
-                  />
-                </div>
-              ) : ProdDetails.images ? (
-                <Slider {...settings}>
-                  {ProdDetails.images.map((img, index) => (
-                    <div key={index} className="w-full h-[460px]">
+      {/* 기존 코드: 비율 수정: md:grid-cols-12 로 변경해서 5:7 황금비율 세팅 */}
+      {/* <div className="container dark:bg-gray-800">
+        <div className="grid gap-10 md:gap-14 md:grid-cols-12 items-start"> */}
+      {/* 1. 최상단 컨테이너: 
+       - 기본(작은 화면): container 클래스로 기존 비율 유지
+       - lg(큰 화면): max-w-6xl로 너비를 제한하고 px-10으로 안쪽 여백을 더 넓게 줌 */}
+      <div className="container lg:max-w-6xl mx-auto px-4 lg:px-10 dark:bg-gray-800">
+        {/* 2. 그리드 레이아웃:
+         - 기본(작은 화면): gap-6으로 좁은 간격 유지
+         - lg(큰 화면): gap-20으로 좌우 단락 사이를 시원하게 벌림 */}
+        <div className="grid gap-6 lg:gap-20 md:grid-cols-12 items-start">
+          {/* ================= 좌측: 이미지 영역 (5칸 차지) ================= */}
+          <div className="space-y-4 min-w-0 md:col-span-5">
+            {/* 메인 이미지 */}
+            <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-white">
+              <img
+                className="w-full aspect-square object-contain"
+                src={selectedImage || mainImage}
+                alt={ProdDetails.prodNm || '상품 이미지'}
+                loading="lazy"
+                onError={(e) => {
+                  e.target.src = DEFAULT_PRODUCT_IMAGE;
+                }}
+              />
+            </div>
+
+            {/* 썸네일 슬라이더 */}
+            {thumbnailImages.length > 0 && (
+              <div className="px-1 overflow-hidden max-h-[100px] md:max-h-[150px]">
+                <Slider {...thumbnailSettings}>
+                  {thumbnailImages.map((img, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => setSelectedImage(img)}
+                      className={`p-1 outline-none ${img === selectedImage ? 'opacity-100' : 'opacity-50 hover:opacity-100'}`}
+                    >
                       <img
-                        className="w-full h-full object-contain rounded-xl"
+                        className="w-full aspect-square object-cover rounded-lg border border-gray-200 bg-white"
                         src={img}
-                        alt={`Product image ${index + 1}`}
+                        alt={`Product thumbnail ${index + 1}`}
                       />
-                    </div>
+                    </button>
                   ))}
                 </Slider>
-              ) : (
-                <div className="w-full h-[460px] bg-gray-200 rounded-xl"></div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
-          <div className="w-full md:w-2/3">
-            <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-10">
-              {ProdDetails.prodNm || ProdDetails.title}
+          {/* ================= 우측: 상품 정보 영역 (네이버 스마트스토어 스타일) ================= */}
+          {/* <div className="w-full flex flex-col h-full pt-2"> */}
+          {/* ================= 우측: 상품 정보 영역 (7칸 차지) ================= */}
+          <div className="w-full flex flex-col h-full pt-2 md:col-span-7">
+            {/* 1. 상품명 (좌측) */}
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+              {ProdDetails.prodNm}
             </h2>
 
-            <span className="text-xl font-bold text-gray-700 dark:text-gray-300">
-              상품 설명 :
-            </span>
-            <p className="text-xl text-gray-600 dark:text-gray-300 mb-5">
-              {ProdDetails.shortDesc ||
-                ProdDetails.detailDesc ||
-                ProdDetails.description}
+            {/* 2. 별점 (우측 정렬) */}
+            <div className="flex justify-end items-center gap-2 mt-2">
+              <StarRating rating={Math.round(reviewAvg)} />
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                {reviewAvg.toFixed(1)}
+              </span>
+              <span className="text-sm text-gray-500">({reviewCount}건)</span>
+            </div>
+
+            {/* 3. 상품 상세 설명 (좌측 정렬) */}
+            <p className="mt-4 text-base text-gray-600 dark:text-gray-400">
+              {ProdDetails.shortDesc || ProdDetails.detailDesc}
             </p>
 
-            <div className="mb-4">
-              <div className="flex justify-between my-4">
-                <div className="text-xl font-bold text-gray-800 dark:text-white">
-                  평점
-                </div>
-                <div className="flex items-center">
-                  <span className="flex">
-                    {renderStars(
-                      Math.round(ProdDetails.ratingsAverage || 0),
-                    ).map((star, index) => (
-                      <span key={index} className="transform scale-150">
-                        {star}
-                      </span>
-                    ))}
-                  </span>
-                  <span className="bg-gray-100 text-gray-800 text-xl font-semibold mr-2 px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800 ml-3">
-                    {ProdDetails.ratingsAverage || 0}
-                  </span>
-                </div>
+            {/* 4. 가격 (우측 정렬, 빨간색 텍스트) */}
+            <div className="text-right mt-6">
+              <span className="text-3xl md:text-4xl font-extrabold text-black-600 dark:text-black-500">
+                {formatWon(ProdDetails.price)}
+              </span>
+            </div>
+
+            <hr className="my-6 border-gray-200 dark:border-gray-700" />
+
+            {/* 5. 배송 방식 및 배송비 (구매 버튼 위쪽 배치, 공통코드 이름 매핑) */}
+            <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-5 mb-6 space-y-3 text-sm">
+              <div className="flex items-center gap-6">
+                <span className="text-gray-500 dark:text-gray-400 w-16">
+                  배송 방식
+                </span>
+                <span className="font-medium text-gray-900 dark:text-gray-100">
+                  {ProdDetails.deliveryTypeNm || '일반배송'}
+                </span>
               </div>
-
-              <div className="my-5 flex justify-between text-gray-900 dark:text-white">
-                <div className="text-2xl font-bold text-gray-700 dark:text-gray-300">
-                  가격 :
-                </div>
-                <div className="text-xl font-bold">
-                  {ProdDetails.imgUrl
-                    ? formatWon(ProdDetails.price)
-                    : ` ${ProdDetails.price}`}
-                </div>
+              <div className="flex items-center gap-6">
+                <span className="text-gray-500 dark:text-gray-400 w-16">
+                  배송비
+                </span>
+                <span className="font-medium text-gray-900 dark:text-gray-100">
+                  {ProdDetails.deliveryFee
+                    ? formatWon(ProdDetails.deliveryFee)
+                    : '무료배송'}
+                </span>
               </div>
+            </div>
 
-              <div className="w-full max-w-md ml-auto">
-                <div className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3 mb-4">
-                  <span className="text-base font-semibold text-gray-700 dark:text-gray-200">
-                    수량
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={handleDecreaseQuantity}
-                      className="w-8 h-8 rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    >
-                      -
-                    </button>
-                    <input
-                      type="number"
-                      min="1"
-                      max="99"
-                      value={quantity}
-                      onChange={handleQuantityInput}
-                      className="w-14 text-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleIncreaseQuantity}
-                      className="w-8 h-8 rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3 mb-4">
-                  <span className="text-base font-semibold text-gray-700 dark:text-gray-200">
-                    총 금액
-                  </span>
-                  <span className="text-xl font-bold text-green-700 dark:text-green-400">
-                    {ProdDetails.imgUrl
-                      ? formatWon(quantity * Number(ProdDetails.price))
-                      : `${(quantity * Number(ProdDetails.price)).toFixed(2)}`}
-                  </span>
-                </div>
-
-                <div className="flex mt-4 gap-3">
+            {/* 6. 수량 선택 및 총 금액 */}
+            <div className="space-y-3 mb-6">
+              <div className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  수량
+                </span>
+                <div className="flex items-center gap-2">
                   <button
-                    onClick={handleBuyNow}
-                    className="flex-1 bg-green-700 hover:bg-green-800 dark:bg-green-600 text-white py-2 px-4 rounded-lg font-bold dark:hover:bg-green-700"
+                    type="button"
+                    onClick={handleDecreaseQuantity}
+                    className="w-8 h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 hover:bg-gray-50 outline-none"
                   >
-                    바로 구매
+                    -
                   </button>
+                  <input
+                    type="number"
+                    min="1"
+                    max="99"
+                    value={quantity}
+                    onChange={handleQuantityInput}
+                    className="w-12 text-center border-none bg-transparent font-medium focus:ring-0 text-gray-900 dark:text-white"
+                  />
                   <button
-                    className="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white py-2 px-4 rounded-lg font-bold hover:bg-gray-300 dark:hover:bg-gray-600"
-                    onClick={handleAddToCart}
+                    type="button"
+                    onClick={handleIncreaseQuantity}
+                    className="w-8 h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 hover:bg-gray-50 outline-none"
                   >
-                    장바구니 담기
+                    +
                   </button>
                 </div>
               </div>
+
+              <div className="flex items-center justify-between px-2 pt-2">
+                <span className="text-base font-semibold text-gray-900 dark:text-white">
+                  총 상품 금액
+                </span>
+                <span className="text-2xl font-bold text-green-700 dark:text-green-500">
+                  {ProdDetails.price
+                    ? formatWon(quantity * Number(ProdDetails.price))
+                    : '0 원'}
+                </span>
+              </div>
+            </div>
+
+            {/* 7. 구매 및 장바구니 버튼 */}
+            <div className="flex gap-2 mt-auto">
+              <button
+                onClick={handleBuyNow}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white py-4 rounded-xl font-bold text-lg transition-colors"
+              >
+                바로 구매
+              </button>
+              <button
+                onClick={handleAddToCart}
+                className="flex-1 bg-gray-800 hover:bg-gray-900 text-white py-4 rounded-xl font-bold text-lg transition-colors"
+              >
+                장바구니
+              </button>
             </div>
           </div>
         </div>
 
+        {/* 상세정보/리뷰/QnA */}
         {isDbProduct && (
           <div className="mt-10 space-y-6 pb-8">
             <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
@@ -456,9 +521,9 @@ export default function ProductDetails() {
                 <h3 className="text-2xl font-bold text-gray-900">
                   상품상세 정보
                 </h3>
-                <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
+                {/* <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
                   DB 연동 상품
-                </span>
+                </span> */}
               </div>
 
               {hasExtraDetailInfo ? (
@@ -474,7 +539,13 @@ export default function ProductDetails() {
                       <span className="font-semibold text-gray-900">
                         판매상태
                       </span>
-                      <div className="mt-1">{ProdDetails.saleState || '-'}</div>
+                      <div className="mt-1">
+                        {/* {getLabelByCode(
+                          saleStateOptions,
+                          ProdDetails.saleState,
+                        ) || '-'} */}
+                        {ProdDetails.saleStateNm || '-'}
+                      </div>
                     </div>
                     <div className="rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-700">
                       <span className="font-semibold text-gray-900">
@@ -547,11 +618,12 @@ export default function ProductDetails() {
                               <span className="font-semibold text-gray-900">
                                 {review.userNm || '구매자'}
                               </span>
-                              <span className="flex text-sm">
-                                {renderStars(
-                                  Math.round(Number(review.rating || 0)),
-                                ).map((star, index) => (
-                                  <span key={index}>{star}</span>
+                              <span className="flex text-sm gap-1">
+                                {[...Array(5)].map((_, i) => (
+                                  <i
+                                    key={i}
+                                    className={`fa fa-star ${i < Math.round(Number(review.rating || 0)) ? 'text-yellow-400' : 'text-gray-300'}`}
+                                  />
                                 ))}
                               </span>
                             </div>
