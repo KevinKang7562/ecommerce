@@ -1,11 +1,10 @@
 import { useContext, useEffect, useState } from 'react';
 import Slider from 'react-slick/lib/slider.js';
-import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import api from '../../api/axios';
 import { useCommCd } from '../../hooks/useCommCd';
 import { cartContext } from '../../context/Cart/CartContextProvider';
-// import { productsContext } from '../../context/Products/Products.jsx';
 import { authContext } from '../../context/Auth/Auth.jsx';
 import { DEFAULT_PRODUCT_IMAGE, SHOPPING_PATH } from '../../constants/api';
 import StarRating from '../../components/StarRating/StarRating';
@@ -38,7 +37,7 @@ export default function ProductDetails() {
     inquiryTitle: '',
     inquiryContent: '',
   });
-  const location = useLocation();
+
   const { id } = useParams();
 
   const prodNo = ProdDetails?.prodNo ? Number(ProdDetails.prodNo) : null;
@@ -65,7 +64,11 @@ export default function ProductDetails() {
   const mainImage = ProdDetails.imgUrl || imageUrls[0] || DEFAULT_PRODUCT_IMAGE;
 
   // 메인 이미지를 포함한 전체 이미지 리스트를 만들고, Set으로 중복된 이미지를 제거
-  const rawThumbnails = [ProdDetails.imgUrl, ...imageUrls].filter(Boolean);
+  // const rawThumbnails = [ProdDetails.imgUrl, ...imageUrls].filter(Boolean);
+  // ✨ 수정: DB에 등록된 '진짜' 이미지만 필터링 (기본 이미지는 걸러냄)
+  const rawThumbnails = [ProdDetails.imgUrl, ...imageUrls].filter(
+    (img) => img && img !== DEFAULT_PRODUCT_IMAGE,
+  );
   const thumbnailImages = [...new Set(rawThumbnails)];
 
   const [selectedImage, setSelectedImage] = useState(mainImage);
@@ -231,8 +234,8 @@ export default function ProductDetails() {
 
   const thumbnailSettings = {
     dots: false,
-    infinite: true,
-    slidesToShow: Math.min(4, thumbnailImages.length || 1),
+    infinite: false, // ✨ 회전문(무한 스크롤) 방지: 마지막 이미지에 도달하면 더 이상 안 넘어감
+    slidesToShow: 4, // ✨ 핵심: 이미지가 1개든 2개든 무조건 '4칸 기준'으로 고정해서 당근 이미지 팽창 방지
     slidesToScroll: 1,
     arrows: true,
     swipeToSlide: true,
@@ -240,13 +243,13 @@ export default function ProductDetails() {
       {
         breakpoint: 768,
         settings: {
-          slidesToShow: Math.min(3, thumbnailImages.length || 1),
+          slidesToShow: Math.min3, // 태블릿 화면에서도 3칸 기준 고정
         },
       },
       {
         breakpoint: 480,
         settings: {
-          slidesToShow: 2,
+          slidesToShow: 2, // 모바일 화면에서도 2칸 기준 고정
         },
       },
     ],
@@ -256,10 +259,6 @@ export default function ProductDetails() {
     let isMounted = true;
 
     const loadProduct = async () => {
-      if (location.state?.product) {
-        // setProdDetails(location.state.product);
-      }
-
       try {
         const dbResponse = await api.get(`${SHOPPING_PATH}/products/${id}`, {
           meta: { errorType: 'INLINE' },
@@ -283,7 +282,7 @@ export default function ProductDetails() {
     return () => {
       isMounted = false;
     };
-  }, [id, location.state]);
+  }, [id]);
 
   useEffect(() => {
     if (!prodNo) {
@@ -348,9 +347,6 @@ export default function ProductDetails() {
         <title>{ProdDetails.prodNm || '상품 상세'}</title>
       </Helmet>
 
-      {/* 기존 코드: 비율 수정: md:grid-cols-12 로 변경해서 5:7 황금비율 세팅 */}
-      {/* <div className="container dark:bg-gray-800">
-        <div className="grid gap-10 md:gap-14 md:grid-cols-12 items-start"> */}
       {/* 1. 최상단 컨테이너: 
        - 기본(작은 화면): container 클래스로 기존 비율 유지
        - lg(큰 화면): max-w-6xl로 너비를 제한하고 px-10으로 안쪽 여백을 더 넓게 줌 */}
@@ -397,8 +393,6 @@ export default function ProductDetails() {
             )}
           </div>
 
-          {/* ================= 우측: 상품 정보 영역 (네이버 스마트스토어 스타일) ================= */}
-          {/* <div className="w-full flex flex-col h-full pt-2"> */}
           {/* ================= 우측: 상품 정보 영역 (7칸 차지) ================= */}
           <div className="w-full flex flex-col h-full pt-2 md:col-span-7">
             {/* 1. 상품명 (좌측) */}
@@ -420,7 +414,7 @@ export default function ProductDetails() {
               {ProdDetails.shortDesc || ProdDetails.detailDesc}
             </p>
 
-            {/* 4. 가격 (우측 정렬, 빨간색 텍스트) */}
+            {/* 4. 가격 (우측 정렬) */}
             <div className="text-right mt-6">
               <span className="text-3xl md:text-4xl font-extrabold text-black-600 dark:text-black-500">
                 {formatWon(ProdDetails.price)}
@@ -521,9 +515,6 @@ export default function ProductDetails() {
                 <h3 className="text-2xl font-bold text-gray-900">
                   상품상세 정보
                 </h3>
-                {/* <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
-                  DB 연동 상품
-                </span> */}
               </div>
 
               {hasExtraDetailInfo ? (
@@ -540,10 +531,6 @@ export default function ProductDetails() {
                         판매상태
                       </span>
                       <div className="mt-1">
-                        {/* {getLabelByCode(
-                          saleStateOptions,
-                          ProdDetails.saleState,
-                        ) || '-'} */}
                         {ProdDetails.saleStateNm || '-'}
                       </div>
                     </div>
