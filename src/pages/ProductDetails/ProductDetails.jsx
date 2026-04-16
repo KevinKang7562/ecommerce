@@ -10,6 +10,8 @@ import {
   DEFAULT_PRODUCT_IMAGE,
   IMAGE_BASE_URL,
   SHOPPING_PATH,
+  MY_INQUIRY_PATH,
+  MY_REVIEW_PATH,
 } from '../../constants/api';
 import StarRating from '../../components/StarRating/StarRating';
 
@@ -19,7 +21,7 @@ export default function ProductDetails() {
   const { userToken } = useContext(authContext);
   const { codes: inquiryCategoryOptions } = useCommCd({
     hCd: 'INQUIRY_CATEGORY',
-    refCd: 'IT002',
+    refCd: 'IT001',
   });
 
   const navigate = useNavigate();
@@ -44,6 +46,9 @@ export default function ProductDetails() {
   const [currentReviewPage, setCurrentReviewPage] = useState(1);
   const [totalReviewPages, setTotalReviewPages] = useState(1);
   const [totalReviewCount, setTotalReviewCount] = useState(0);
+  const [currentQnaPage, setCurrentQnaPage] = useState(1);
+  const [totalQnaPages, setTotalQnaPages] = useState(1);
+  const [totalQnACount, setTotalQnACount] = useState(0);
 
   // 이미지 확대 팝업 상태
   const [selectedReviewImage, setSelectedReviewImage] = useState(null);
@@ -122,7 +127,11 @@ export default function ProductDetails() {
     return userId.substring(0, 3) + '*'.repeat(userId.length - 3);
   };
 
-  const fetchProductExtraData = async (targetProdNo, reviewPage = 1) => {
+  const fetchProductExtraData = async (
+    targetProdNo,
+    reviewPage = 1,
+    qnaPage = 1,
+  ) => {
     if (!targetProdNo) {
       setProductReviews([]);
       setProductQnAs([]);
@@ -138,33 +147,49 @@ export default function ProductDetails() {
       const [reviewResponse, qnaResponse] = await Promise.all([
         api
           .get(
-            `/api/review/product/${targetProdNo}?page=${reviewPage}&size=5`,
+            `${MY_REVIEW_PATH}/product/${targetProdNo}?page=${reviewPage}&size=5`,
             {
               meta: { errorType: 'INLINE' },
             },
           )
-          .catch(() => ({ data: { data: { reviews: [], totalCount: 0 } } })),
+          .catch(() => ({
+            data: { data: { reviews: [], totalReviewCount: 0 } },
+          })),
         api
-          .get(`/api/inquiry/product/${targetProdNo}/qna`, {
-            meta: { errorType: 'INLINE' },
-          })
-          .catch(() => ({ data: { data: [] } })),
+          .get(
+            `${MY_INQUIRY_PATH}/product/${targetProdNo}/qna?page=${qnaPage}&size=5`,
+            {
+              meta: { errorType: 'INLINE' },
+            },
+          )
+          .catch(() => ({
+            data: { data: { qnaList: [], totalQnACount: 0 } },
+          })),
       ]);
 
       const reviewData = reviewResponse.data?.data ?? {
         reviews: [],
-        totalCount: 0,
+        totalReviewCount: 0,
       };
       const nextReviews = reviewData.reviews ?? [];
-      const totalCount = reviewData.totalCount ?? 0;
-      const nextQnAs = qnaResponse.data?.data ?? [];
+      const totalReviewCount = reviewData.totalReviewCount ?? 0;
+      const qnaData = qnaResponse.data?.data ?? {
+        qnaList: [],
+        totalQnACount: 0,
+      };
+      const nextQnAs = qnaData.qnaList ?? [];
+      const qnaTotalCount = qnaData.totalQnACount ?? 0;
 
       setProductReviews(nextReviews);
-      setTotalReviewCount(totalCount);
-      setTotalReviewPages(Math.ceil(totalCount / 5));
+      setTotalReviewCount(totalReviewCount);
+      setTotalReviewPages(Math.ceil(totalReviewCount / 5));
       setProductQnAs(nextQnAs);
+      setTotalQnACount(qnaTotalCount);
+      setTotalQnaPages(Math.ceil(qnaTotalCount / 5));
+      setCurrentReviewPage(reviewPage);
+      setCurrentQnaPage(qnaPage);
       setOpenReviewNo(null);
-      setOpenInquiryNo(nextQnAs[0]?.inquiryNo ?? null);
+      setOpenInquiryNo(null);
     } finally {
       setReviewsLoading(false);
       setQnaLoading(false);
@@ -207,6 +232,7 @@ export default function ProductDetails() {
     }));
   };
 
+  //상품 Q&A 등록
   const handleSubmitProductQna = async (e) => {
     e.preventDefault();
 
@@ -237,7 +263,7 @@ export default function ProductDetails() {
 
     const formData = new FormData();
     formData.append('prodNo', String(prodNo));
-    formData.append('inquiryType', 'IT002');
+    formData.append('inquiryType', 'IT001');
     formData.append('inquiryCategory', qnaForm.inquiryCategory);
     formData.append('inquiryTitle', qnaForm.inquiryTitle.trim());
     formData.append('inquiryContent', qnaForm.inquiryContent.trim());
@@ -247,8 +273,7 @@ export default function ProductDetails() {
       setQnaErrorMessage('');
       setQnaSuccessMessage('');
 
-      ///api/inquiry/saveMyInquiry.do는 1:1문의 등록이므로 상품QnA등록용 api 생성 필요
-      await api.post('/api/inquiry/saveMyInquiry.do', formData, {
+      await api.post(`${MY_INQUIRY_PATH}/saveMyProductQnA.do`, formData, {
         meta: { errorType: 'ALERT' },
       });
 
@@ -259,7 +284,7 @@ export default function ProductDetails() {
       });
       setQnaSuccessMessage('상품 Q&A가 등록되었습니다.');
       setShowQnaForm(false);
-      await fetchProductExtraData(prodNo);
+      await fetchProductExtraData(prodNo, currentReviewPage, currentQnaPage);
     } catch (error) {
       setQnaErrorMessage(
         error.response?.data?.message ||
@@ -324,7 +349,9 @@ export default function ProductDetails() {
 
   useEffect(() => {
     if (!prodNo) return;
-    fetchProductExtraData(prodNo, currentReviewPage);
+    setCurrentReviewPage(1);
+    setCurrentQnaPage(1);
+    fetchProductExtraData(prodNo, 1, 1);
   }, [prodNo]);
 
   useEffect(() => {
@@ -766,8 +793,11 @@ export default function ProductDetails() {
                       {
                         length: Math.min(
                           5,
-                          totalReviewPages -
-                            Math.floor((currentReviewPage - 1) / 5) * 5,
+                          Math.max(
+                            0,
+                            totalReviewPages -
+                              Math.floor((currentReviewPage - 1) / 5) * 5,
+                          ),
                         ),
                       },
                       (_, i) => {
@@ -779,7 +809,11 @@ export default function ProductDetails() {
                             type="button"
                             onClick={() => {
                               setCurrentReviewPage(pageNum);
-                              fetchProductExtraData(prodNo, pageNum);
+                              fetchProductExtraData(
+                                prodNo,
+                                pageNum,
+                                currentQnaPage,
+                              );
                             }}
                             className={`rounded-lg border px-3 py-2 text-sm font-medium ${
                               currentReviewPage === pageNum
@@ -814,30 +848,35 @@ export default function ProductDetails() {
             </section>
 
             <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <div>
+              <div className="mb-4 flex flex-col gap-2">
+                <div className="flex items-center justify-between gap-3">
                   <h3 className="text-2xl font-bold text-gray-900">상품 Q&A</h3>
+                  <span className="mt-1 text-sm text-gray-500">
+                    총 {totalQnACount}건
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between gap-3">
                   <p className="mt-1 text-sm text-gray-500">
                     상품 관련 문의와 답변을 확인할 수 있습니다.
                   </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!userToken) {
+                        setShowLoginModal(true);
+                        return;
+                      }
+                      setQnaErrorMessage('');
+                      setQnaSuccessMessage('');
+                      setShowQnaForm((prev) => !prev);
+                    }}
+                    className="rounded-lg bg-green-700 px-4 py-2 text-sm font-semibold text-white hover:bg-green-800"
+                  >
+                    Q&A 등록
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!userToken) {
-                      setShowLoginModal(true);
-                      return;
-                    }
-                    setQnaErrorMessage('');
-                    setQnaSuccessMessage('');
-                    setShowQnaForm((prev) => !prev);
-                  }}
-                  className="rounded-lg bg-green-700 px-4 py-2 text-sm font-semibold text-white hover:bg-green-800"
-                >
-                  Q&A 등록
-                </button>
               </div>
-
               {showQnaForm && (
                 <form
                   onSubmit={handleSubmitProductQna}
@@ -929,87 +968,186 @@ export default function ProductDetails() {
                   상품 Q&A를 불러오는 중입니다...
                 </p>
               ) : productQnAs.length > 0 ? (
-                <div className="space-y-3">
-                  {productQnAs.map((qna) => {
-                    const isOpen = openInquiryNo === qna.inquiryNo;
-                    const isAnswered = Boolean(qna.answerContent);
+                <>
+                  <div className="space-y-3">
+                    {productQnAs.map((qna) => {
+                      const isOpen = openInquiryNo === qna.inquiryNo;
+                      const isAnswered = Boolean(qna.answerContent);
+                      const inquiryUserLabel =
+                        qna.inquiryUserId || qna.inquiryUserNm;
+                      const answerUserLabel =
+                        qna.answerUserId || qna.answerUserNm;
 
-                    return (
-                      <div
-                        key={qna.inquiryNo}
-                        className="overflow-hidden rounded-xl border border-gray-200"
-                      >
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setOpenInquiryNo((prev) =>
-                              prev === qna.inquiryNo ? null : qna.inquiryNo,
-                            )
-                          }
-                          className="flex w-full items-center justify-between gap-3 px-4 py-4 text-left hover:bg-gray-50"
+                      return (
+                        <div
+                          key={qna.inquiryNo}
+                          className="overflow-hidden rounded-xl border border-gray-200"
                         >
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span
-                                className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setOpenInquiryNo((prev) =>
+                                prev === qna.inquiryNo ? null : qna.inquiryNo,
+                              )
+                            }
+                            className="flex w-full items-center justify-between gap-3 px-4 py-4 text-left hover:bg-gray-50"
+                          >
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                    isAnswered
+                                      ? 'bg-green-100 text-green-700'
+                                      : 'bg-amber-100 text-amber-700'
+                                  }`}
+                                >
+                                  {isAnswered ? '답변완료' : '답변대기'}
+                                </span>
+                                <span className="font-semibold text-gray-900">
+                                  {qna.inquiryTitle}
+                                </span>
+                              </div>
+                              <p className="mt-1 text-sm text-gray-500">
+                                {qna.inquiryCategoryNm || '상품문의'} ·{' '}
+                                {qna.inquiryDate || '-'}
+                                {inquiryUserLabel && (
+                                  <>
+                                    {' '}
+                                    &middot; 문의자{' '}
+                                    {maskUserId(inquiryUserLabel)}
+                                  </>
+                                )}
+                              </p>
+                            </div>
+                            <span className="text-sm font-medium text-green-700">
+                              {isOpen ? '접기' : '상세보기'}
+                            </span>
+                          </button>
+
+                          {isOpen && (
+                            <div className="space-y-3 border-t border-gray-100 bg-gray-50 p-4">
+                              <div>
+                                <p className="text-xs font-semibold text-gray-500">
+                                  문의 내용
+                                </p>
+                                <p className="mt-1 whitespace-pre-line text-sm leading-6 text-gray-700">
+                                  {qna.inquiryContent ||
+                                    '문의 내용이 없습니다.'}
+                                </p>
+                              </div>
+
+                              <div
+                                className={`rounded-lg p-4 ${
                                   isAnswered
-                                    ? 'bg-green-100 text-green-700'
-                                    : 'bg-amber-100 text-amber-700'
+                                    ? 'border border-green-200 bg-green-50'
+                                    : 'border border-dashed border-gray-200 bg-white'
                                 }`}
                               >
-                                {isAnswered ? '답변완료' : '답변대기'}
-                              </span>
-                              <span className="font-semibold text-gray-900">
-                                {qna.inquiryTitle}
-                              </span>
+                                <p className="text-xs font-semibold text-gray-500">
+                                  답변
+                                </p>
+                                <p className="mt-1 whitespace-pre-line text-sm leading-6 text-gray-700">
+                                  {qna.answerContent ||
+                                    '아직 등록된 답변이 없습니다.'}
+                                </p>
+                                {answerUserLabel && (
+                                  <p className="mt-2 text-xs text-gray-500">
+                                    답변자 {maskUserId(answerUserLabel)}
+                                  </p>
+                                )}
+                                {qna.answerDate && (
+                                  <p className="mt-2 text-xs text-gray-500">
+                                    답변일 {qna.answerDate}
+                                  </p>
+                                )}
+                              </div>
                             </div>
-                            <p className="mt-1 text-sm text-gray-500">
-                              {qna.inquiryCategoryNm || '상품문의'} ·{' '}
-                              {qna.inquiryDate || '-'}
-                            </p>
-                          </div>
-                          <span className="text-sm font-medium text-green-700">
-                            {isOpen ? '접기' : '상세보기'}
-                          </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {totalQnaPages > 1 && (
+                    <div className="mt-6 flex justify-center">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newPage = Math.max(1, currentQnaPage - 5);
+                            setCurrentQnaPage(newPage);
+                            fetchProductExtraData(
+                              prodNo,
+                              currentReviewPage,
+                              newPage,
+                            );
+                          }}
+                          disabled={currentQnaPage <= 5}
+                          className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          이전
                         </button>
 
-                        {isOpen && (
-                          <div className="space-y-3 border-t border-gray-100 bg-gray-50 p-4">
-                            <div>
-                              <p className="text-xs font-semibold text-gray-500">
-                                문의 내용
-                              </p>
-                              <p className="mt-1 whitespace-pre-line text-sm leading-6 text-gray-700">
-                                {qna.inquiryContent || '문의 내용이 없습니다.'}
-                              </p>
-                            </div>
-
-                            <div
-                              className={`rounded-lg p-4 ${
-                                isAnswered
-                                  ? 'border border-green-200 bg-green-50'
-                                  : 'border border-dashed border-gray-200 bg-white'
-                              }`}
-                            >
-                              <p className="text-xs font-semibold text-gray-500">
-                                답변
-                              </p>
-                              <p className="mt-1 whitespace-pre-line text-sm leading-6 text-gray-700">
-                                {qna.answerContent ||
-                                  '아직 등록된 답변이 없습니다.'}
-                              </p>
-                              {qna.answerDate && (
-                                <p className="mt-2 text-xs text-gray-500">
-                                  답변일 {qna.answerDate}
-                                </p>
-                              )}
-                            </div>
-                          </div>
+                        {Array.from(
+                          {
+                            length: Math.min(
+                              5,
+                              Math.max(
+                                0,
+                                totalQnaPages -
+                                  Math.floor((currentQnaPage - 1) / 5) * 5,
+                              ),
+                            ),
+                          },
+                          (_, i) => {
+                            const pageNum =
+                              Math.floor((currentQnaPage - 1) / 5) * 5 + i + 1;
+                            return (
+                              <button
+                                key={pageNum}
+                                type="button"
+                                onClick={() => {
+                                  setCurrentQnaPage(pageNum);
+                                  fetchProductExtraData(
+                                    prodNo,
+                                    currentReviewPage,
+                                    pageNum,
+                                  );
+                                }}
+                                className={`rounded-lg border px-3 py-2 text-sm font-medium ${
+                                  currentQnaPage === pageNum
+                                    ? 'border-green-500 bg-green-50 text-green-700'
+                                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                                }`}
+                              >
+                                {pageNum}
+                              </button>
+                            );
+                          },
                         )}
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newPage = Math.min(
+                              totalQnaPages,
+                              Math.floor((currentQnaPage - 1) / 5) * 5 + 6,
+                            );
+                            setCurrentQnaPage(newPage);
+                            fetchProductExtraData(
+                              prodNo,
+                              currentReviewPage,
+                              newPage,
+                            );
+                          }}
+                          disabled={currentQnaPage > totalQnaPages - 5}
+                          className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          다음
+                        </button>
                       </div>
-                    );
-                  })}
-                </div>
+                    </div>
+                  )}
+                </>
               ) : (
                 <p className="text-sm text-gray-500">
                   등록된 상품 Q&A가 없습니다. 첫 문의를 남겨보세요.
