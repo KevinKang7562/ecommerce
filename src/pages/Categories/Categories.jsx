@@ -4,7 +4,7 @@ import Spinner from '../../components/Spinner/Spinner';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 
-import { SHOPPING_PATH } from '../../constants/api';
+import { SHOPPING_PATH, IMAGE_BASE_URL } from '../../constants/api';
 import api from '../../api/axios';
 
 export default function Categories() {
@@ -46,7 +46,7 @@ export default function Categories() {
             <div className="relative bg-white mx-auto hover:shadow-green-300 transition-shadow shadow-md rounded-lg max-w-sm dark:bg-gray-800 dark:border-gray-700 hover:-translate-y-1 transform transition-transform duration-200">
               <img
                 className="rounded-t-lg sm:object-cover object-contain object-top w-full h-80"
-                src={category.image}
+                src={`${IMAGE_BASE_URL}${category.image}`}
                 alt={category.title}
               />
               <div className="px-5 py-2">

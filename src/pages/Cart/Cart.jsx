@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from 'react';
 import { cartContext } from '../../context/Cart/CartContextProvider';
 import { Link } from 'react-router-dom';
 import Spinner from '../../components/Spinner/Spinner';
-import { DEFAULT_PRODUCT_IMAGE } from '../../constants/api';
+import { DEFAULT_PRODUCT_IMAGE, IMAGE_BASE_URL } from '../../constants/api';
 
 export default function Cart() {
   const { getProducts, deleteProduct, updateProductQuantity } =
@@ -76,7 +76,10 @@ export default function Cart() {
                     <td className="p-4">
                       <Link to={`/product/${item.product.prodNo}`}>
                         <img
-                          src={item.product.imgUrl || DEFAULT_PRODUCT_IMAGE}
+                          src={
+                            `${IMAGE_BASE_URL}${item.product.imgUrl}` ||
+                            DEFAULT_PRODUCT_IMAGE
+                          }
                           className="w-24 h-24 aspect-square object-cover rounded-lg bg-gray-100"
                           onError={(e) => {
                             e.target.src = DEFAULT_PRODUCT_IMAGE; // 에러 났을 때도 상수로 교체!

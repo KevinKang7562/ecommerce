@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { cartContext } from '../../context/Cart/CartContextProvider';
 import { useNavigate } from 'react-router-dom';
 import StarRating from '../StarRating/StarRating';
-import { DEFAULT_PRODUCT_IMAGE } from '../../constants/api';
+import { DEFAULT_PRODUCT_IMAGE, IMAGE_BASE_URL } from '../../constants/api';
 
 export default function ProductItem({ product, isWished, handleWishlist }) {
   const { addProduct } = useContext(cartContext);
@@ -52,7 +52,7 @@ export default function ProductItem({ product, isWished, handleWishlist }) {
         {/* 상품이미지 */}
 
         <img
-          src={product.imgUrl || DEFAULT_PRODUCT_IMAGE}
+          src={`${IMAGE_BASE_URL}${product.imgUrl}` || DEFAULT_PRODUCT_IMAGE}
           className="w-full aspect-square object-cover rounded-t-lg bg-gray-100"
           alt={product.prodNm || '상품 이미지'}
           loading="lazy"

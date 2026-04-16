@@ -5,6 +5,7 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import api from '../../api/axios';
 import Spinner from '../../components/Spinner/Spinner';
+import { DEFAULT_PRODUCT_IMAGE, IMAGE_BASE_URL } from '../../constants/api';
 
 export default function Checkout() {
   const [isLoading, setIsLoading] = useState(false);
@@ -27,11 +28,13 @@ export default function Checkout() {
 
   const displayProducts = useMemo(() => {
     if (directProduct) {
-      return [{
-        product: directProduct,
-        price: Number(directProduct.price) * directQuantity,
-        count: directQuantity,
-      }];
+      return [
+        {
+          product: directProduct,
+          price: Number(directProduct.price) * directQuantity,
+          count: directQuantity,
+        },
+      ];
     }
     return products;
   }, [directProduct, directQuantity, products]);
@@ -107,7 +110,10 @@ export default function Checkout() {
     const checkoutId = id || cartData?._id;
 
     if (!checkoutId) {
-      openAlertModal('주문 불가', '결제 정보가 없어 주문을 진행할 수 없습니다.');
+      openAlertModal(
+        '주문 불가',
+        '결제 정보가 없어 주문을 진행할 수 없습니다.',
+      );
       return;
     }
 
@@ -168,7 +174,10 @@ export default function Checkout() {
         });
       })
       .catch((error) => {
-        openAlertModal('주문 실패', error.response?.data?.message || '주문 처리 중 오류가 발생했습니다.');
+        openAlertModal(
+          '주문 실패',
+          error.response?.data?.message || '주문 처리 중 오류가 발생했습니다.',
+        );
       })
       .finally(() => {
         setIsLoading(false);
@@ -181,10 +190,13 @@ export default function Checkout() {
       return;
     }
 
-    const checkoutId = id || cartData?._id;
+    const checkoutId = id || cartData?._id; //장바구니 고유 ID
 
     if (!checkoutId) {
-      openAlertModal('주문 불가', '결제 정보가 없어 주문을 진행할 수 없습니다.');
+      openAlertModal(
+        '주문 불가',
+        '결제 정보가 없어 주문을 진행할 수 없습니다.',
+      );
       return;
     }
 
@@ -235,9 +247,14 @@ export default function Checkout() {
         'expiryYear',
         'cvc',
       ];
-      const firstErrorKey = priorityFields.find((key) => errors[key]) || Object.keys(errors)[0];
-      const firstErrorMessage = errors[firstErrorKey] || '입력값을 다시 확인해주세요.';
-      openAlertModal('필수 정보 확인', `주문 전 필수 정보를 확인해주세요.\n\n${firstErrorMessage}`);
+      const firstErrorKey =
+        priorityFields.find((key) => errors[key]) || Object.keys(errors)[0];
+      const firstErrorMessage =
+        errors[firstErrorKey] || '입력값을 다시 확인해주세요.';
+      openAlertModal(
+        '필수 정보 확인',
+        `주문 전 필수 정보를 확인해주세요.\n\n${firstErrorMessage}`,
+      );
       return;
     }
 
@@ -273,7 +290,10 @@ export default function Checkout() {
     const normalizedEntries = Object.entries(source);
     for (const key of keys) {
       const normalizedKey = key.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-      const match = normalizedEntries.find(([entryKey]) => entryKey.replace(/[^a-zA-Z0-9]/g, '').toUpperCase() === normalizedKey);
+      const match = normalizedEntries.find(
+        ([entryKey]) =>
+          entryKey.replace(/[^a-zA-Z0-9]/g, '').toUpperCase() === normalizedKey,
+      );
       if (match && match[1] !== undefined && match[1] !== null) {
         return match[1];
       }
@@ -284,20 +304,41 @@ export default function Checkout() {
 
   useEffect(() => {
     Promise.all([
-      api.get('/api/shopping/cart', { meta: { errorType: 'INLINE' } }).catch(() => ({ data: { data: { products: [], totalCartPrice: 0 } } })),
-      api.get('/api/shopping/checkout-preference', { meta: { errorType: 'INLINE' } }).catch(() => ({ data: { data: {} } })),
+      api
+        .get('/api/shopping/cart', { meta: { errorType: 'INLINE' } })
+        .catch(() => ({ data: { data: { products: [], totalCartPrice: 0 } } })),
+      api
+        .get('/api/shopping/checkout-preference', {
+          meta: { errorType: 'INLINE' },
+        })
+        .catch(() => ({ data: { data: {} } })),
     ])
       .then(([cartResponse, preferenceResponse]) => {
         const cartPayload = cartResponse.data?.data ?? cartResponse.data;
         setCartData(cartPayload || { products: [], totalCartPrice: 0 });
 
-        const preferencePayload = preferenceResponse.data?.data ?? preferenceResponse.data ?? {};
+        const preferencePayload =
+          preferenceResponse.data?.data ?? preferenceResponse.data ?? {};
         if (preferencePayload && Object.keys(preferencePayload).length > 0) {
-          const savedOrderer = getPreferenceValue(preferencePayload, 'saveForNextTime');
-          const savedPayment = getPreferenceValue(preferencePayload, 'savePaymentForNextTime');
+          const savedOrderer = getPreferenceValue(
+            preferencePayload,
+            'saveForNextTime',
+          );
+          const savedPayment = getPreferenceValue(
+            preferencePayload,
+            'savePaymentForNextTime',
+          );
 
-          setSaveForNextTime(savedOrderer === true || String(savedOrderer).toUpperCase() === 'Y' || String(savedOrderer).toLowerCase() === 'true');
-          setSavePaymentForNextTime(savedPayment === true || String(savedPayment).toUpperCase() === 'Y' || String(savedPayment).toLowerCase() === 'true');
+          setSaveForNextTime(
+            savedOrderer === true ||
+              String(savedOrderer).toUpperCase() === 'Y' ||
+              String(savedOrderer).toLowerCase() === 'true',
+          );
+          setSavePaymentForNextTime(
+            savedPayment === true ||
+              String(savedPayment).toUpperCase() === 'Y' ||
+              String(savedPayment).toLowerCase() === 'true',
+          );
           formik.setValues({
             receiverName: getPreferenceValue(preferencePayload, 'receiverName'),
             city: getPreferenceValue(preferencePayload, 'city'),
@@ -343,7 +384,9 @@ export default function Checkout() {
               <div className="lg:col-span-2 space-y-6">
                 <section className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
                   <div className="flex items-center justify-between mb-4 gap-3">
-                    <h2 className="text-xl font-semibold text-gray-800">주문자 정보</h2>
+                    <h2 className="text-xl font-semibold text-gray-800">
+                      주문자 정보
+                    </h2>
                     <button
                       type="button"
                       onClick={() => setSaveForNextTime((prev) => !prev)}
@@ -365,7 +408,12 @@ export default function Checkout() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label htmlFor="receiverName" className="block text-sm font-medium text-gray-700 mb-1">이름</label>
+                      <label
+                        htmlFor="receiverName"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        이름
+                      </label>
                       <input
                         type="text"
                         name="receiverName"
@@ -376,13 +424,21 @@ export default function Checkout() {
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                         placeholder="홍길동"
                       />
-                      {formik.errors.receiverName && formik.touched.receiverName && (
-                        <p className="text-red-600 text-sm mt-1">{formik.errors.receiverName}</p>
-                      )}
+                      {formik.errors.receiverName &&
+                        formik.touched.receiverName && (
+                          <p className="text-red-600 text-sm mt-1">
+                            {formik.errors.receiverName}
+                          </p>
+                        )}
                     </div>
 
                     <div>
-                      <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">휴대폰 번호</label>
+                      <label
+                        htmlFor="phone"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        휴대폰 번호
+                      </label>
                       <input
                         type="tel"
                         name="phone"
@@ -394,13 +450,20 @@ export default function Checkout() {
                         placeholder="01012345678"
                       />
                       {formik.errors.phone && formik.touched.phone && (
-                        <p className="text-red-600 text-sm mt-1">{formik.errors.phone}</p>
+                        <p className="text-red-600 text-sm mt-1">
+                          {formik.errors.phone}
+                        </p>
                       )}
                     </div>
                   </div>
 
                   <div className="mt-4">
-                    <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">주소</label>
+                    <label
+                      htmlFor="city"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      주소
+                    </label>
                     <input
                       type="text"
                       name="city"
@@ -412,12 +475,19 @@ export default function Checkout() {
                       placeholder="서울시 강남구 ..."
                     />
                     {formik.errors.city && formik.touched.city && (
-                      <p className="text-red-600 text-sm mt-1">{formik.errors.city}</p>
+                      <p className="text-red-600 text-sm mt-1">
+                        {formik.errors.city}
+                      </p>
                     )}
                   </div>
 
                   <div className="mt-4">
-                    <label htmlFor="details" className="block text-sm font-medium text-gray-700 mb-1">상세 주소</label>
+                    <label
+                      htmlFor="details"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      상세 주소
+                    </label>
                     <input
                       type="text"
                       name="details"
@@ -433,7 +503,9 @@ export default function Checkout() {
 
                 <section className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
                   <div className="flex items-center justify-between mb-4 gap-3">
-                    <h2 className="text-xl font-semibold text-gray-800">결제 정보</h2>
+                    <h2 className="text-xl font-semibold text-gray-800">
+                      결제 정보
+                    </h2>
                     <button
                       type="button"
                       onClick={() => setSavePaymentForNextTime((prev) => !prev)}
@@ -442,12 +514,16 @@ export default function Checkout() {
                       <span>다음에도 사용</span>
                       <span
                         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                          savePaymentForNextTime ? 'bg-green-600' : 'bg-gray-300'
+                          savePaymentForNextTime
+                            ? 'bg-green-600'
+                            : 'bg-gray-300'
                         }`}
                       >
                         <span
                           className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            savePaymentForNextTime ? 'translate-x-6' : 'translate-x-1'
+                            savePaymentForNextTime
+                              ? 'translate-x-6'
+                              : 'translate-x-1'
                           }`}
                         />
                       </span>
@@ -455,7 +531,12 @@ export default function Checkout() {
                   </div>
                   <div className="space-y-4">
                     <div>
-                      <label htmlFor="cardNumber-0" className="block text-sm font-medium text-gray-700 mb-1">카드번호</label>
+                      <label
+                        htmlFor="cardNumber-0"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        카드번호
+                      </label>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                         {cardNumberGroups.map((group, index) => (
                           <input
@@ -467,111 +548,181 @@ export default function Checkout() {
                             value={group}
                             onChange={(e) => {
                               handleCardNumberChange(index, e.target.value);
-                              if (e.target.value.replace(/\D/g, '').length === 4 && index < 3) {
-                                document.getElementById(`cardNumber-${index + 1}`)?.focus();
+                              if (
+                                e.target.value.replace(/\D/g, '').length ===
+                                  4 &&
+                                index < 3
+                              ) {
+                                document
+                                  .getElementById(`cardNumber-${index + 1}`)
+                                  ?.focus();
                               }
                             }}
-                            onBlur={() => formik.setFieldTouched('cardNumber', true)}
+                            onBlur={() =>
+                              formik.setFieldTouched('cardNumber', true)
+                            }
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-center tracking-[0.3em] focus:outline-none focus:ring-2 focus:ring-green-500"
                             placeholder="1234"
                           />
                         ))}
                       </div>
-                      {formik.errors.cardNumber && formik.touched.cardNumber && (
-                        <p className="text-red-600 text-sm mt-1">{formik.errors.cardNumber}</p>
-                      )}
+                      {formik.errors.cardNumber &&
+                        formik.touched.cardNumber && (
+                          <p className="text-red-600 text-sm mt-1">
+                            {formik.errors.cardNumber}
+                          </p>
+                        )}
                     </div>
 
                     <div className="grid grid-cols-3 gap-3">
                       <div>
-                        <label htmlFor="expiryMonth" className="block text-sm font-medium text-gray-700 mb-1">유효월</label>
+                        <label
+                          htmlFor="expiryMonth"
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                        >
+                          유효월
+                        </label>
                         <input
                           type="text"
                           inputMode="numeric"
                           maxLength={2}
                           name="expiryMonth"
                           id="expiryMonth"
-                          onChange={(e) => formik.setFieldValue('expiryMonth', e.target.value.replace(/\D/g, '').slice(0, 2))}
+                          onChange={(e) =>
+                            formik.setFieldValue(
+                              'expiryMonth',
+                              e.target.value.replace(/\D/g, '').slice(0, 2),
+                            )
+                          }
                           onBlur={formik.handleBlur}
                           value={formik.values.expiryMonth}
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                           placeholder="MM"
                         />
-                        {formik.errors.expiryMonth && formik.touched.expiryMonth && (
-                          <p className="text-red-600 text-sm mt-1">{formik.errors.expiryMonth}</p>
-                        )}
+                        {formik.errors.expiryMonth &&
+                          formik.touched.expiryMonth && (
+                            <p className="text-red-600 text-sm mt-1">
+                              {formik.errors.expiryMonth}
+                            </p>
+                          )}
                       </div>
 
                       <div>
-                        <label htmlFor="expiryYear" className="block text-sm font-medium text-gray-700 mb-1">유효년</label>
+                        <label
+                          htmlFor="expiryYear"
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                        >
+                          유효년
+                        </label>
                         <input
                           type="text"
                           inputMode="numeric"
                           maxLength={2}
                           name="expiryYear"
                           id="expiryYear"
-                          onChange={(e) => formik.setFieldValue('expiryYear', e.target.value.replace(/\D/g, '').slice(0, 2))}
+                          onChange={(e) =>
+                            formik.setFieldValue(
+                              'expiryYear',
+                              e.target.value.replace(/\D/g, '').slice(0, 2),
+                            )
+                          }
                           onBlur={formik.handleBlur}
                           value={formik.values.expiryYear}
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                           placeholder="YY"
                         />
-                        {formik.errors.expiryYear && formik.touched.expiryYear && (
-                          <p className="text-red-600 text-sm mt-1">{formik.errors.expiryYear}</p>
-                        )}
+                        {formik.errors.expiryYear &&
+                          formik.touched.expiryYear && (
+                            <p className="text-red-600 text-sm mt-1">
+                              {formik.errors.expiryYear}
+                            </p>
+                          )}
                       </div>
 
                       <div>
-                        <label htmlFor="cvc" className="block text-sm font-medium text-gray-700 mb-1">CVC</label>
+                        <label
+                          htmlFor="cvc"
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                        >
+                          CVC
+                        </label>
                         <input
                           type="text"
                           inputMode="numeric"
                           maxLength={3}
                           name="cvc"
                           id="cvc"
-                          onChange={(e) => formik.setFieldValue('cvc', e.target.value.replace(/\D/g, '').slice(0, 3))}
+                          onChange={(e) =>
+                            formik.setFieldValue(
+                              'cvc',
+                              e.target.value.replace(/\D/g, '').slice(0, 3),
+                            )
+                          }
                           onBlur={formik.handleBlur}
                           value={formik.values.cvc}
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                           placeholder="123"
                         />
                         {formik.errors.cvc && formik.touched.cvc && (
-                          <p className="text-red-600 text-sm mt-1">{formik.errors.cvc}</p>
+                          <p className="text-red-600 text-sm mt-1">
+                            {formik.errors.cvc}
+                          </p>
                         )}
                       </div>
                     </div>
-                    <p className="text-xs font-medium text-amber-600">보안을 위해 CVC는 저장되지 않으며, 주문 시마다 다시 입력해야 합니다.</p>
+                    <p className="text-xs font-medium text-amber-600">
+                      보안을 위해 CVC는 저장되지 않으며, 주문 시마다 다시
+                      입력해야 합니다.
+                    </p>
                   </div>
                 </section>
               </div>
 
               <aside className="lg:col-span-1">
                 <section className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm sticky top-24">
-                  <h2 className="text-xl font-semibold text-gray-800 mb-4">주문 상품</h2>
+                  <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                    주문 상품
+                  </h2>
 
                   {displayProducts.length === 0 ? (
-                    <p className="text-gray-500 text-sm">주문할 상품이 없습니다.</p>
+                    <p className="text-gray-500 text-sm">
+                      주문할 상품이 없습니다.
+                    </p>
                   ) : (
                     <div className="space-y-4 max-h-[360px] overflow-y-auto pr-1">
                       {displayProducts.map((item, idx) => {
                         const product = item.product || {};
-                        const linePrice = Number(item.price || 0) > 0
-                          ? Number(item.price || 0)
-                          : Number(product.price || 0) * Number(item.count || 0);
+                        const linePrice =
+                          Number(item.price || 0) > 0
+                            ? Number(item.price || 0)
+                            : Number(product.price || 0) *
+                              Number(item.count || 0);
 
                         return (
-                          <div key={`${product._id || product.prodNo || idx}-${idx}`} className="flex gap-3">
+                          <div
+                            key={`${product.prodNo || idx}-${idx}`}
+                            className="flex gap-3"
+                          >
                             <img
-                              src={product.imageCover || product.imgUrl}
-                              alt={product.title || product.prodNm || 'product'}
-                              className="w-16 h-16 rounded-lg object-contain bg-gray-100"
+                              src={
+                                `${IMAGE_BASE_URL}${item.product.imgUrl}` ||
+                                DEFAULT_PRODUCT_IMAGE
+                              }
+                              className="w-24 h-24 aspect-square object-cover rounded-lg bg-gray-100"
+                              onError={(e) => {
+                                e.target.src = DEFAULT_PRODUCT_IMAGE; // 에러 났을 때도 상수로 교체!
+                              }}
                             />
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-gray-800 truncate">
-                                {product.title || product.prodNm || '상품명 없음'}
+                                {product.prodNm || '상품명 없음'}
                               </p>
-                              <p className="text-xs text-gray-500 mt-1">수량 {item.count || 0}개</p>
-                              <p className="text-sm font-semibold text-gray-900 mt-1">{formatPrice(linePrice)}</p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                수량 {item.count || 0}개
+                              </p>
+                              <p className="text-sm font-semibold text-gray-900 mt-1">
+                                {formatPrice(linePrice)}
+                              </p>
                             </div>
                           </div>
                         );
@@ -582,7 +733,9 @@ export default function Checkout() {
                   <div className="border-t border-gray-200 mt-5 pt-4">
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-gray-600">총 결제금액</span>
-                      <span className="text-xl font-bold text-gray-900">{formatPrice(displayTotalPrice)}</span>
+                      <span className="text-xl font-bold text-gray-900">
+                        {formatPrice(displayTotalPrice)}
+                      </span>
                     </div>
 
                     {isLoading ? (
@@ -614,7 +767,11 @@ export default function Checkout() {
                 <div className="flex-1">
                   <h3 className="text-lg font-bold text-gray-900">주문 확인</h3>
                   <p className="mt-2 text-sm text-gray-600">
-                    총 <span className="font-semibold text-gray-900">{formatPrice(displayTotalPrice)}</span> 결제를 진행할까요?
+                    총{' '}
+                    <span className="font-semibold text-gray-900">
+                      {formatPrice(displayTotalPrice)}
+                    </span>{' '}
+                    결제를 진행할까요?
                   </p>
                   <p className="mt-1 text-sm text-gray-500">
                     확인을 누르면 주문이 접수되고 주문완료 페이지로 이동합니다.
@@ -651,8 +808,12 @@ export default function Checkout() {
                   <i className="fa-solid fa-triangle-exclamation"></i>
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-bold text-gray-900">{alertModalTitle}</h3>
-                  <p className="mt-2 whitespace-pre-line text-sm text-gray-600">{alertModalMessage}</p>
+                  <h3 className="text-lg font-bold text-gray-900">
+                    {alertModalTitle}
+                  </h3>
+                  <p className="mt-2 whitespace-pre-line text-sm text-gray-600">
+                    {alertModalMessage}
+                  </p>
                 </div>
               </div>
 
