@@ -13,7 +13,7 @@ export default function TitleManager() {
       '/login': '로그인',
       '/register': '회원가입',
       '/cart': '장바구니',
-      '/wishlist': '위시리스트',
+
       '/mypage': '마이페이지',
       '/brands': '브랜드',
       '/categories': '카테고리',

@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import StarRating from '../StarRating/StarRating';
 import { DEFAULT_PRODUCT_IMAGE, IMAGE_BASE_URL } from '../../constants/api';
 
-export default function ProductItem({ product, isWished, handleWishlist }) {
+export default function ProductItem({ product }) {
   const { addProduct } = useContext(cartContext);
   const navigate = useNavigate(); // ✨ 2. navigate 객체 생성
 
@@ -26,10 +26,6 @@ export default function ProductItem({ product, isWished, handleWishlist }) {
     addProduct(productId);
   };
 
-  const onWishlistClick = (e) => {
-    e.stopPropagation(); // ✨ 핵심: 하트 버튼도 페이지 이동을 막음!
-    handleWishlist(product.prodNo);
-  };
   return (
     <div className="w-full lg:md:w-1/4 md:w-1/3 sm:w-1/2 p-3">
       {/* ✨ 4. Link를 없애고 카드 전체 div에 onClick과 cursor-pointer 적용 */}
@@ -37,18 +33,6 @@ export default function ProductItem({ product, isWished, handleWishlist }) {
         onClick={handleCardClick}
         className="relative bg-white mx-auto hover:scale-105 transition-all duration-400 hover:shadow-green-300 shadow-md rounded-lg max-w-sm dark:bg-gray-800 dark:border-gray-700 cursor-pointer"
       >
-        <div className="text-right absolute top-3 left-3">
-          <button
-            onClick={onWishlistClick}
-            className="p-2 rounded-full bg-green-500 bg-opacity-25 hover:bg-opacity-50"
-          >
-            {isWished ? (
-              <i className="fas fa-heart fa-fw fa-lg text-green-600"></i>
-            ) : (
-              <i className="far fa-heart fa-fw fa-lg text-green-600"></i>
-            )}
-          </button>
-        </div>
         {/* 상품이미지 */}
 
         <img

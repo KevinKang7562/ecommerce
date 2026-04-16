@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import api from '../../api/axios';
-import { wishlistContext } from '../../context/Wishlist/Wishlist';
+
 import Spinner from '../../components/Spinner/Spinner';
 import ProductItem from '../../components/ProductItem/ProductItem';
 
@@ -16,38 +16,6 @@ export default function Search() {
   const categoryIdFromQuery = searchParams.get('categoryId');
   const categoryNameFromQuery = searchParams.get('categoryName');
   const keywordFromQuery = searchParams.get('keyword'); // 네비바 검색어 쿼리 파라미터
-
-  const { getWishlist, addToWishlist, deleteWishlistItem } =
-    useContext(wishlistContext);
-
-  const [wishlistIds, setWishlistIds] = useState(null);
-
-  // 위시리스트 초기 로딩 함수 (헷갈리던 main() 이름을 직관적으로 변경)
-  const fetchWishlist = async () => {
-    try {
-      const wishlistItems = await getWishlist();
-      const ids = wishlistItems.map((item) => item._id);
-      setWishlistIds(ids);
-    } catch (err) {
-      console.error('위시리스트 로딩 에러:', err);
-    }
-  };
-
-  useEffect(() => {
-    fetchWishlist();
-  }, []);
-
-  // 위시리스트 추가/삭제 핸들러
-  async function handleWishlist(id) {
-    if (wishlistIds?.includes(id)) {
-      await deleteWishlistItem(id);
-    } else {
-      // 옛날의 searchRes(Context) 대신, 방금 useQuery로 가져온 products에서 상품을 찾습니다
-      const product = products?.find((item) => item._id === id);
-      await addToWishlist(product ?? id);
-    }
-    fetchWishlist(); // 하트 색깔 갱신
-  }
 
   // useQuery 도입: useState 3개(products, loading, error)와 useEffect를 이거 하나로 압축
   const {
@@ -99,12 +67,7 @@ export default function Search() {
           <div className="w-full py-20 text-center text-red-500">{error}</div>
         ) : products && products.length > 0 ? (
           products.map((product) => (
-            <ProductItem
-              product={product}
-              isWished={wishlistIds?.indexOf(product._id) !== -1 ? true : false}
-              key={product._id}
-              handleWishlist={handleWishlist}
-            />
+            <ProductItem product={product} key={product._id} />
           ))
         ) : (
           <div className="w-full py-20 text-center text-gray-500">

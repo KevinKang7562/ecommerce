@@ -230,22 +230,7 @@ export default function Navbar() {
               w-full font-medium border border-gray-100 rounded-lg bg-gray-50 lg:space-x-8 rtl:space-x-reverse lg:flex-row lg:mt-0 lg:border-0 lg:bg-white dark:bg-gray-800 lg:dark:bg-gray-900 dark:border-gray-700`}
             >
               {/* 로그인 유무와 관계 없이 공통으로 보이는 것들 */}
-              {/* <li>
-                <Link to="/" className={getLinkClass('/')} aria-current="page">
-                  <div className="flex lg:flex-col lg:justify-center items-center space-x-1">
-                    <i className="fas fa-home fa-fw"></i>
-                    <span>Home</span>
-                  </div>
-                </Link>
-              </li> */}
-              <li>
-                <Link to="wishlist" className={getLinkClass('/wishlist')}>
-                  <div className="flex lg:flex-col lg:justify-center items-center space-x-1">
-                    <i className="fas fa-heart fa-fw"></i>
-                    <span>위시리스트</span>
-                  </div>
-                </Link>
-              </li>
+
               <li>
                 <Link to="cart" className={getLinkClass('/cart')}>
                   <div className="flex lg:flex-col lg:justify-center items-center space-x-1">
@@ -254,14 +239,7 @@ export default function Navbar() {
                   </div>
                 </Link>
               </li>
-              {/* <li>
-                <Link to="brands" className={getLinkClass('/brands')}>
-                  <div className="flex lg:flex-col lg:justify-center items-center space-x-1">
-                    <i className="fa-solid fa-tags" />
-                    <span>브랜드</span>
-                  </div>
-                </Link>
-              </li> */}
+
               <li>
                 <Link to="categories" className={getLinkClass('/categories')}>
                   <div className="flex lg:flex-col lg:justify-center items-center space-x-1">

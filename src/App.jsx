@@ -11,7 +11,7 @@ import ProtectedRoute from './pages/ProtectedRoute/ProtectedRoute';
 import ProductDetails from './pages/ProductDetails/ProductDetails';
 import Cart from './pages/Cart/Cart';
 import CartContextProvider from './context/Cart/CartContextProvider';
-import WishlistContextProvider from './context/Wishlist/Wishlist';
+
 import OrderContextProvider from './context/Order/Order';
 import ReviewContextProvider from './context/Review/Review';
 import { Toaster, toast, useToasterStore } from 'react-hot-toast';
@@ -22,7 +22,7 @@ import ResetPassword from './pages/ResetPassword/ResetPassword';
 import VerifyCode from './pages/VerifyCode/VerifyCode';
 import Checkout from './pages/Checkout/Checkout';
 import CheckoutComplete from './pages/Checkout/CheckoutComplete';
-import Wishlist from './pages/Wishlist/Wishlist';
+
 import Brands from './pages/Brands/Brands';
 import Categories from './pages/Categories/Categories';
 import Event from './pages/Board/Event';
@@ -159,14 +159,7 @@ function App() {
             // </ProtectedRoute>
           ),
         },
-        {
-          path: 'wishlist',
-          element: (
-            // <ProtectedRoute>
-            <Wishlist />
-            // </ProtectedRoute>
-          ),
-        },
+
         {
           path: 'brands',
           element: (
@@ -322,21 +315,19 @@ function App() {
   return (
     <AuthContextProvider>
       <CartContextProvider>
-        <WishlistContextProvider>
-          <OrderContextProvider>
-            <ReviewContextProvider>
-              <MyInquiryContextProvider>
-                <QueryClientProvider client={queryClient}>
-                  <ProductsContextProvider>
-                    <ToastLayer />
-                    {/* <ReactQueryDevtools initialIsOpen={false} /> */}
-                    <RouterProvider router={router} />
-                  </ProductsContextProvider>
-                </QueryClientProvider>
-              </MyInquiryContextProvider>
-            </ReviewContextProvider>
-          </OrderContextProvider>
-        </WishlistContextProvider>
+        <OrderContextProvider>
+          <ReviewContextProvider>
+            <MyInquiryContextProvider>
+              <QueryClientProvider client={queryClient}>
+                <ProductsContextProvider>
+                  <ToastLayer />
+                  {/* <ReactQueryDevtools initialIsOpen={false} /> */}
+                  <RouterProvider router={router} />
+                </ProductsContextProvider>
+              </QueryClientProvider>
+            </MyInquiryContextProvider>
+          </ReviewContextProvider>
+        </OrderContextProvider>
       </CartContextProvider>
     </AuthContextProvider>
   );
