@@ -3,7 +3,7 @@ import CommonTable from '../../../components/MyPageCommon/Common/CommonTable';
 import { useContext, useEffect, useState } from 'react';
 import MyButton from '../../../components/MyPageCommon/Common/MyButton';
 import { ReviewContext } from '../../../context/Review/Review';
-import { IMAGE_BASE_URL } from '../../../constants/api';
+import { DEFAULT_PRODUCT_IMAGE, IMAGE_BASE_URL } from '../../../constants/api';
 
 export default function Review() {
   //상품주문번호 파라미터
@@ -347,7 +347,14 @@ export default function Review() {
       key: 'imgUrl',
       header: '상품이미지',
       render: (v) => (
-        <img src={v} className="w-24 h-24 object-cover rounded-lg border" />
+        <img
+          src={v ? `${IMAGE_BASE_URL}${v}` : DEFAULT_PRODUCT_IMAGE}
+          // onError는 '주소는 멀쩡한데 막상 서버에 가보니 이미지가 지워졌거나 엑스박스 뜰 때'를 대비
+          onError={(e) => {
+            e.target.src = DEFAULT_PRODUCT_IMAGE; // 에러 났을 때도 상수로 교체!
+          }}
+          className="w-24 h-24 object-cover rounded-lg border"
+        />
       ),
     },
     {
@@ -546,22 +553,6 @@ export default function Review() {
                   />
                 </label>
 
-                {/* 등록된 이미지 (기존) */}
-                {/* {existingImages.map((url, index) => (
-                  <div key={`exist-${index}`} className="relative group">
-                    <img
-                      src={`${IMAGE_BASE_URL}${url}`}
-                      className="w-24 h-24 object-cover rounded-xl border"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveExistingImage(url)}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center shadow-lg"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))} */}
                 {/* 기존 리뷰 이미지 렌더링 */}
                 {existingImages.map((img, idx) => (
                   <div
