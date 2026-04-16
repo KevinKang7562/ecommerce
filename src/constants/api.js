@@ -2,7 +2,8 @@
 export const SESSION_ALERT = '세션이 종료되어 로그인이 필요합니다.';
 export const IMAGE_BASE_URL =
   // import.meta.env.VITE_IMAGE_BASE_URL || 'http://10.100.102.27';
-  import.meta.env.VITE_IMAGE_BASE_URL || 'http://10.100.101.165'; //사무실 이전으로 아이피 변경
+  // import.meta.env.VITE_IMAGE_BASE_URL || 'http://10.100.101.165'; //사무실 이전으로 아이피 변경
+  import.meta.env.VITE_IMAGE_BASE_URL || 'http://192.168.0.225'; //사무실 이전으로 아이피 변경
 
 export const DEFAULT_PRODUCT_IMAGE = `${IMAGE_BASE_URL}/zin_user1/productImg/default_product_image.png`;
 
@@ -21,3 +22,4 @@ export const AUTH_PATH = '/api/user/auth';
 export const SHOPPING_PATH = '/api/shopping';
 export const MY_ORDER_PATH = '/api/order';
 export const MY_REVIEW_PATH = '/api/review';
+export const MY_INQUIRY_PATH = '/api/inquiry';
