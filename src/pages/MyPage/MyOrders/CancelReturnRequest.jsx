@@ -6,6 +6,7 @@ import MyButton from '../../../components/MyPageCommon/Common/MyButton';
 import { useCommCd } from '../../../hooks/useCommCd';
 import { useEffect, useState, useContext } from 'react';
 import { OrderContext } from '../../../context/Order/Order';
+import { DEFAULT_PRODUCT_IMAGE, IMAGE_BASE_URL } from '../../../constants/api';
 
 export default function CancelReturnRequest() {
   // 주문 번호 파라미터
@@ -167,7 +168,16 @@ export default function CancelReturnRequest() {
     {
       key: 'imgUrl',
       header: '상품이미지',
-      render: (v) => <img src={v} className="w-24 h-24 object-cover-16" />,
+      render: (v) => (
+        <img
+          src={v ? `${IMAGE_BASE_URL}${v}` : DEFAULT_PRODUCT_IMAGE}
+          // onError는 '주소는 멀쩡한데 막상 서버에 가보니 이미지가 지워졌거나 엑스박스 뜰 때'를 대비
+          onError={(e) => {
+            e.target.src = DEFAULT_PRODUCT_IMAGE; // 에러 났을 때도 상수로 교체!
+          }}
+          className="w-24 h-24 object-cover-16"
+        />
+      ),
     },
     {
       key: 'productInfo',
