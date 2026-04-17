@@ -56,7 +56,8 @@ export default function MyCancelReturn() {
           </div>
           <div className="font-medium">{row.prodNm}</div>
           <div className="text-sm text-gray-600">
-            수량/옵션 : {row.optionInfo}
+            {/* 수량/옵션 : {row.optionInfo} */}
+            수량 : {row.optionInfo}
           </div>
           <div className="text-sm font-semibold">
             {row.csAppliedAmt?.toLocaleString()}원

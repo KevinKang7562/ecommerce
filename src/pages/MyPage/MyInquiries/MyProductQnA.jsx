@@ -47,7 +47,7 @@ export default function MyProductQnA() {
     {
       key: 'productInfo',
       header: '상품정보',
-      width: '180px',
+      width: '230px',
       render: (_, row) => (
         <div className="text-start flex flex-col gap-1 min-w-[200px]">
           <div className="text-sm text-gray-600">상품번호 : {row.prodNo}</div>

@@ -93,7 +93,8 @@ export default function MyOrderDetail() {
           </div>
           <div className="font-medium">{row.prodNm}</div>
           <div className="text-sm text-gray-600">
-            수량/옵션 : {row.optionInfo}
+            {/* 수량/옵션 : {row.optionInfo} */}
+            수량 : {row.optionInfo}
           </div>
           <div className="text-sm font-semibold">
             {/* 상품별 총금액 ()(구매단가-할인금액+옵션추가금)*수량)*/}
