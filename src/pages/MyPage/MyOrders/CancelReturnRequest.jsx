@@ -107,16 +107,29 @@ export default function CancelReturnRequest() {
   );
 
   const totalCsReqAmt = selectedItems.reduce((sum, item) => {
-    //상품 단가 = 상품별 총금액 / 주문수량
-    // const unitPrice = item.totalPrice / item.quantity;
-    return sum + item.itemPrice * item.newCsReqQty;
+    return sum + Number(item.itemPrice || 0) * Number(item.newCsReqQty || 0);
   }, 0);
 
-  //반품 배송비 = 임시로 기본 반품비 3000원 설정
-  const returnFee =
-    cancelReturnType === 'RETURN' && selectedItems.length > 0 ? 3000 : 0;
+  const orderTotalAmt = Number(orderInfo?.totalAmt ?? 0);
+  const originalItemsTotal = orderInfo?.items
+    ? orderInfo.items.reduce(
+        (sum, item) => sum + Number(item.csAppliedAmt || 0),
+        0,
+      )
+    : 0;
 
-  const reqRefundTotal = totalCsReqAmt - returnFee;
+  const isFullCancel =
+    cancelReturnType === 'CANCEL' &&
+    selectedItems.length > 0 &&
+    selectedItems.length === productitems.length;
+
+  const paidDeliveryFee = orderTotalAmt - originalItemsTotal > 0 ? 2500 : 0;
+  const refundShippingFee = isFullCancel ? paidDeliveryFee : 0;
+
+  const reqRefundTotal =
+    cancelReturnType === 'CANCEL'
+      ? totalCsReqAmt + refundShippingFee
+      : totalCsReqAmt;
 
   const csInfo = [
     {
@@ -127,11 +140,11 @@ export default function CancelReturnRequest() {
       label: `${csTitle[cancelReturnType]} 요청 금액`,
       value: `${totalCsReqAmt.toLocaleString()}원`,
     },
-    ...(cancelReturnType === 'RETURN' //스프레드 연산자로 '반품'인 경우만 반품배송비 배열 추가
+    ...(refundShippingFee > 0
       ? [
           {
-            label: '반품 배송비',
-            value: `${returnFee.toLocaleString()}원`,
+            label: '환불 배송비',
+            value: `${refundShippingFee.toLocaleString()}원`,
           },
         ]
       : []),
@@ -193,7 +206,8 @@ export default function CancelReturnRequest() {
             </div>
             <div className="font-medium">{row.prodNm}</div>
             <div className="text-sm text-gray-600">
-              수량/옵션 : {row.optionInfo}
+              {/* 수량/옵션 : {row.optionInfo} */}
+              수량 : {row.optionInfo}
             </div>
 
             <div className="text-sm font-semibold">
@@ -297,6 +311,10 @@ export default function CancelReturnRequest() {
       console.log('주문상세 : ', resData);
 
       //주문 메타 정보
+      const remainingItems = (resData.items ?? []).filter(
+        (item) => item.csNo == null,
+      );
+
       setOrderInfo({
         order: {
           orderNo: resData.orderNo,
@@ -304,12 +322,15 @@ export default function CancelReturnRequest() {
           orderDate: resData.orderDate,
           canCancelYn: resData.canCancelYn,
           canReturnYn: resData.canReturnYn,
+          deliveryFee: resData.deliveryFee ?? 0,
         },
+        items: resData.items ?? [],
+        totalAmt: resData.totalAmt ?? 0,
       });
 
       //상품목록
       setProductitems(
-        (resData.items ?? []).map((item) => ({
+        remainingItems.map((item) => ({
           ...item,
           csChecked: false, //체크박스 초기상태
           newCsReqQty: 1, //취소/반품 기본 선택 수량
@@ -366,6 +387,18 @@ export default function CancelReturnRequest() {
       {requestError && (
         <div className="mb-4 text-center text-red-500">
           {csTitle[cancelReturnType]}요청 실패 : {requestErrorMessage}
+        </div>
+      )}
+
+      {cancelReturnType === 'RETURN' && (
+        <div className="mb-4 rounded-md border border-orange-300 bg-orange-50 px-4 py-3 text-sm text-orange-700">
+          반품 시 환불은 상품 금액에 한정되며 배송비는 환불되지 않습니다.
+          {(selectedCsReason === 'CR01' || selectedCsReason === 'CR02') && (
+            <div className="mt-2 font-semibold">
+              ※ 고객 귀책 사유(CR01, CR02)의 경우 반품 배송비 2,500원을 별도
+              입금해 주세요.
+            </div>
+          )}
         </div>
       )}
 

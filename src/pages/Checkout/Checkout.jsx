@@ -3,6 +3,7 @@ import * as Yup from 'yup';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
+import DaumPostcode from 'react-daum-postcode';
 import api from '../../api/axios';
 import Spinner from '../../components/Spinner/Spinner';
 import { DEFAULT_PRODUCT_IMAGE, IMAGE_BASE_URL } from '../../constants/api';
@@ -18,6 +19,7 @@ export default function Checkout() {
   const [alertModalTitle, setAlertModalTitle] = useState('안내');
   const [alertModalMessage, setAlertModalMessage] = useState('');
   const [pendingCheckoutData, setPendingCheckoutData] = useState(null);
+  const [isOpenPost, setIsOpenPost] = useState(false);
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -53,9 +55,12 @@ export default function Checkout() {
     }, 0);
   }, [cartData, products]);
 
-  const displayTotalPrice = directProduct
+  const baseTotalPrice = directProduct
     ? Number(directProduct.price) * directQuantity
     : totalPrice;
+
+  const shippingFee = baseTotalPrice >= 30000 ? 0 : 2500;
+  const displayTotalPrice = baseTotalPrice + shippingFee;
 
   const formatPrice = (value) => `${Number(value || 0).toLocaleString()} 원`;
 
@@ -74,6 +79,12 @@ export default function Checkout() {
   function closeAlertModal() {
     setIsAlertModalOpen(false);
   }
+
+  const handleCompletePost = (data) => {
+    formik.setFieldValue('postCd', data.zonecode);
+    formik.setFieldValue('city', data.address);
+    setIsOpenPost(false);
+  };
 
   const validate = Yup.object({
     receiverName: Yup.string()
@@ -126,6 +137,7 @@ export default function Checkout() {
         saveForNextTime,
         savePaymentForNextTime,
         totalAmount: displayTotalPrice,
+        shippingFee,
         productCount: displayProducts.length,
         items: displayProducts.map((item) => {
           const product = item?.product || {};
@@ -264,9 +276,10 @@ export default function Checkout() {
   const formik = useFormik({
     initialValues: {
       receiverName: '',
+      phone: '',
+      postCd: '',
       city: '',
       details: '',
-      phone: '',
       cardNumber: '',
       expiryMonth: '',
       expiryYear: '',
@@ -341,9 +354,10 @@ export default function Checkout() {
           );
           formik.setValues({
             receiverName: getPreferenceValue(preferencePayload, 'receiverName'),
+            phone: getPreferenceValue(preferencePayload, 'phone'),
+            postCd: getPreferenceValue(preferencePayload, 'postCd'),
             city: getPreferenceValue(preferencePayload, 'city'),
             details: getPreferenceValue(preferencePayload, 'details'),
-            phone: getPreferenceValue(preferencePayload, 'phone'),
             cardNumber: getPreferenceValue(preferencePayload, 'cardNumber'),
             expiryMonth: getPreferenceValue(preferencePayload, 'expiryMonth'),
             expiryYear: getPreferenceValue(preferencePayload, 'expiryYear'),
@@ -458,26 +472,56 @@ export default function Checkout() {
                   </div>
 
                   <div className="mt-4">
-                    <label
-                      htmlFor="city"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      주소
-                    </label>
-                    <input
-                      type="text"
-                      name="city"
-                      id="city"
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      value={formik.values.city}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-                      placeholder="서울시 강남구 ..."
-                    />
+                    <div className="flex items-center justify-between gap-3">
+                      <label
+                        htmlFor="city"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        주소
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setIsOpenPost((prev) => !prev)}
+                        className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                      >
+                        주소 검색
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-[120px_1fr] gap-3">
+                      <input
+                        type="text"
+                        name="postCd"
+                        id="postCd"
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        value={formik.values.postCd}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        placeholder="우편번호"
+                      />
+                      <input
+                        type="text"
+                        name="city"
+                        id="city"
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        value={formik.values.city}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        placeholder="서울시 강남구 ..."
+                      />
+                    </div>
                     {formik.errors.city && formik.touched.city && (
                       <p className="text-red-600 text-sm mt-1">
                         {formik.errors.city}
                       </p>
+                    )}
+                    {isOpenPost && (
+                      <div className="mt-3 rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
+                        <DaumPostcode
+                          onComplete={handleCompletePost}
+                          autoClose={false}
+                          style={{ width: '100%', minHeight: '350px' }}
+                        />
+                      </div>
                     )}
                   </div>
 
@@ -731,6 +775,18 @@ export default function Checkout() {
                   )}
 
                   <div className="border-t border-gray-200 mt-5 pt-4">
+                    <div className="flex items-center justify-between mb-2 text-sm text-gray-600">
+                      <span>상품 합계</span>
+                      <span>{formatPrice(baseTotalPrice)}</span>
+                    </div>
+                    <div className="flex items-center justify-between mb-4 text-sm text-gray-600">
+                      <span>배송비</span>
+                      <span>
+                        {shippingFee > 0
+                          ? formatPrice(shippingFee)
+                          : '무료배송'}
+                      </span>
+                    </div>
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-gray-600">총 결제금액</span>
                       <span className="text-xl font-bold text-gray-900">
