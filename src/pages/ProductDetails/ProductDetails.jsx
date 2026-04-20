@@ -14,10 +14,10 @@ import {
   MY_REVIEW_PATH,
 } from '../../constants/api';
 import StarRating from '../../components/StarRating/StarRating';
+import ProductImg from '../../components/ProductImg/ProductImg.jsx'; // 💡 공통 이미지 컴포넌트 import
 
 export default function ProductDetails() {
   const { addProduct } = useContext(cartContext);
-  // const { renderStars } = useContext(productsContext);
   const { userToken } = useContext(authContext);
   const { codes: inquiryCategoryOptions } = useCommCd({
     hCd: 'INQUIRY_CATEGORY',
@@ -70,10 +70,32 @@ export default function ProductDetails() {
 
   const formatWon = (value) => `${Number(value || 0).toLocaleString()} 원`;
 
+  // 💡 1. 순수 파일 경로만 추출하는 함수 (ProductImg 컴포넌트에 넘겨주기 위함)
+  // IMAGE_BASE_URL을 여기서 붙이지 않고 순수한 DB 경로만 반환합니다.
+  function getRawImagePath(imgUrl) {
+    const trimmed = String(imgUrl || '').trim();
+    if (!trimmed) return '';
+    if (/^https?:\/\//i.test(trimmed) || /^data:/i.test(trimmed))
+      return trimmed;
+    const path = trimmed.includes(':')
+      ? trimmed.split(':').slice(1).join(':')
+      : trimmed;
+    return path;
+  }
+
+  // 💡 2. 리뷰 등에서 여전히 전체 URL이 필요한 곳을 위한 기존 함수 유지
+  function normalizeImageUrl(imgUrl) {
+    const path = getRawImagePath(imgUrl);
+    if (!path) return '';
+    if (/^https?:\/\//i.test(path) || /^data:/i.test(path)) return path;
+    return `${IMAGE_BASE_URL}${path}`;
+  }
+
+  // 💡 3. 상품 서브 이미지 배열 추출 (getRawImagePath 적용)
   const imageUrls = Array.isArray(ProdDetails.images)
     ? ProdDetails.images
         .map((item) =>
-          normalizeImageUrl(
+          getRawImagePath(
             typeof item === 'string'
               ? item
               : item?.IMG_URL || item?.imgUrl || '',
@@ -82,18 +104,15 @@ export default function ProductDetails() {
         .filter(Boolean)
     : [];
 
-  const mainImage =
-    normalizeImageUrl(ProdDetails.imgUrl) ||
-    imageUrls[0] ||
-    DEFAULT_PRODUCT_IMAGE;
+  // 💡 4. 메인 이미지 추출 (getRawImagePath 적용)
+  const mainImage = getRawImagePath(ProdDetails.imgUrl) || imageUrls[0] || ''; // 빈 값이면 ProductImg가 알아서 DEFAULT로 처리합니다.
 
-  // 메인 이미지를 포함한 전체 이미지 리스트를 만들고, Set으로 중복된 이미지를 제거
-  // const rawThumbnails = [ProdDetails.imgUrl, ...imageUrls].filter(Boolean);
-  // ✨ 수정: DB에 등록된 '진짜' 이미지만 필터링 (기본 이미지는 걸러냄)
+  // 💡 5. 썸네일 이미지 배열 조립 및 중복 제거 (getRawImagePath 적용)
   const rawThumbnails = [
-    normalizeImageUrl(ProdDetails.imgUrl),
+    getRawImagePath(ProdDetails.imgUrl),
     ...imageUrls,
   ].filter((img) => img && img !== DEFAULT_PRODUCT_IMAGE);
+
   const thumbnailImages = [...new Set(rawThumbnails)];
 
   const [selectedImage, setSelectedImage] = useState(mainImage);
@@ -104,17 +123,6 @@ export default function ProductDetails() {
 
   const reviewAvg = Number(ProdDetails.reviewAvg || 0);
   const reviewCount = Number(ProdDetails.reviewCount || 0);
-
-  function normalizeImageUrl(imgUrl) {
-    const trimmed = String(imgUrl || '').trim();
-    if (!trimmed) return '';
-    if (/^https?:\/\//i.test(trimmed) || /^data:/i.test(trimmed))
-      return trimmed;
-    const path = trimmed.includes(':')
-      ? trimmed.split(':').slice(1).join(':')
-      : trimmed;
-    return path ? `${IMAGE_BASE_URL}${path}` : '';
-  }
 
   const getReviewImages = (imgUrls) =>
     String(imgUrls || '')
@@ -477,20 +485,17 @@ export default function ProductDetails() {
           <div className="space-y-4 min-w-0 md:col-span-5">
             {/* 메인 이미지 */}
             <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-white">
-              <img
-                className="w-full aspect-square object-contain"
+              {/* 💡 6. 기존 img 태그를 ProductImg로 교체! */}
+              <ProductImg
+                className="w-full "
                 src={selectedImage || mainImage}
                 alt={ProdDetails.prodNm || '상품 이미지'}
-                loading="lazy"
-                onError={(e) => {
-                  e.target.src = DEFAULT_PRODUCT_IMAGE;
-                }}
               />
             </div>
 
             {/* 썸네일 슬라이더 */}
             {thumbnailImages.length > 0 && (
-              <div className="px-1 overflow-hidden max-h-[100px] md:max-h-[150px]">
+              <div className="px-1 pb-2">
                 <Slider {...thumbnailSettings}>
                   {thumbnailImages.map((img, index) => (
                     <button
@@ -499,8 +504,9 @@ export default function ProductDetails() {
                       onClick={() => setSelectedImage(img)}
                       className={`p-1 outline-none ${img === selectedImage ? 'opacity-100' : 'opacity-50 hover:opacity-100'}`}
                     >
-                      <img
-                        className="w-full aspect-square object-cover rounded-lg border border-gray-200 bg-white"
+                      {/* 💡 7. 썸네일 img 태그를 ProductImg로 교체! */}
+                      <ProductImg
+                        className="w-full rounded-lg"
                         src={img}
                         alt={`Product thumbnail ${index + 1}`}
                       />
@@ -513,12 +519,10 @@ export default function ProductDetails() {
 
           {/* ================= 우측: 상품 정보 영역 (7칸 차지) ================= */}
           <div className="w-full flex flex-col h-full pt-2 md:col-span-7">
-            {/* 1. 상품명 (좌측) */}
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
               {ProdDetails.prodNm}
             </h2>
 
-            {/* 2. 별점 (우측 정렬) */}
             <div className="flex justify-end items-center gap-2 mt-2">
               <StarRating rating={Math.round(reviewAvg)} />
               <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
@@ -527,12 +531,10 @@ export default function ProductDetails() {
               <span className="text-sm text-gray-500">({reviewCount}건)</span>
             </div>
 
-            {/* 3. 상품 상세 설명 (좌측 정렬) */}
             <p className="mt-4 text-base text-gray-600 dark:text-gray-400">
               {ProdDetails.shortDesc || ProdDetails.detailDesc}
             </p>
 
-            {/* 4. 가격 (우측 정렬) */}
             <div className="text-right mt-6">
               <span className="text-3xl md:text-4xl font-extrabold text-black-600 dark:text-black-500">
                 {formatWon(ProdDetails.price)}
@@ -541,7 +543,6 @@ export default function ProductDetails() {
 
             <hr className="my-6 border-gray-200 dark:border-gray-700" />
 
-            {/* 5. 배송 방식 및 배송비 (구매 버튼 위쪽 배치, 공통코드 이름 매핑) */}
             <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-5 mb-6 space-y-3 text-sm">
               <div className="flex items-center gap-6">
                 <span className="text-gray-500 dark:text-gray-400 w-16">
@@ -563,7 +564,6 @@ export default function ProductDetails() {
               </div>
             </div>
 
-            {/* 6. 수량 선택 및 총 금액 */}
             <div className="space-y-3 mb-6">
               <div className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -607,7 +607,6 @@ export default function ProductDetails() {
               </div>
             </div>
 
-            {/* 7. 구매 및 장바구니 버튼 */}
             <div className="flex gap-2 mt-auto">
               <button
                 onClick={handleBuyNow}

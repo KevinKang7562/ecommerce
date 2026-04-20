@@ -3,6 +3,7 @@ import CommonTable from '../../../components/MyPageCommon/Common/CommonTable';
 import Pagination from '../../../components/MyPageCommon/Common/Pagination';
 import { MyInquiryContext } from '../../../context/Inquiry/MyInquiry';
 import { DEFAULT_PRODUCT_IMAGE, IMAGE_BASE_URL } from '../../../constants/api';
+import ProductImg from '../../../components/ProductImg/ProductImg';
 // import { authContext } from '../../../context/Auth/Auth';
 
 //나의 상품 문의 목록
@@ -27,29 +28,21 @@ export default function MyProductQnA() {
     {
       key: 'prodNo',
       header: '상품번호',
-      width: '90px',
+      className: 'hidden sm:table-cell w-20',
     },
     {
       key: 'imgUrl',
       header: '상품이미지',
-      width: '140px',
-      render: (v) => (
-        <img
-          src={v ? `${IMAGE_BASE_URL}${v}` : DEFAULT_PRODUCT_IMAGE}
-          // onError는 '주소는 멀쩡한데 막상 서버에 가보니 이미지가 지워졌거나 엑스박스 뜰 때'를 대비
-          onError={(e) => {
-            e.target.src = DEFAULT_PRODUCT_IMAGE; // 에러 났을 때도 상수로 교체!
-          }}
-          className="w-24 h-24 object-cover-16"
-        />
-      ),
+
+      className: 'w-24 sm:w-32 ',
+      render: (v) => <ProductImg src={v} />,
     },
     {
       key: 'productInfo',
       header: '상품정보',
-      width: '230px',
+      className: 'hidden w-48 sm:table-cell md:w-64 ',
       render: (_, row) => (
-        <div className="text-start flex flex-col gap-1 min-w-[200px]">
+        <div className="text-start flex flex-col gap-1 break-keep">
           <div className="text-sm text-gray-600">상품번호 : {row.prodNo}</div>
           <div className="font-medium">{row.prodNm}</div>
         </div>
@@ -58,9 +51,10 @@ export default function MyProductQnA() {
     {
       key: 'inquiryTitle',
       header: '제목',
+      className: 'w-32 sm:w-40 md:w-48',
       render: (v, row) => (
         <div
-          className="cursor-pointer hover:underline text-blue-700 font-medium"
+          className="cursor-pointer hover:underline text-blue-700 font-medium text-sm sm:text-base break-keep"
           onClick={() =>
             setExpandedId(expandedId === row.inquiryNo ? null : row.inquiryNo)
           }
@@ -72,43 +66,49 @@ export default function MyProductQnA() {
     {
       key: 'inquiryCategoryNm',
       header: '문의유형',
-      width: '120px',
+      className: 'hidden md:table-cell w-24',
     },
     {
       key: 'inquiryStatusNm',
       header: '답변상태',
-      width: '120px',
+      className: 'w-20 sm:w-24',
     },
     {
       key: 'inquiryDate',
       header: '문의작성일',
-      width: '140px',
+      className: 'w-24 sm:w-28',
     },
   ];
   // 2. 제목 클릭 시 하단에 보여줄 상세 UI 정의
   const renderInquiryDetail = (row) => (
-    <div className="p-6 text-start flex flex-col gap-4 bg-white border-x-4 border-l-green-700">
+    <div className="p-4 sm:p-6 text-start flex flex-col gap-4 bg-white border-x-4 border-l-green-700">
       <div className="flex flex-col gap-2">
-        <span className="text-red-500 font-bold text-sm">문의내용</span>
-        <p className="text-gray-800 whitespace-pre-wrap">
+        <span className="text-red-500 font-bold text-sm sm:text-base">
+          문의내용
+        </span>
+        <p className="text-gray-800 whitespace-pre-wrap text-sm sm:text-base">
           {row.inquiryContent}
         </p>
       </div>
 
       <div className="border-t pt-4 flex flex-col gap-2">
-        <span className="text-blue-600 font-bold text-sm">답변내용</span>
+        <span className="text-blue-600 font-bold text-sm sm:text-base">
+          답변내용
+        </span>
         {row.answerContent ? (
           <>
-            <p className="text-gray-800 whitespace-pre-wrap">
+            <p className="text-gray-800 whitespace-pre-wrap text-sm sm:text-base">
               {row.answerContent}
             </p>
-            <div className="mt-2 flex justify-end gap-4 text-xs text-gray-500">
+            <div className="mt-2 flex justify-end gap-4 text-xs sm:text-sm text-gray-500">
               <span>작성자: {row.answerUserNo ? '관리자' : '시스템'}</span>
               <span>작성일: {row.answerDate}</span>
             </div>
           </>
         ) : (
-          <p className="text-gray-400 italic">아직 등록된 답변이 없습니다.</p>
+          <p className="text-gray-400 italic text-sm sm:text-base">
+            아직 등록된 답변이 없습니다.
+          </p>
         )}
       </div>
     </div>
@@ -148,15 +148,14 @@ export default function MyProductQnA() {
   }, [currentPage]);
 
   return (
-    <div>
-      {' '}
+    <div className="px-4 sm:px-6 lg:px-8">
       <div className="overflow-x-auto">
         {loading ? (
-          <div className="py-20 text-center">
+          <div className="py-20 text-center text-sm sm:text-base">
             문의 내역을 불러오는 중입니다...
           </div>
         ) : error ? (
-          <div className="py-20 text-center text-red-500">
+          <div className="py-20 text-center text-red-500 text-sm sm:text-base">
             {errorMessage} {/*INLINE 에러 표시 */}
           </div>
         ) : (
@@ -169,7 +168,7 @@ export default function MyProductQnA() {
           />
         )}
       </div>
-      <div className="border-t pt-4">
+      <div className="border-t pt-4 mt-4">
         {/* 페이지(최하단에 위치 고정) */}
         <Pagination
           currentPage={currentPage}

@@ -7,6 +7,7 @@ import DaumPostcode from 'react-daum-postcode';
 import api from '../../api/axios';
 import Spinner from '../../components/Spinner/Spinner';
 import { DEFAULT_PRODUCT_IMAGE, IMAGE_BASE_URL } from '../../constants/api';
+import ProductImg from '../../components/ProductImg/ProductImg';
 
 export default function Checkout() {
   const [isLoading, setIsLoading] = useState(false);
@@ -747,16 +748,7 @@ export default function Checkout() {
                             key={`${product.prodNo || idx}-${idx}`}
                             className="flex gap-3"
                           >
-                            <img
-                              src={
-                                `${IMAGE_BASE_URL}${item.product.imgUrl}` ||
-                                DEFAULT_PRODUCT_IMAGE
-                              }
-                              className="w-24 h-24 aspect-square object-cover rounded-lg bg-gray-100"
-                              onError={(e) => {
-                                e.target.src = DEFAULT_PRODUCT_IMAGE; // 에러 났을 때도 상수로 교체!
-                              }}
-                            />
+                            <ProductImg src={item.product.imgUrl} />
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-gray-800 truncate">
                                 {product.prodNm || '상품명 없음'}

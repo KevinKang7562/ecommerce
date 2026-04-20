@@ -4,6 +4,7 @@ import { cartContext } from '../../context/Cart/CartContextProvider';
 import { useNavigate } from 'react-router-dom';
 import StarRating from '../StarRating/StarRating';
 import { DEFAULT_PRODUCT_IMAGE, IMAGE_BASE_URL } from '../../constants/api';
+import ProductImg from '../ProductImg/ProductImg';
 
 export default function ProductItem({ product }) {
   const { addProduct } = useContext(cartContext);
@@ -35,15 +36,7 @@ export default function ProductItem({ product }) {
       >
         {/* 상품이미지 */}
 
-        <img
-          src={`${IMAGE_BASE_URL}${product.imgUrl}` || DEFAULT_PRODUCT_IMAGE}
-          className="w-full aspect-square object-cover rounded-t-lg bg-gray-100"
-          alt={product.prodNm || '상품 이미지'}
-          loading="lazy"
-          onError={(e) => {
-            e.target.src = DEFAULT_PRODUCT_IMAGE;
-          }}
-        />
+        <ProductImg src={product.imgUrl} className="w-full rounded-t-lg " />
 
         {/* 상품 정보 */}
         <div className="px-5 pb-5" style={{ marginTop: '0.75rem' }}>

@@ -7,6 +7,7 @@ import MyButton from '../../../components/MyPageCommon/Common/MyButton';
 import { OrderContext } from '../../../context/Order/Order';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { DEFAULT_PRODUCT_IMAGE, IMAGE_BASE_URL } from '../../../constants/api';
+import ProductImg from '../../../components/ProductImg/ProductImg';
 
 // 나의 전체 주문 목록
 function MyAllOrders() {
@@ -82,22 +83,20 @@ function MyAllOrders() {
     {
       key: 'imgUrl',
       header: '상품이미지',
+      // width: '180px',
+      className: 'hidden md:table-cell', //반응형: md 이상에서만 보이도록
       render: (v) => (
-        <img
-          src={v ? `${IMAGE_BASE_URL}${v}` : DEFAULT_PRODUCT_IMAGE}
-          // onError는 '주소는 멀쩡한데 막상 서버에 가보니 이미지가 지워졌거나 엑스박스 뜰 때'를 대비
-          onError={(e) => {
-            e.target.src = DEFAULT_PRODUCT_IMAGE; // 에러 났을 때도 상수로 교체!
-          }}
-          className="w-24 h-24 object-cover-16"
-        />
+        <div className="flex justify-center w-full">
+          <ProductImg src={v} className="w-28 h-28 rounded-lg" />
+        </div>
       ),
     },
     {
       key: 'productInfo',
       header: '상품정보',
       render: (_, row) => (
-        <div className="text-start flex flex-col gap-1 min-w-[200px]">
+        // break-words는 상품명이 너무 길어서 다음 줄로 넘어갈 때 단어 단위로 줄바꿈, break-keep는 공백 기준으로 줄바꿈(공백 없는 긴 문자열은 overflow)
+        <div className="text-start flex flex-col gap-1 w-full break-keep">
           <div className="text-sm text-gray-600">
             상품주문번호 : {row.itemOrderNo}
           </div>
@@ -117,6 +116,7 @@ function MyAllOrders() {
     {
       key: 'csStatusNm',
       header: '취소/반품상태',
+      className: 'hidden md:table-cell',
     },
     {
       key: 'reviewYn',

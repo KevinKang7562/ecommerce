@@ -7,6 +7,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import CsDetailModal from '../../../components/MyPageCommon/MyOrder/CsDetailModal';
 import { OrderContext } from '../../../context/Order/Order';
 import { DEFAULT_PRODUCT_IMAGE, IMAGE_BASE_URL } from '../../../constants/api';
+import ProductImg from '../../../components/ProductImg/ProductImg';
 
 export default function MyOrderDetail() {
   //주문번호 파라미터
@@ -72,22 +73,18 @@ export default function MyOrderDetail() {
     {
       key: 'imgUrl',
       header: '상품이미지',
+      className: 'hidden md:table-cell',
       render: (v) => (
-        <img
-          src={v ? `${IMAGE_BASE_URL}${v}` : DEFAULT_PRODUCT_IMAGE}
-          // onError는 '주소는 멀쩡한데 막상 서버에 가보니 이미지가 지워졌거나 엑스박스 뜰 때'를 대비
-          onError={(e) => {
-            e.target.src = DEFAULT_PRODUCT_IMAGE; // 에러 났을 때도 상수로 교체!
-          }}
-          className="w-24 h-24 object-cover-16"
-        />
+        <div className="flex justify-center w-full">
+          <ProductImg src={v} className="w-28 h-28 rounded-lg" />
+        </div>
       ),
     },
     {
       key: 'productInfo',
       header: '상품정보',
       render: (_, row) => (
-        <div className="text-start flex flex-col gap-1 min-w-[200px]">
+        <div className="text-start flex flex-col gap-1  w-full break-keep">
           <div className="text-sm text-gray-600">
             상품주문번호 : {row.itemOrderNo}
           </div>
