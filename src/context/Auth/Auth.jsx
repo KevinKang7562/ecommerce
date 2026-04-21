@@ -1,78 +1,83 @@
-import { createContext, useEffect, useState } from 'react';
+import { createContext, useEffect, useState, useCallback } from 'react';
 import { AUTH_PATH } from '../../constants/api';
 import api from '../../api/axios';
 
 /**
- * ============================================================================
  * 🔐 Auth Context Provider (로그인 상태 관제탑)
- * * 이 파일은 앱 전체의 "내 정보(토큰)"를 담아두는 전역 금고입니다.
- * * [역할 및 흐름]
- * - 앱이 켜지자마자 가장 먼저 실행되어 내 브라우저 창고(localStorage)를 뒤집니다.
- * - 토큰이 발견되면 백엔드(/me.do)에 물어봐서 유효한 토큰인지 검사합니다.
- * - 검사가 통과되면 userToken 상태에 값을 채워 쇼핑몰 전체를 '로그인 상태'로 만듭니다.
- * - 다른 컴포넌트(헤더, 마이페이지 등)는 여기서 userToken을 꺼내어 권한을 체크합니다.
- * ============================================================================
+ * - 앱 전체의 로그인 상태('LOGGED_IN' 또는 null)를 관리합니다.
+ * - 로그인 상태 변경 시 localStorage도 함께 업데이트하여 다중 탭을 동기화합니다.
  */
-export const authContext = createContext(null);
-
-function extractToken(payload) {
-  if (!payload) {
-    return null;
-  }
-
-  if (typeof payload === 'string') {
-    return payload;
-  }
-
-  return payload.token || payload.authToken || payload.accessToken || null;
-}
+export const authContext = createContext({});
 
 export default function AuthContextProvider(props) {
-  const [userToken, setUserToken] = useState(null);
-  // const [userNo, setUserNo] = useState(null);
+  const [userToken, setUserToken] = useState(localStorage.getItem('authToken')); // 초기값
   const [authLoading, setAuthLoading] = useState(true);
   const [isTokenLoading, setIsTokenLoading] = useState(true);
 
-  useEffect(() => {
-    const savedToken = localStorage.getItem('authToken');
-
-    if (savedToken) {
-      setUserToken(savedToken);
+  // 💡 핵심: 상태(State)와 스토리지(localStorage)를 동시에 업데이트하는 함수
+  const updateAuth = useCallback((token) => {
+    setUserToken(token);
+    if (token) {
+      localStorage.setItem('authToken', token);
+    } else {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('email');
     }
+  }, []);
 
-    api
+  // 서버에 내 정보 묻기 (세션 체크)
+  const checkAuthFromServer = useCallback(() => {
+    return api
       .post(`${AUTH_PATH}/me.do`, {}, { meta: { errorType: 'INLINE' } })
       .then((response) => {
         const sessionUser = response.data?.data;
-
         if (sessionUser?.authenticated) {
-          setUserToken(savedToken || extractToken(sessionUser) || sessionUser);
-          // userNo 저장 (sessionUser 객체 또는 savedToken 기반)
-          // if (sessionUser?.userNo) {
-          //   setUserNo(sessionUser.userNo);
-          // }
+          // 세션이 살아있으면 무조건 'LOGGED_IN' 유지
+          updateAuth('LOGGED_IN');
         } else {
-          setUserToken(null);
-          // setUserNo(null);
+          // 세션이 죽어있으면 null로 초기화
+          updateAuth(null);
         }
       })
       .catch(() => {
-        setUserToken(savedToken || null);
-        // setUserNo(null);
+        // 서버 통신 실패 시 특별한 조치 없이 기존 상태 유지 (네트워크 불안정 대비)
       })
       .finally(() => {
         setAuthLoading(false);
         setIsTokenLoading(false);
       });
-  }, []);
+  }, [updateAuth]);
+
+  useEffect(() => {
+    // 앱 켜질 때 1회 세션 검증
+    checkAuthFromServer();
+  }, [checkAuthFromServer]);
+
+  useEffect(() => {
+    // 💡 axios 인터셉터에서 보내는 전역 로그아웃 이벤트 감지
+    const handleLogout = () => updateAuth(null);
+
+    // 💡 A창에서 로그인/로그아웃 시 B창(다른 탭)의 상태를 동기화하는 이벤트 감지
+    const handleStorageChange = (e) => {
+      if (e.key === 'authToken') {
+        setUserToken(e.newValue);
+      }
+    };
+
+    window.addEventListener('logout', handleLogout);
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('logout', handleLogout);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [updateAuth]);
 
   return (
     <authContext.Provider
       value={{
         userToken,
-        setUserToken,
-        // userNo,
-        // setUserNo,
+        setUserToken: updateAuth, // 다른 컴포넌트에서 setUserToken을 부르면 updateAuth가 실행됨
         authLoading,
         setAuthLoading,
         isTokenLoading,

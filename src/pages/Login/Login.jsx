@@ -21,20 +21,6 @@ export default function Login() {
       'sm:w-36 w-full text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800',
   };
 
-  const persistAuthToken = (payload) => {
-    if (typeof payload === 'string') {
-      localStorage.setItem('authToken', payload);
-      return;
-    }
-
-    const token =
-      payload?.token || payload?.authToken || payload?.accessToken || null;
-
-    if (token) {
-      localStorage.setItem('authToken', token);
-    }
-  };
-
   async function handleLogin(e) {
     e.preventDefault();
 
@@ -65,12 +51,11 @@ export default function Login() {
     api
       .post(`${AUTH_PATH}/login.do`, data, { meta: { errorType: 'INLINE' } })
       .then((response) => {
-        const authData = response.data.data;
-        setUserToken(authData);
-        // setUserNo(authData?.userNo || null);
-        persistAuthToken(authData);
+        // 서버 응답 성공 = 세션 쿠키 발급 완료
+        // AuthContext에 상태 공유용 플래그 저장 (이 값이 localStorage에 저장되어 다른 창으로 전파됨)
+        setUserToken('LOGGED_IN');
         setErr(null);
-        toast.success('Logged in successfully');
+        toast.success('로그인하였습니다.');
         setIsLoading(false);
         navigate('/');
       })
