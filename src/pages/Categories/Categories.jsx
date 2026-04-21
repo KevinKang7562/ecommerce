@@ -45,7 +45,7 @@ export default function Categories() {
           >
             <div className="relative bg-white mx-auto hover:shadow-green-300 transition-shadow shadow-md rounded-lg max-w-sm dark:bg-gray-800 dark:border-gray-700 hover:-translate-y-1 transform transition-transform duration-200">
               <img
-                className="rounded-t-lg sm:object-cover object-contain object-top w-full h-80"
+                className="rounded-t-lg object-cover object-top w-full h-80"
                 src={`${IMAGE_BASE_URL}${category.image}`}
                 alt={category.title}
               />

@@ -60,13 +60,13 @@ export default function ProductItem({ product }) {
             <span className="text-sm text-gray-500 ml-2">({reviewCount})</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="md:text-xl text-2xl font-bold text-gray-900 dark:text-white">
-              {Number(product.price).toLocaleString()} 원
+            <span className="md:text-xl text-2xl font-bold text-gray-900 dark:text-white break-keep mr-2">
+              {Number(product.price).toLocaleString()}원
             </span>
             <button
               type="button"
               onClick={handleAddToCart}
-              className="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+              className="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 break-keep"
             >
               장바구니
             </button>
