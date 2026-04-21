@@ -1,4 +1,4 @@
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import CommonTable from '../../../components/MyPageCommon/Common/CommonTable';
 import InfoSection from '../../../components/MyPageCommon/Common/InfoSection';
 import SelectBox from '../../../components/MyPageCommon/Common/SelectBox';
@@ -186,10 +186,12 @@ export default function CancelReturnRequest() {
       header: '상품이미지',
 
       className: 'hidden md:table-cell', //반응형: md 이상에서만 보이도록
-      render: (v) => (
-        <div className="flex justify-center w-full">
-          <ProductImg src={v} className="w-28 h-28 rounded-lg" />
-        </div>
+      render: (v, row) => (
+        <Link to={`/product/${row.prodNo}`} className="block">
+          <div className="flex justify-center w-full">
+            <ProductImg src={v} className="w-28 h-28 rounded-lg" />
+          </div>
+        </Link>
       ),
     },
     {
@@ -205,7 +207,13 @@ export default function CancelReturnRequest() {
             <div className="text-sm text-gray-600">
               상품주문번호 : {row.itemOrderNo}
             </div>
-            <div className="font-medium">{row.prodNm}</div>
+            {/* 💡 3. 상품명 부분도 Link로 감싸고, 마우스를 올리면 밑줄이 생기게(hover:underline) 해줍니다. */}
+            <Link
+              to={`/product/${row.prodNo}`}
+              className="font-bold hover:underline hover:text-green-700 transition-colors"
+            >
+              {row.prodNm}
+            </Link>
             <div className="text-sm text-gray-600">
               {/* 수량/옵션 : {row.optionInfo} */}
               수량 : {row.optionInfo}

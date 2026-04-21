@@ -2,7 +2,7 @@ import CommonTable from '../../../components/MyPageCommon/Common/CommonTable';
 import MyButton from '../../../components/MyPageCommon/Common/MyButton';
 import InfoSection from '../../../components/MyPageCommon/Common/InfoSection';
 import { useEffect, useState, useContext } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useNavigate, useLocation } from 'react-router-dom';
 import CsDetailModal from '../../../components/MyPageCommon/MyOrder/CsDetailModal';
 import { OrderContext } from '../../../context/Order/Order';
@@ -74,10 +74,12 @@ export default function MyOrderDetail() {
       key: 'imgUrl',
       header: '상품이미지',
       className: 'hidden md:table-cell',
-      render: (v) => (
-        <div className="flex justify-center w-full">
-          <ProductImg src={v} className="w-28 h-28 rounded-lg" />
-        </div>
+      render: (v, row) => (
+        <Link to={`/product/${row.prodNo}`} className="block">
+          <div className="flex justify-center w-full">
+            <ProductImg src={v} className="w-28 h-28 rounded-lg" />
+          </div>
+        </Link>
       ),
     },
     {
@@ -88,7 +90,12 @@ export default function MyOrderDetail() {
           <div className="text-sm text-gray-600">
             상품주문번호 : {row.itemOrderNo}
           </div>
-          <div className="font-medium">{row.prodNm}</div>
+          <Link
+            to={`/product/${row.prodNo}`}
+            className="font-bold hover:underline hover:text-green-700 transition-colors"
+          >
+            {row.prodNm}
+          </Link>
           <div className="text-sm text-gray-600">
             {/* 수량/옵션 : {row.optionInfo} */}
             수량 : {row.optionInfo}

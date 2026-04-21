@@ -6,6 +6,7 @@ import MyOrderBlock from '../../../components/MyPageCommon/MyOrder/MyOrderBlock'
 import { OrderContext } from '../../../context/Order/Order';
 import { DEFAULT_PRODUCT_IMAGE, IMAGE_BASE_URL } from '../../../constants/api';
 import ProductImg from '../../../components/ProductImg/ProductImg';
+import { Link } from 'react-router-dom';
 // import { authContext } from '../../../context/Auth/Auth';
 
 // 나의 취소/반품 목록
@@ -37,10 +38,12 @@ export default function MyCancelReturn() {
       key: 'imgUrl',
       header: '상품이미지',
       className: 'hidden md:table-cell',
-      render: (v) => (
-        <div className="flex justify-center w-full">
-          <ProductImg src={v} className="w-28 h-28 rounded-lg" />
-        </div>
+      render: (v, row) => (
+        <Link to={`/product/${row.prodNo}`} className="block">
+          <div className="flex justify-center w-full">
+            <ProductImg src={v} className="w-28 h-28 rounded-lg" />
+          </div>
+        </Link>
       ),
     },
     {
@@ -51,7 +54,12 @@ export default function MyCancelReturn() {
           <div className="text-sm text-gray-600">
             상품주문번호 : {row.itemOrderNo}
           </div>
-          <div className="font-medium">{row.prodNm}</div>
+          <Link
+            to={`/product/${row.prodNo}`}
+            className="font-bold hover:underline hover:text-green-700 transition-colors"
+          >
+            {row.prodNm}
+          </Link>
           <div className="text-sm text-gray-600">
             {/* 수량/옵션 : {row.optionInfo} */}
             수량 : {row.optionInfo}

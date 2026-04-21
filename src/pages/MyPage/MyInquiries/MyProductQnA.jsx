@@ -4,6 +4,7 @@ import Pagination from '../../../components/MyPageCommon/Common/Pagination';
 import { MyInquiryContext } from '../../../context/Inquiry/MyInquiry';
 import { DEFAULT_PRODUCT_IMAGE, IMAGE_BASE_URL } from '../../../constants/api';
 import ProductImg from '../../../components/ProductImg/ProductImg';
+import { Link } from 'react-router-dom';
 // import { authContext } from '../../../context/Auth/Auth';
 
 //나의 상품 문의 목록
@@ -35,7 +36,12 @@ export default function MyProductQnA() {
       header: '상품이미지',
 
       className: 'w-24 sm:w-32 ',
-      render: (v) => <ProductImg src={v} />,
+      render: (v, row) => (
+        // 💡 2. Link로 감싸줍니다.
+        <Link to={`/product/${row.prodNo}`} className="block">
+          <ProductImg src={v} className="hover:opacity-80 transition-opacity" />
+        </Link>
+      ),
     },
     {
       key: 'productInfo',
@@ -44,7 +50,13 @@ export default function MyProductQnA() {
       render: (_, row) => (
         <div className="text-start flex flex-col gap-1 break-keep">
           <div className="text-sm text-gray-600">상품번호 : {row.prodNo}</div>
-          <div className="font-medium">{row.prodNm}</div>
+          {/* 💡 3. 상품명 부분도 Link로 감싸고, 마우스를 올리면 밑줄이 생기게(hover:underline) 해줍니다. */}
+          <Link
+            to={`/product/${row.prodNo}`}
+            className="font-bold hover:underline hover:text-green-700 transition-colors"
+          >
+            {row.prodNm}
+          </Link>
         </div>
       ),
     },
