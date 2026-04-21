@@ -18,14 +18,31 @@ export default function MyCancelReturn() {
 
   const [cancleReturnList, setCancleReturnList] = useState([]); //취소반품목록
 
-  const [currentPage, setCurrentPage] = useState(1); //현재 페이지
-  const [totalPages, setTotalPages] = useState(0); //전체 페이지 수
+  // ====== [수정] 초기값을 세션 스토리지에서 가져오도록 변경 ======
+  const [currentPage, setCurrentPage] = useState(
+    () => Number(sessionStorage.getItem('cs_page')) || 1,
+  );
+  const [totalPages, setTotalPages] = useState(0);
 
-  const [selected, setSelected] = useState(''); //주문처리상태 검색필터
-  const [searchStartDate, setSearchStartDate] = useState(''); //시작날짜 검색필터
-  const [searchEndDate, setSearchEndDate] = useState(''); //종료날짜 검색필터
+  const [selected, setSelected] = useState(
+    () => sessionStorage.getItem('cs_status') || '',
+  );
+  const [searchStartDate, setSearchStartDate] = useState(
+    () => sessionStorage.getItem('cs_start') || '',
+  );
+  const [searchEndDate, setSearchEndDate] = useState(
+    () => sessionStorage.getItem('cs_end') || '',
+  );
 
-  const [searchTrigger, setSearchTrigger] = useState(0); //검색 버튼 클릭여부
+  const [searchTrigger, setSearchTrigger] = useState(0);
+
+  // ====== [추가] 상태가 변경될 때마다 세션 스토리지에 저장 ======
+  useEffect(() => {
+    sessionStorage.setItem('cs_page', currentPage);
+    sessionStorage.setItem('cs_status', selected);
+    sessionStorage.setItem('cs_start', searchStartDate);
+    sessionStorage.setItem('cs_end', searchEndDate);
+  }, [currentPage, selected, searchStartDate, searchEndDate]);
 
   const [loading, setLoading] = useState(false); //로딩표시
   const [error, setError] = useState(false); //에러표시

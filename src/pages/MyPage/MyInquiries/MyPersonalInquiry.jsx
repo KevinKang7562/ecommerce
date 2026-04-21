@@ -15,11 +15,18 @@ export default function MyPersonalInquiry() {
   const [error, setError] = useState(false); //에러표시
   const [errorMessage, setErrorMessage] = useState(''); //인라인 에러 메세지 표시
 
-  const [currentPage, setCurrentPage] = useState(1); //현재 페이지
-  const [totalPages, setTotalPages] = useState(0); //전체 페이지 수
+  // ====== [수정] 초기값을 세션 스토리지에서 가져오도록 변경 ======
+  const [currentPage, setCurrentPage] = useState(
+    () => Number(sessionStorage.getItem('inquiry_page')) || 1,
+  );
+  const [totalPages, setTotalPages] = useState(0);
 
   const [myInquiryList, setMyInquiryList] = useState([]);
-  // const movePersonal;
+
+  // ====== [추가] 페이지가 변경될 때마다 세션 스토리지에 저장 ======
+  useEffect(() => {
+    sessionStorage.setItem('inquiry_page', currentPage);
+  }, [currentPage]);
 
   const itemsPerPage = 5; //페이지당 보일 항목 수
   const inquiryType = 'IT002';

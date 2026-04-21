@@ -22,15 +22,31 @@ function MyAllOrders() {
   const [error, setError] = useState(false); //에러표시
   const [errorMessage, setErrorMessage] = useState(''); //인라인 에러 메세지 표시
 
-  const [currentPage, setCurrentPage] = useState(1); //현재 페이지
-  const [totalPages, setTotalPages] = useState(0); //전체 페이지 수
+  // ====== [수정] 초기값을 세션 스토리지에서 가져오도록 변경 ======
+  const [currentPage, setCurrentPage] = useState(
+    () => Number(sessionStorage.getItem('order_page')) || 1,
+  );
+  const [totalPages, setTotalPages] = useState(0);
 
-  const [selected, setSelected] = useState(''); //주문상태 검색필터
-  const [searchStartDate, setSearchStartDate] = useState(''); //시작날짜 검색필터
-  const [searchEndDate, setSearchEndDate] = useState(''); //종료날짜 검색필터
+  const [selected, setSelected] = useState(
+    () => sessionStorage.getItem('order_status') || '',
+  );
+  const [searchStartDate, setSearchStartDate] = useState(
+    () => sessionStorage.getItem('order_start') || '',
+  );
+  const [searchEndDate, setSearchEndDate] = useState(
+    () => sessionStorage.getItem('order_end') || '',
+  );
 
-  const [searchTrigger, setSearchTrigger] = useState(0); //검색 버튼 클릭여부
+  const [searchTrigger, setSearchTrigger] = useState(0);
 
+  // ====== [추가] 상태가 변경될 때마다 세션 스토리지에 저장 ======
+  useEffect(() => {
+    sessionStorage.setItem('order_page', currentPage);
+    sessionStorage.setItem('order_status', selected);
+    sessionStorage.setItem('order_start', searchStartDate);
+    sessionStorage.setItem('order_end', searchEndDate);
+  }, [currentPage, selected, searchStartDate, searchEndDate]);
   const itemsPerPage = 5; //페이지당 보일 항목 수
 
   // =====================================================================
