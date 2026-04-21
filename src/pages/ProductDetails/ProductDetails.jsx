@@ -15,6 +15,7 @@ import {
 } from '../../constants/api';
 import StarRating from '../../components/StarRating/StarRating';
 import ProductImg from '../../components/ProductImg/ProductImg.jsx'; // 💡 공통 이미지 컴포넌트 import
+import ImgModal from '../../components/ImgModal/ImgModal.jsx';
 
 export default function ProductDetails() {
   const { addProduct } = useContext(cartContext);
@@ -51,9 +52,10 @@ export default function ProductDetails() {
   const [totalQnACount, setTotalQnACount] = useState(0);
 
   // 이미지 확대 팝업 상태
-  const [selectedReviewImage, setSelectedReviewImage] = useState(null);
-  const [imageIndex, setImageIndex] = useState(0);
-  const [allReviewImages, setAllReviewImages] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false); //리뷰 이미지 모달 상태
+  const [imageIndex, setImageIndex] = useState(0); //리뷰 이미지 모달에서 현재 보고 있는 이미지 인덱스
+  // 💡 [추가] 모달에 띄워줄 "현재 리뷰의 사진 배열"을 저장할 State
+  const [modalImages, setModalImages] = useState([]);
 
   const { id } = useParams();
 
@@ -362,18 +364,6 @@ export default function ProductDetails() {
     fetchProductExtraData(prodNo, 1, 1);
   }, [prodNo]);
 
-  useEffect(() => {
-    const combined = productReviews.flatMap((review) => {
-      const reviewImages = getReviewImages(review.imgUrls);
-      return reviewImages.map((src) => ({
-        src,
-        reviewNo: review.reviewNo,
-        userId: review.userId,
-      }));
-    });
-    setAllReviewImages(combined);
-  }, [productReviews]);
-
   const handleDecreaseQuantity = () => {
     setQuantity((prev) => Math.max(1, prev - 1));
   };
@@ -390,51 +380,13 @@ export default function ProductDetails() {
     setQuantity(Math.min(99, Math.max(1, value)));
   };
 
-  // 이미지 팝업 열기
-  const openImageModal = (imageUrl) => {
-    const index = allReviewImages.findIndex((img) => img.src === imageUrl);
-    if (index !== -1) {
-      setImageIndex(index);
-      setSelectedReviewImage(imageUrl);
-    }
+  //이미지 팝업 열기
+  // 💡 [수정] 열기 함수: 이제 클릭한 사진의 URL이 아니라, "사진 배열"과 "클릭한 순서(index)"를 받습니다.
+  const openImageModal = (imagesArray, clickedIndex) => {
+    setModalImages(imagesArray); // 모달한테 "이 배열만 보여줘!" 하고 전달
+    setImageIndex(clickedIndex); // "이 번호 사진부터 띄워!"
+    setIsModalOpen(true);
   };
-
-  // 이미지 팝업 닫기
-  const closeImageModal = () => {
-    setSelectedReviewImage(null);
-  };
-
-  // 다음 이미지
-  const nextImage = () => {
-    if (imageIndex < allReviewImages.length - 1) {
-      const nextIdx = imageIndex + 1;
-      setImageIndex(nextIdx);
-      setSelectedReviewImage(allReviewImages[nextIdx].src);
-    }
-  };
-
-  // 이전 이미지
-  const prevImage = () => {
-    if (imageIndex > 0) {
-      const prevIdx = imageIndex - 1;
-      setImageIndex(prevIdx);
-      setSelectedReviewImage(allReviewImages[prevIdx].src);
-    }
-  };
-
-  // 키보드 네비게이션
-  useEffect(() => {
-    if (!selectedReviewImage) return;
-
-    const handleKeyDown = (e) => {
-      if (e.key === 'ArrowRight') nextImage();
-      if (e.key === 'ArrowLeft') prevImage();
-      if (e.key === 'Escape') closeImageModal();
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [imageIndex, allReviewImages, selectedReviewImage]);
 
   return (
     <>
@@ -754,7 +706,10 @@ export default function ProductDetails() {
                                     src={imageUrl}
                                     alt="리뷰 이미지"
                                     className="w-full aspect-square cursor-pointer rounded-lg object-cover bg-white transition-transform hover:scale-105"
-                                    onClick={() => openImageModal(imageUrl)}
+                                    // 💡 [핵심 수정] 함수에 현재 리뷰의 이미지 배열(reviewImages)과 클릭한 인덱스를 던져줍니다!
+                                    onClick={() =>
+                                      openImageModal(reviewImages, index)
+                                    }
                                   />
                                 ))}
                               </div>
@@ -1158,54 +1113,15 @@ export default function ProductDetails() {
       </div>
 
       {/* 이미지 확대 모달 */}
-      {selectedReviewImage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
-          <div className="relative max-h-full max-w-4xl">
-            <img
-              src={selectedReviewImage}
-              alt="확대된 리뷰 이미지"
-              className="max-h-full max-w-full object-contain"
-            />
 
-            {/* 닫기 버튼 */}
-            <button
-              type="button"
-              onClick={closeImageModal}
-              className="absolute -top-12 right-0 text-white hover:text-gray-300"
-            >
-              <i className="fa fa-times text-2xl" />
-            </button>
-
-            {/* 이전/다음 버튼 */}
-            {allReviewImages.length > 1 && (
-              <>
-                <button
-                  type="button"
-                  onClick={prevImage}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 disabled:opacity-50"
-                  disabled={imageIndex === 0}
-                >
-                  <i className="fa fa-chevron-left text-3xl" />
-                </button>
-                <button
-                  type="button"
-                  onClick={nextImage}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 disabled:opacity-50"
-                  disabled={imageIndex === allReviewImages.length - 1}
-                >
-                  <i className="fa fa-chevron-right text-3xl" />
-                </button>
-              </>
-            )}
-
-            {/* 이미지 카운터 */}
-            {allReviewImages.length > 1 && (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white">
-                {imageIndex + 1} / {allReviewImages.length}
-              </div>
-            )}
-          </div>
-        </div>
+      {isModalOpen && (
+        <ImgModal
+          // images={allReviewImages} // 전체 이미지 배열
+          images={modalImages} // 💡 [수정] 전체 이미지가 아니라, 방금 클릭한 리뷰의 이미지 배열만 쏙!
+          currentIndex={imageIndex} // 현재 인덱스
+          onClose={() => setIsModalOpen(false)} // 닫기 로직
+          onChangeIndex={setImageIndex} // 인덱스 변경 로직
+        />
       )}
     </>
   );

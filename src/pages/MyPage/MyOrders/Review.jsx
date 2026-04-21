@@ -1,9 +1,11 @@
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import CommonTable from '../../../components/MyPageCommon/Common/CommonTable';
 import { useContext, useEffect, useState } from 'react';
 import MyButton from '../../../components/MyPageCommon/Common/MyButton';
 import { ReviewContext } from '../../../context/Review/Review';
 import { DEFAULT_PRODUCT_IMAGE, IMAGE_BASE_URL } from '../../../constants/api';
+import ProductImg from '../../../components/ProductImg/ProductImg';
+import ImgModal from '../../../components/ImgModal/ImgModal';
 
 export default function Review() {
   //상품주문번호 파라미터
@@ -72,17 +74,6 @@ export default function Review() {
     e.target.value = '';
   };
 
-  // //기존 이미지 삭제
-  // const handleRemoveExistingImage = (url) => {
-  //   if (window.confirm('기존 이미지를 삭제하시겠습니까?')) {
-  //     // 화면에서 제거
-  //     setExistingImages((prev) => prev.filter((img) => img !== url));
-
-  //     // 삭제 대상 목록에 추가
-  //     setDeletedImages((prev) => [...prev, url]);
-  //   }
-  // };
-
   // [수정] 기존 이미지 삭제
   const handleRemoveExistingImage = (img) => {
     if (window.confirm('기존 이미지를 삭제하시겠습니까?')) {
@@ -129,34 +120,6 @@ export default function Review() {
       // alert('리뷰 등록 실패');
     }
   };
-
-  // //리뷰 수정
-  // const handleReviewUpdate = async () => {
-  //   const formData = new FormData();
-  //   formData.append('itemOrderNo', orderItemData.itemOrderNo);
-  //   formData.append('prodNo', orderItemData.prodNo);
-  //   formData.append('reviewNo', orderItemData.reviewNo);
-  //   formData.append('rating', rating);
-  //   formData.append('reviewContent', reviewContent);
-
-  //   // 새로 추가한 이미지
-  //   images.forEach((file) => {
-  //     formData.append('images', file);
-  //   });
-
-  //   // 삭제할 기존 이미지
-  //   deletedImages.forEach((url) => {
-  //     formData.append('deletedImages', url);
-  //   });
-
-  //   console.log('리뷰수정', formData);
-
-  //   try {
-  //     await updateReview(formData);
-  //     alert('리뷰가 수정되었습니다.');
-  //     goToOrderList(); //목록이동
-  //   } catch (error) {}
-  // };
 
   // [수정] 리뷰 수정
   const handleReviewUpdate = async () => {
@@ -253,10 +216,6 @@ export default function Review() {
     setRating(orderItemData.rating ?? 0);
     setReviewContent(orderItemData.reviewContent ?? '');
 
-    // //기존 등록된 이미지 세팅
-    // if (orderItemData.imgUrls) {
-    //   setExistingImages(orderItemData.imgUrls.split(','));
-    //   console.log(existingImages);
     // [수정] 번호:URL 형태의 문자열을 객체 배열로 파싱
     console.log('원래 이미지', orderItemData.imgUrls);
     if (orderItemData.imgUrls) {
@@ -275,9 +234,10 @@ export default function Review() {
   }, [orderItemData]);
 
   // [추가] 이미지 확대 팝업 상태
-  const [selectedImage, setSelectedImage] = useState(null); // 선택된 이미지
+  // const [selectedImage, setSelectedImage] = useState(null); // 선택된 이미지
   const [imageIndex, setImageIndex] = useState(0); // 현재 보는 이미지 인덱스
   const [allImages, setAllImages] = useState([]); // 모든 이미지 배열 (기존 + 새로)
+  const [isModalOpen, setIsModalOpen] = useState(false); // 모달 On/Off 상태
 
   // [추가] 모든 이미지 배열 업데이트 (기존 이미지 + 새 이미지)
   useEffect(() => {
@@ -296,47 +256,11 @@ export default function Review() {
   }, [existingImages, previews]);
 
   // [추가] 이미지 팝업 열기
+
   const openImageModal = (index) => {
     setImageIndex(index);
-    setSelectedImage(allImages[index]);
+    setIsModalOpen(true); // selectedImage 대신 isModalOpen을 true로 바꿈
   };
-
-  // [추가] 이미지 팝업 닫기
-  const closeImageModal = () => {
-    setSelectedImage(null);
-  };
-
-  // [추가] 다음 이미지
-  const nextImage = () => {
-    if (imageIndex < allImages.length - 1) {
-      const nextIdx = imageIndex + 1;
-      setImageIndex(nextIdx);
-      setSelectedImage(allImages[nextIdx]);
-    }
-  };
-
-  // [추가] 이전 이미지
-  const prevImage = () => {
-    if (imageIndex > 0) {
-      const prevIdx = imageIndex - 1;
-      setImageIndex(prevIdx);
-      setSelectedImage(allImages[prevIdx]);
-    }
-  };
-
-  // [추가] 키보드 네비게이션
-  useEffect(() => {
-    if (!selectedImage) return;
-
-    const handleKeyDown = (e) => {
-      if (e.key === 'ArrowRight') nextImage();
-      if (e.key === 'ArrowLeft') prevImage();
-      if (e.key === 'Escape') closeImageModal();
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [imageIndex, allImages]);
 
   // =====================================================================
   //테이블: 주문상품목록 컬럼
@@ -346,15 +270,12 @@ export default function Review() {
     {
       key: 'imgUrl',
       header: '상품이미지',
-      render: (v) => (
-        <img
-          src={v ? `${IMAGE_BASE_URL}${v}` : DEFAULT_PRODUCT_IMAGE}
-          // onError는 '주소는 멀쩡한데 막상 서버에 가보니 이미지가 지워졌거나 엑스박스 뜰 때'를 대비
-          onError={(e) => {
-            e.target.src = DEFAULT_PRODUCT_IMAGE; // 에러 났을 때도 상수로 교체!
-          }}
-          className="w-24 h-24 object-cover rounded-lg border"
-        />
+      render: (v, row) => (
+        <Link to={`/product/${row.prodNo}`} className="block">
+          <div className="flex justify-center w-full">
+            <ProductImg src={v} className="w-28 h-28 rounded-lg" />
+          </div>
+        </Link>
       ),
     },
     {
@@ -365,9 +286,14 @@ export default function Review() {
           <div className="text-xs text-gray-400">
             상품주문번호: {row.itemOrderNo}
           </div>
-          <div className="font-bold text-gray-800">{row.prodNm}</div>
+          <Link
+            to={`/product/${row.prodNo}`}
+            className="font-bold text-gray-800 hover:underline hover:text-green-700 transition-colors"
+          >
+            {row.prodNm}
+          </Link>
           <div className="text-sm text-gray-500">{row.optionInfo}</div>
-          <div className="text-sm font-bold text-blue-600">
+          <div className="text-sm font-semibold">
             {/* 상품별 총금액 ()(구매단가-할인금액+옵션추가금)*수량)*/}
             {row.csAppliedAmt?.toLocaleString()}원
           </div>
@@ -402,68 +328,13 @@ export default function Review() {
   return (
     <div className="w-full">
       {/* [추가] 이미지 확대 모달 팝업 */}
-      {selectedImage && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4"
-          onClick={closeImageModal}
-        >
-          {/* 모달 내용 */}
-          <div
-            className="bg-white rounded-2xl shadow-2xl max-w-4xl max-h-[90vh] overflow-auto relative animate-in fade-in zoom-in-95 duration-200"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* 닫기 버튼 */}
-            <button
-              onClick={closeImageModal}
-              className="absolute top-4 right-4 bg-red-500 text-white rounded-full w-10 h-10 flex items-center justify-center hover:bg-red-600 transition-colors z-10 shadow-lg"
-              title="Close (ESC)"
-            >
-              ✕
-            </button>
-
-            {/* 이미지 영역 */}
-            <div className="flex items-center justify-center bg-gray-100 p-4 min-h-[400px]">
-              <img
-                src={selectedImage.src}
-                alt={`Enlarged view ${imageIndex + 1}`}
-                className="max-w-full max-h-[70vh] object-contain rounded-lg"
-              />
-            </div>
-
-            {/* 네비게이션 및 정보 영역 */}
-            <div className="p-6 bg-white border-t">
-              {/* 이미지 정보 */}
-              <div className="text-center mb-4 text-gray-600 text-sm">
-                {imageIndex + 1} / {allImages.length}
-              </div>
-
-              {/* 네비게이션 버튼 */}
-              <div className="flex justify-center gap-4">
-                <button
-                  onClick={prevImage}
-                  disabled={imageIndex === 0}
-                  className="px-6 py-2 bg-gray-300 hover:bg-gray-400 disabled:bg-gray-200 disabled:cursor-not-allowed text-gray-800 rounded-lg font-semibold transition-colors"
-                >
-                  ← 이전
-                </button>
-
-                <button
-                  onClick={nextImage}
-                  disabled={imageIndex === allImages.length - 1}
-                  className="px-6 py-2 bg-gray-300 hover:bg-gray-400 disabled:bg-gray-200 disabled:cursor-not-allowed text-gray-800 rounded-lg font-semibold transition-colors"
-                >
-                  다음 →
-                </button>
-              </div>
-
-              {/* 키보드 단축키 안내 */}
-              <p className="text-center text-xs text-gray-400 mt-4 flex justify-center gap-4">
-                <span>← → 키로 네비게이션</span>
-                <span>ESC로 닫기</span>
-              </p>
-            </div>
-          </div>
-        </div>
+      {isModalOpen && (
+        <ImgModal
+          images={allImages} // 기존+새로고침 이미지 합친 배열
+          currentIndex={imageIndex} // 클릭한 번호
+          onClose={() => setIsModalOpen(false)} // 닫기
+          onChangeIndex={setImageIndex} // 좌우 이동 시 번호 변경
+        />
       )}
 
       <h1 className="text-2xl sm:text-3xl font-bold mb-8 border-b pb-5">
