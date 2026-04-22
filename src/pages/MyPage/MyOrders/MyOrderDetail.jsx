@@ -143,6 +143,19 @@ export default function MyOrderDetail() {
       const resData = await selectOrderDetail(orderNo);
 
       console.log('주문상세 : ', resData);
+      // 💡 [핵심 추가] 백엔드와 동일하게 배송비 역산하기
+      // 1. 순수 상품 총액 계산 (모든 아이템의 구매 금액 합산)
+      const goodsTotalAmt = (resData.items ?? []).reduce(
+        (sum, item) => sum + (item.csAppliedAmt || 0),
+        0,
+      );
+
+      // 2. DB에 저장된 총 결제금액 (상품총액 + 배송비)
+      const orderTotalAmt = resData.totalAmt ?? 0;
+
+      // 3. 배송비 도출 (총 결제금액 - 순수 상품총액)
+      const calculatedDeliveryFee =
+        orderTotalAmt - goodsTotalAmt > 0 ? 2500 : 0;
 
       setOrderData({
         order: {
@@ -161,16 +174,43 @@ export default function MyOrderDetail() {
         },
 
         payment: {
-          totalAmt: resData.totalAmt ?? 0, //상품별 총금액의 합
-          deliveryFee: resData.deliveryFee ?? 0,
-          totalPayAmt: resData.totalPayAmt ?? 0, //총 결제 금액 (배송비 포함 금액인데 실제 배송비는 0원인 걸로 고려)
+          totalAmt: goodsTotalAmt, // 💡 [수정] 역산한 순수 상품 총액(배송비 미포함된 금액)
+          deliveryFee: calculatedDeliveryFee, // 💡 [수정] 역산한 배송비 적용
+          totalPayAmt: orderTotalAmt, // 💡 [수정] DB의 totalAmt가 실제 최종 결제금액
           payMethod: resData.payMethod ?? '',
           payMethodNm: resData.payMethodNm ?? '',
-          refundTotal: resData.refundTotal ?? '',
+          refundTotal: resData.refundTotal ?? 0, // null 방지
         },
 
         productitems: resData.items ?? [],
       });
+      // setOrderData({
+      //   order: {
+      //     orderNo: resData.orderNo,
+      //     orderDate: resData.orderDate,
+      //     canCancelYn: resData.canCancelYn,
+      //     canReturnYn: resData.canReturnYn,
+      //   },
+
+      //   delivery: {
+      //     recipientNm: resData.recipientNm,
+      //     recipientTell: resData.recipientTell,
+      //     postCd: resData.postCd,
+      //     address: resData.address,
+      //     addressDetail: resData.addressDetail,
+      //   },
+
+      //   payment: {
+      //     totalAmt: resData.totalAmt ?? 0, //상품별 총금액의 합
+      //     deliveryFee: resData.deliveryFee ?? 0,
+      //     totalPayAmt: resData.totalPayAmt ?? 0, //총 결제 금액 (배송비 포함 금액인데 실제 배송비는 0원인 걸로 고려)
+      //     payMethod: resData.payMethod ?? '',
+      //     payMethodNm: resData.payMethodNm ?? '',
+      //     refundTotal: resData.refundTotal ?? '',
+      //   },
+
+      //   productitems: resData.items ?? [],
+      // });
     } catch (error) {
       setError(true);
       const serverMessage =
