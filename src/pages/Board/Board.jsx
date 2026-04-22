@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_BASE_URL, SESSION_ALERT } from '../../constants/api';
+import Spinner from '../../components/Spinner/Spinner';
 
 /**
  * 공지사항 게시판 (Grid + 그룹 페이징)
@@ -222,7 +223,8 @@ export default function Board() {
         </div>
       </form>
 
-      {loading && <div style={{ marginBottom: 12 }}>로딩 중...</div>}
+      {/* {loading && <div style={{ marginBottom: 12 }}>로딩 중...</div>} */}
+      {loading && <Spinner />}
       {error && <div style={{ color: 'red', marginBottom: 12 }}>{error}</div>}
 
       {/* Grid: 높이 고정 (header + pageSize * rowHeight) */}
