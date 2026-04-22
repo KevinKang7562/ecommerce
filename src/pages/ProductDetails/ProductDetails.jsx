@@ -16,6 +16,15 @@ import {
 import StarRating from '../../components/StarRating/StarRating';
 import ProductImg from '../../components/ProductImg/ProductImg.jsx'; // 💡 공통 이미지 컴포넌트 import
 import ImgModal from '../../components/ImgModal/ImgModal.jsx';
+import Spinner from '../../components/Spinner/Spinner';
+
+function SpinnerMini() {
+  return (
+    <div className="flex justify-center items-center py-6">
+      <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  );
+}
 
 export default function ProductDetails() {
   const { addProduct } = useContext(cartContext);
@@ -31,8 +40,8 @@ export default function ProductDetails() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [productReviews, setProductReviews] = useState([]);
   const [productQnAs, setProductQnAs] = useState([]);
-  const [reviewsLoading, setReviewsLoading] = useState(false);
-  const [qnaLoading, setQnaLoading] = useState(false);
+  const [isReviewLoading, setIsReviewLoading] = useState(true);
+  const [isQnaLoading, setIsQnaLoading] = useState(true);
   const [openReviewNo, setOpenReviewNo] = useState(null);
   const [openInquiryNo, setOpenInquiryNo] = useState(null);
   const [showQnaForm, setShowQnaForm] = useState(false);
@@ -137,45 +146,24 @@ export default function ProductDetails() {
     return userId.substring(0, 3) + '*'.repeat(userId.length - 3);
   };
 
-  const fetchProductExtraData = async (
-    targetProdNo,
-    reviewPage = 1,
-    qnaPage = 1,
-  ) => {
+  const fetchReviews = async (targetProdNo, reviewPage = 1) => {
     if (!targetProdNo) {
       setProductReviews([]);
-      setProductQnAs([]);
       setOpenReviewNo(null);
-      setOpenInquiryNo(null);
       return;
     }
-
-    setReviewsLoading(true);
-    setQnaLoading(true);
-
+    setIsReviewLoading(true);
     try {
-      const [reviewResponse, qnaResponse] = await Promise.all([
-        api
-          .get(
-            `${MY_REVIEW_PATH}/product/${targetProdNo}?page=${reviewPage}&size=5`,
-            {
-              meta: { errorType: 'INLINE' },
-            },
-          )
-          .catch(() => ({
-            data: { data: { reviews: [], totalReviewCount: 0 } },
-          })),
-        api
-          .get(
-            `${MY_INQUIRY_PATH}/product/${targetProdNo}/qna?page=${qnaPage}&size=5`,
-            {
-              meta: { errorType: 'INLINE' },
-            },
-          )
-          .catch(() => ({
-            data: { data: { qnaList: [], totalQnACount: 0 } },
-          })),
-      ]);
+      const reviewResponse = await api
+        .get(
+          `${MY_REVIEW_PATH}/product/${targetProdNo}?page=${reviewPage}&size=5`,
+          {
+            meta: { errorType: 'INLINE' },
+          },
+        )
+        .catch(() => ({
+          data: { data: { reviews: [], totalReviewCount: 0 } },
+        }));
 
       const reviewData = reviewResponse.data?.data ?? {
         reviews: [],
@@ -183,6 +171,36 @@ export default function ProductDetails() {
       };
       const nextReviews = reviewData.reviews ?? [];
       const totalReviewCount = reviewData.totalReviewCount ?? 0;
+
+      setProductReviews(nextReviews);
+      setTotalReviewCount(totalReviewCount);
+      setTotalReviewPages(Math.ceil(totalReviewCount / 5));
+      setCurrentReviewPage(reviewPage);
+      setOpenReviewNo(null);
+    } finally {
+      setIsReviewLoading(false);
+    }
+  };
+
+  const fetchQnAs = async (targetProdNo, qnaPage = 1) => {
+    if (!targetProdNo) {
+      setProductQnAs([]);
+      setOpenInquiryNo(null);
+      return;
+    }
+    setIsQnaLoading(true);
+    try {
+      const qnaResponse = await api
+        .get(
+          `${MY_INQUIRY_PATH}/product/${targetProdNo}/qna?page=${qnaPage}&size=5`,
+          {
+            meta: { errorType: 'INLINE' },
+          },
+        )
+        .catch(() => ({
+          data: { data: { qnaList: [], totalQnACount: 0 } },
+        }));
+
       const qnaData = qnaResponse.data?.data ?? {
         qnaList: [],
         totalQnACount: 0,
@@ -190,19 +208,13 @@ export default function ProductDetails() {
       const nextQnAs = qnaData.qnaList ?? [];
       const qnaTotalCount = qnaData.totalQnACount ?? 0;
 
-      setProductReviews(nextReviews);
-      setTotalReviewCount(totalReviewCount);
-      setTotalReviewPages(Math.ceil(totalReviewCount / 5));
       setProductQnAs(nextQnAs);
       setTotalQnACount(qnaTotalCount);
       setTotalQnaPages(Math.ceil(qnaTotalCount / 5));
-      setCurrentReviewPage(reviewPage);
       setCurrentQnaPage(qnaPage);
-      setOpenReviewNo(null);
       setOpenInquiryNo(null);
     } finally {
-      setReviewsLoading(false);
-      setQnaLoading(false);
+      setIsQnaLoading(false);
     }
   };
 
@@ -294,7 +306,7 @@ export default function ProductDetails() {
       });
       setQnaSuccessMessage('상품 Q&A가 등록되었습니다.');
       setShowQnaForm(false);
-      await fetchProductExtraData(prodNo, currentReviewPage, currentQnaPage);
+      await fetchQnAs(prodNo, currentQnaPage);
     } catch (error) {
       setQnaErrorMessage(
         error.response?.data?.message ||
@@ -361,7 +373,8 @@ export default function ProductDetails() {
     if (!prodNo) return;
     setCurrentReviewPage(1);
     setCurrentQnaPage(1);
-    fetchProductExtraData(prodNo, 1, 1);
+    fetchReviews(prodNo, 1);
+    fetchQnAs(prodNo, 1);
   }, [prodNo]);
 
   const handleDecreaseQuantity = () => {
@@ -645,10 +658,8 @@ export default function ProductDetails() {
                 </span>
               </div>
 
-              {reviewsLoading ? (
-                <p className="text-sm text-gray-500">
-                  리뷰를 불러오는 중입니다...
-                </p>
+              {isReviewLoading ? (
+                <SpinnerMini />
               ) : productReviews.length > 0 ? (
                 <div className="space-y-3">
                   {productReviews.map((review) => {
@@ -706,7 +717,6 @@ export default function ProductDetails() {
                                     src={imageUrl}
                                     alt="리뷰 이미지"
                                     className="w-full aspect-square cursor-pointer rounded-lg object-cover bg-white transition-transform hover:scale-105"
-                                    // 💡 [핵심 수정] 함수에 현재 리뷰의 이미지 배열(reviewImages)과 클릭한 인덱스를 던져줍니다!
                                     onClick={() =>
                                       openImageModal(reviewImages, index)
                                     }
@@ -735,7 +745,7 @@ export default function ProductDetails() {
                       onClick={() => {
                         const newPage = Math.max(1, currentReviewPage - 5);
                         setCurrentReviewPage(newPage);
-                        fetchProductExtraData(prodNo, newPage);
+                        fetchReviews(prodNo, newPage);
                       }}
                       disabled={currentReviewPage <= 5}
                       className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -763,11 +773,7 @@ export default function ProductDetails() {
                             type="button"
                             onClick={() => {
                               setCurrentReviewPage(pageNum);
-                              fetchProductExtraData(
-                                prodNo,
-                                pageNum,
-                                currentQnaPage,
-                              );
+                              fetchReviews(prodNo, pageNum);
                             }}
                             className={`rounded-lg border px-3 py-2 text-sm font-medium ${
                               currentReviewPage === pageNum
@@ -789,7 +795,7 @@ export default function ProductDetails() {
                           Math.floor((currentReviewPage - 1) / 5) * 5 + 6,
                         );
                         setCurrentReviewPage(newPage);
-                        fetchProductExtraData(prodNo, newPage);
+                        fetchReviews(prodNo, newPage);
                       }}
                       disabled={currentReviewPage > totalReviewPages - 5}
                       className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -917,10 +923,8 @@ export default function ProductDetails() {
                 </form>
               )}
 
-              {qnaLoading ? (
-                <p className="text-sm text-gray-500">
-                  상품 Q&A를 불러오는 중입니다...
-                </p>
+              {isQnaLoading ? (
+                <Spinner />
               ) : productQnAs.length > 0 ? (
                 <>
                   <div className="space-y-3">
@@ -1029,11 +1033,7 @@ export default function ProductDetails() {
                           onClick={() => {
                             const newPage = Math.max(1, currentQnaPage - 5);
                             setCurrentQnaPage(newPage);
-                            fetchProductExtraData(
-                              prodNo,
-                              currentReviewPage,
-                              newPage,
-                            );
+                            fetchQnAs(prodNo, newPage);
                           }}
                           disabled={currentQnaPage <= 5}
                           className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1061,11 +1061,7 @@ export default function ProductDetails() {
                                 type="button"
                                 onClick={() => {
                                   setCurrentQnaPage(pageNum);
-                                  fetchProductExtraData(
-                                    prodNo,
-                                    currentReviewPage,
-                                    pageNum,
-                                  );
+                                  fetchQnAs(prodNo, pageNum);
                                 }}
                                 className={`rounded-lg border px-3 py-2 text-sm font-medium ${
                                   currentQnaPage === pageNum
@@ -1087,11 +1083,7 @@ export default function ProductDetails() {
                               Math.floor((currentQnaPage - 1) / 5) * 5 + 6,
                             );
                             setCurrentQnaPage(newPage);
-                            fetchProductExtraData(
-                              prodNo,
-                              currentReviewPage,
-                              newPage,
-                            );
+                            fetchQnAs(prodNo, newPage);
                           }}
                           disabled={currentQnaPage > totalQnaPages - 5}
                           className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
