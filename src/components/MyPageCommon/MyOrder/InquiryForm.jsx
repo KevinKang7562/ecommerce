@@ -11,10 +11,12 @@ import InputRow from '../Common/InputRow';
 import EditorRow from '../Common/EditorRow';
 import SelectRow from '../Common/SelectRow';
 import { useCommCd } from '../../../hooks/useCommCd';
+import { useModal } from '../../../context/ModalContext/ModalContext';
 
 //함수 컴포넌트는 ref를 받을 수 없으므로 forwardRef를 통해 부모가 준 ref를 자식 컴포넌트가 받을 수 있게 함
 //export default forwardRef(function InquiryForm(props, ref) {
 const InquiryForm = forwardRef(({ onSuccess, mode, inquiryNo }, ref) => {
+  const { showAlert, showConfirm } = useModal();
   // mode, inquiryNo 프롭스 추가
   // context에서 update 함수도 가져온다고 가정 (혹은 save 함수 내부에서 분기 처리)
   const { saveMyInquiry, updateMyInquiry, selectMyInquiryDetail } =
@@ -108,10 +110,10 @@ const InquiryForm = forwardRef(({ onSuccess, mode, inquiryNo }, ref) => {
       //모드에 따라 호출 함수 분기
       if (mode === 'UPDATE') {
         await updateMyInquiry(formData);
-        alert('1:1 문의가 수정되었습니다.');
+        showAlert('1:1 문의가 수정되었습니다.');
       } else {
         await saveMyInquiry(formData);
-        alert('1:1 문의가 접수되었습니다.');
+        showAlert('1:1 문의가 접수되었습니다.');
       }
 
       onSuccess?.();

@@ -6,10 +6,13 @@ import MyButton from '../../../components/MyPageCommon/Common/MyButton';
 import { useCommCd } from '../../../hooks/useCommCd';
 import { useEffect, useState, useContext } from 'react';
 import { OrderContext } from '../../../context/Order/Order';
-import { DEFAULT_PRODUCT_IMAGE, IMAGE_BASE_URL } from '../../../constants/api';
+// import { DEFAULT_PRODUCT_IMAGE, IMAGE_BASE_URL } from '../../../constants/api';
 import ProductImg from '../../../components/ProductImg/ProductImg';
+import Spinner from '../../../components/Spinner/Spinner';
+import { useModal } from '../../../context/ModalContext/ModalContext';
 
 export default function CancelReturnRequest() {
+  const { showAlert, showConfirm } = useModal();
   // 주문 번호 파라미터
   const { orderNo } = useParams();
 
@@ -278,10 +281,12 @@ export default function CancelReturnRequest() {
       })),
     };
     console.log('파라미터 : ', params);
-    const confirmed = window.confirm(
+    // const confirmed = window.confirm(
+    //   `${csTitle[cancelReturnType]} 요청을 진행하시겠습니까?`,
+    // );
+    const confirmed = await showConfirm(
       `${csTitle[cancelReturnType]} 요청을 진행하시겠습니까?`,
     );
-
     if (!confirmed) {
       return; // 사용자가 취소를 누르면 여기서 종료
     }
@@ -292,7 +297,8 @@ export default function CancelReturnRequest() {
     try {
       await requestCancelReturn(params);
 
-      alert(`${csTitle[cancelReturnType]} 요청이 완료되었습니다.`);
+      // alert(`${csTitle[cancelReturnType]} 요청이 완료되었습니다.`);
+      await showAlert(`${csTitle[cancelReturnType]} 요청이 완료되었습니다.`);
       navigate(-1);
     } catch (error) {
       console.error(`주문 ${csTitle[cancelReturnType]} 실패 : `, error);
@@ -367,7 +373,7 @@ export default function CancelReturnRequest() {
   //조건부 랜더링(데이터 조회 전 orderInfo 구조분해 실행으로 인한 에러발생 방지하기 위해 초기 랜더링 시 구조분해 전에 return으로 함수 조기 종료)
   // =====================================================================
   if (loading) {
-    return <div className="py-20 text-center">로딩중...</div>;
+    return <Spinner />;
   }
   if (loadError) {
     return (
@@ -404,8 +410,8 @@ export default function CancelReturnRequest() {
           반품 시 환불은 상품 금액에 한정되며 배송비는 환불되지 않습니다.
           {(selectedCsReason === 'CR01' || selectedCsReason === 'CR02') && (
             <div className="mt-2 font-semibold">
-              ※ 고객 귀책 사유(CR01, CR02)의 경우 반품 배송비 2,500원을 별도
-              입금해 주세요.
+              ※ 고객 귀책 사유(단순변심, 주문실수)의 경우 반품 배송비 2,500원을
+              별도 입금해 주세요. 입금계좌 : 0000-0000-0000-000 (예금주: 홍길동)
             </div>
           )}
         </div>

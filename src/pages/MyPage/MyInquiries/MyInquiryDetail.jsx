@@ -2,8 +2,12 @@ import { useContext, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MyInquiryContext } from '../../../context/Inquiry/MyInquiry';
 import MyButton from '../../../components/MyPageCommon/Common/MyButton';
+import Spinner from '../../../components/Spinner/Spinner';
+import { useModal } from '../../../context/ModalContext/ModalContext';
 
 export default function MyInquiryDetail() {
+  const { showAlert, showConfirm } = useModal();
+
   const { selectMyInquiryDetail, deleteMyInquiry } =
     useContext(MyInquiryContext);
   const { inquiryNo } = useParams();
@@ -21,7 +25,8 @@ export default function MyInquiryDetail() {
   //문의 삭제하기
   const handleInquiryDelete = async () => {
     // 1. 사용자에게 한 번 더 확인
-    if (!window.confirm('정말 이 문의글을 삭제하시겠습니까?')) {
+    const confirmed = await showConfirm('정말 이 문의글을 삭제하시겠습니까?');
+    if (!confirmed) {
       return;
     }
 
@@ -31,7 +36,7 @@ export default function MyInquiryDetail() {
       await deleteMyInquiry(inquiryNo);
 
       //성공 알림 및 페이지 이동
-      alert('문의글이 삭제되었습니다.');
+      showAlert('문의글이 삭제되었습니다.');
       navigate('/mypage/myPersonalInquiry'); // 삭제 후 목록으로 이동
     } catch (error) {
       console.error('삭제 실패:', error);
@@ -74,12 +79,7 @@ export default function MyInquiryDetail() {
   }, [inquiryNo]);
   // [수정] UX 개선: 로딩 중일 때 빈 화면 대신 로딩 상태 표시
   if (loading && !inquiryDetail) {
-    return (
-      <div className="w-full py-20 text-center">
-        <div className="animate-spin inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
-        <p className="text-gray-500">문의 내용을 불러오는 중입니다...</p>
-      </div>
-    );
+    return <Spinner />;
   }
 
   // [수정] UX 개선: 데이터가 없고 에러 메시지만 있을 때 (잘못된 접근 등)

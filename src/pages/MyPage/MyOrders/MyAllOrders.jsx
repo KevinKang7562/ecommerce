@@ -8,9 +8,12 @@ import { OrderContext } from '../../../context/Order/Order';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { DEFAULT_PRODUCT_IMAGE, IMAGE_BASE_URL } from '../../../constants/api';
 import ProductImg from '../../../components/ProductImg/ProductImg';
+import Spinner from '../../../components/Spinner/Spinner';
+import { useModal } from '../../../context/ModalContext/ModalContext';
 
 // 나의 전체 주문 목록
 function MyAllOrders() {
+  const { showAlert, showConfirm } = useModal();
   //api는 context로 분리
   //context 사용 이유 : 동일한 api 중복 사용 및 로그인 여부에 대한 공통헤더 필요, 주문이라는 동일한 도메인을 사용하기 때문
   const { selectOrderList, requestPurchaseConfirm } = useContext(OrderContext);
@@ -69,11 +72,11 @@ function MyAllOrders() {
   const handlePurchaseConfirm = async (itemOrderNo) => {
     if (loading) return; //연타 방지
     if (itemOrderNo == null || itemOrderNo === '') {
-      alert('선택된 상품이 없습니다.');
+      await showAlert('선택된 상품이 없습니다.');
       return;
     }
 
-    const confirmed = window.confirm('구매확정 하시겠습니까?');
+    const confirmed = await showConfirm('구매확정 하시겠습니까?');
 
     if (!confirmed) {
       return;
@@ -84,7 +87,7 @@ function MyAllOrders() {
     try {
       await requestPurchaseConfirm(itemOrderNo);
 
-      alert(`구매 확정이 완료되었습니다.`);
+      await showAlert(`구매 확정이 완료되었습니다.`);
     } catch (error) {
       // setError(true);
       //에러 메세지 alert는 axios 인터셉터에서 자동 처리
@@ -234,9 +237,7 @@ function MyAllOrders() {
 
         {/* 주문 목록 */}
         {loading ? (
-          <div className="py-20 text-center">
-            주문내역을 불러오는 중입니다...
-          </div>
+          <Spinner />
         ) : error ? (
           <div className="py-20 text-center text-red-500">
             {errorMessage} {/*INLINE 에러 표시 */}

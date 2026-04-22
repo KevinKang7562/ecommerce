@@ -4,6 +4,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '../../api/axios';
 import { authContext } from '../../context/Auth/Auth';
 import DaumPostcode from 'react-daum-postcode';
+import { useModal } from '../../context/ModalContext/ModalContext';
 
 // =========================================================================
 // API 함수들 (백엔드와 통신)
@@ -46,6 +47,7 @@ const updateProfile = async (data) => {
 };
 
 export default function MyProfileEdit() {
+  const { showAlert, showConfirm } = useModal();
   const navigate = useNavigate();
 
   // =========================================================================
@@ -92,14 +94,14 @@ export default function MyProfileEdit() {
       if (data === true) {
         setIsVerified(true);
       } else {
-        alert('비밀번호가 일치하지 않습니다.');
+        showAlert('비밀번호가 일치하지 않습니다.');
       }
     },
     onError: (error) => {
       const message =
         error.response?.data?.message ||
         '비밀번호 검증 중 오류가 발생했습니다.';
-      alert(message);
+      showAlert(message);
     },
   });
 
@@ -121,13 +123,13 @@ export default function MyProfileEdit() {
     mutationFn: (email) => sendEmailCode(email),
     onSuccess: () => {
       setIsVerificationSent(true);
-      alert('입력하신 이메일로 인증 코드가 발송되었습니다.');
+      showAlert('입력하신 이메일로 인증 코드가 발송되었습니다.');
     },
     onError: (error) => {
       const message =
         error.response?.data?.message ||
         '인증 코드 발송 중 오류가 발생했습니다.';
-      alert(message);
+      showAlert(message);
     },
   });
 
@@ -138,16 +140,16 @@ export default function MyProfileEdit() {
       if (data === true) {
         setIsEmailVerified(true);
         setIsVerificationSent(false);
-        alert('이메일 인증이 완료되었습니다.');
+        showAlert('이메일 인증이 완료되었습니다.');
       } else {
-        alert('인증번호가 일치하지 않습니다.');
+        showAlert('인증번호가 일치하지 않습니다.');
       }
     },
     onError: (error) => {
       const message =
         error.response?.data?.message ||
         '인증번호 검증 중 오류가 발생했습니다.';
-      alert(message);
+      showAlert(message);
     },
   });
 
@@ -158,14 +160,14 @@ export default function MyProfileEdit() {
       // 화면을 다시 [비밀번호 입력 창]으로 되돌리기 위함
       setIsVerified(false);
       setInputPassword(''); // 다음번 입력을 위해 비밀번호 입력칸도 깨끗하게 비워줍니다.
-      alert('회원정보가 성공적으로 수정되었습니다.');
+      showAlert('회원정보가 성공적으로 수정되었습니다.');
       navigate('/mypage');
     },
     onError: (error) => {
       const message =
         error.response?.data?.message ||
         '회원정보 수정 중 오류가 발생했습니다.';
-      alert(message);
+      showAlert(message);
     },
   });
 
@@ -219,7 +221,7 @@ export default function MyProfileEdit() {
       const message =
         profileError.response?.data?.message ||
         '회원정보 조회 중 오류가 발생했습니다.';
-      alert(message);
+      showAlert(message);
     }
   }, [isProfileError, profileError]);
 
@@ -254,7 +256,7 @@ export default function MyProfileEdit() {
   // [A] 이메일 인증번호 발송 핸들러
   const handleEmailVerification = () => {
     if (!formData.email) {
-      alert('이메일을 먼저 입력해 주세요.');
+      showAlert('이메일을 먼저 입력해 주세요.');
       return;
     }
     sendEmailCodeMutation.mutate(formData.email);
@@ -263,7 +265,7 @@ export default function MyProfileEdit() {
   // [B] 이메일 인증번호 확인 핸들러
   const handleVerifyCode = () => {
     if (!verificationCode) {
-      alert('인증번호를 입력해 주세요.');
+      showAlert('인증번호를 입력해 주세요.');
       return;
     }
     verifyEmailCodeMutation.mutate({
@@ -289,7 +291,7 @@ export default function MyProfileEdit() {
     // 새 비밀번호 입력 시 검증
     if (formData.password) {
       if (formData.password !== formData.passwordConfirm) {
-        alert('비밀번호 확인이 일치하지 않습니다.');
+        showAlert('비밀번호 확인이 일치하지 않습니다.');
         return;
       }
     }
@@ -297,13 +299,13 @@ export default function MyProfileEdit() {
     //휴대폰 번호 자릿수 검증 (숫자만 남겼을 때 10자리나 11자리인지 확인)
     const purePhone = formData.phone.replace(/[^\d]/g, '');
     if (purePhone.length < 10) {
-      alert('정확한 휴대폰 번호를 입력해 주세요.');
+      showAlert('정확한 휴대폰 번호를 입력해 주세요.');
       return;
     }
 
     // 이메일이 변경되었거나 새로 입력된 경우, 인증 여부 확인
     if (formData.email !== originalEmail && !isEmailVerified) {
-      alert('새로운 이메일 주소는 반드시 인증을 완료해야 합니다.');
+      showAlert('새로운 이메일 주소는 반드시 인증을 완료해야 합니다.');
       return;
     }
 

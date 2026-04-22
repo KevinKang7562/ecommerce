@@ -44,6 +44,7 @@ import Review from './pages/MyPage/MyOrders/Review';
 import MyInquiryContextProvider from './context/Inquiry/MyInquiry';
 import InquiryWrite from './pages/MyPage/MyInquiries/InquiryWrite';
 import MyInquiryDetail from './pages/MyPage/MyInquiries/MyInquiryDetail';
+import { ModalProvider } from './context/ModalContext/ModalContext';
 
 function ToastLayer() {
   const { toasts } = useToasterStore();
@@ -313,23 +314,25 @@ function App() {
   ]);
 
   return (
-    <AuthContextProvider>
-      <CartContextProvider>
-        <OrderContextProvider>
-          <ReviewContextProvider>
-            <MyInquiryContextProvider>
-              <QueryClientProvider client={queryClient}>
-                <ProductsContextProvider>
-                  <ToastLayer />
-                  {/* <ReactQueryDevtools initialIsOpen={false} /> */}
-                  <RouterProvider router={router} />
-                </ProductsContextProvider>
-              </QueryClientProvider>
-            </MyInquiryContextProvider>
-          </ReviewContextProvider>
-        </OrderContextProvider>
-      </CartContextProvider>
-    </AuthContextProvider>
+    <ModalProvider>
+      <AuthContextProvider>
+        <CartContextProvider>
+          <OrderContextProvider>
+            <ReviewContextProvider>
+              <MyInquiryContextProvider>
+                <QueryClientProvider client={queryClient}>
+                  <ProductsContextProvider>
+                    <ToastLayer />
+                    {/* <ReactQueryDevtools initialIsOpen={false} /> */}
+                    <RouterProvider router={router} />
+                  </ProductsContextProvider>
+                </QueryClientProvider>
+              </MyInquiryContextProvider>
+            </ReviewContextProvider>
+          </OrderContextProvider>
+        </CartContextProvider>
+      </AuthContextProvider>
+    </ModalProvider>
   );
 }
 

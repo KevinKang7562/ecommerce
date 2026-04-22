@@ -6,8 +6,11 @@ import { ReviewContext } from '../../../context/Review/Review';
 import { DEFAULT_PRODUCT_IMAGE, IMAGE_BASE_URL } from '../../../constants/api';
 import ProductImg from '../../../components/ProductImg/ProductImg';
 import ImgModal from '../../../components/ImgModal/ImgModal';
+import Spinner from '../../../components/Spinner/Spinner';
+import { useModal } from '../../../context/ModalContext/ModalContext';
 
 export default function Review() {
+  const { showAlert, showConfirm } = useModal();
   //상품주문번호 파라미터
   const { itemOrderNo } = useParams();
 
@@ -56,12 +59,12 @@ export default function Review() {
       (file) => !file.type.startsWith('image/'),
     );
     if (invalidFiles.length > 0) {
-      alert('이미지 파일만 등록 가능합니다.');
+      showAlert('이미지 파일만 등록 가능합니다.');
       return;
     }
 
     if (files.length + images.length + existingImages.length > 3) {
-      alert('이미지는 최대 3장까지 등록할 수 있습니다.');
+      showAlert('이미지는 최대 3장까지 등록할 수 있습니다.');
       return;
     }
 
@@ -98,9 +101,9 @@ export default function Review() {
 
   //리뷰 등록
   const handleSubmitReview = async () => {
-    if (!rating) return alert('별점을 선택해주세요.');
+    if (!rating) return showAlert('별점을 선택해주세요.');
     if (reviewContent.trim().length < 10)
-      return alert('리뷰를 10자 이상 작성해주세요.');
+      return showAlert('리뷰를 10자 이상 작성해주세요.');
 
     const formData = new FormData();
     formData.append('itemOrderNo', orderItemData.itemOrderNo);
@@ -114,7 +117,7 @@ export default function Review() {
     console.log('리뷰등록', formData);
     try {
       await saveReview(formData);
-      alert('리뷰가 등록되었습니다.');
+      showAlert('리뷰가 등록되었습니다.');
       goToOrderList(); //목록이동
     } catch (error) {
       // alert('리뷰 등록 실패');
@@ -143,7 +146,7 @@ export default function Review() {
     console.log('리뷰수정', formData);
     try {
       await updateReview(formData);
-      alert('리뷰가 수정되었습니다.');
+      showAlert('리뷰가 수정되었습니다.');
       goToOrderList();
     } catch (error) {
       console.error('수정 실패:', error);
@@ -151,11 +154,10 @@ export default function Review() {
   };
 
   const handleReviewDelete = async () => {
-    if (
-      !window.confirm(
-        '정말 리뷰를 삭제하시겠습니까? 삭제후에는 복구할 수 없습니다',
-      )
-    ) {
+    const confirmed = await showConfirm(
+      '정말 리뷰를 삭제하시겠습니까? \n삭제후에는 복구할 수 없습니다',
+    );
+    if (!confirmed) {
       return;
     }
 
@@ -168,7 +170,7 @@ export default function Review() {
       //삭제 API 호출
       await deleteReview(params);
 
-      alert('리뷰글이 삭제되었습니다.');
+      showAlert('리뷰글이 삭제되었습니다.');
       goToOrderList(); // 삭제 후 목록으로 이동
     } catch (error) {
       console.error('삭제 실패:', error);
@@ -308,10 +310,11 @@ export default function Review() {
   // [수정] 로딩 및 에러 처리 UX 개선
   if (loading && !orderItemData) {
     return (
-      <div className="w-full py-20 text-center">
-        <div className="animate-spin inline-block w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full mb-4"></div>
-        <p className="text-gray-500">리뷰 정보를 가져오는 중...</p>
-      </div>
+      // <div className="w-full py-20 text-center">
+      //   <div className="animate-spin inline-block w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full mb-4"></div>
+      //   <p className="text-gray-500">리뷰 정보를 가져오는 중...</p>
+      // </div>
+      <Spinner />
     );
   }
   if (error && !orderItemData) {
