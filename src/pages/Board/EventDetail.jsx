@@ -3,6 +3,7 @@ import DOMPurify from 'dompurify';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../../constants/api';
+import Spinner from '../../components/Spinner/Spinner';
 
 export default function EventDetail() {
   const { boardNo } = useParams();
@@ -20,7 +21,7 @@ export default function EventDetail() {
       const res = await axios.post(
         `${API_BASE_URL}/api/board/selectEventDetail.do`,
         { boardNo },
-        { headers: { 'Content-Type': 'application/json' } }
+        { headers: { 'Content-Type': 'application/json' } },
       );
 
       const data = res?.data ?? {};
@@ -45,7 +46,7 @@ export default function EventDetail() {
         await axios.post(
           `${API_BASE_URL}/api/board/updateBoardViewCount.do`,
           { boardNo },
-          { headers: { 'Content-Type': 'application/json' } }
+          { headers: { 'Content-Type': 'application/json' } },
         );
       } catch {
         // 조회수 업데이트 실패는 상세 로드에 영향 안주도록 무시
@@ -82,7 +83,7 @@ export default function EventDetail() {
     }
   }
 
-  if (loading) return <div style={{ padding: 20 }}>로딩 중...</div>;
+  if (loading) return <Spinner />;
   if (error) return <div style={{ padding: 20, color: 'red' }}>{error}</div>;
   if (!notice) return <div style={{ padding: 20 }}>데이터가 없습니다.</div>;
 
@@ -132,27 +133,43 @@ export default function EventDetail() {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <strong style={{ color: '#08203a', fontWeight: 700 }}>{notice.writerNm ?? notice.writer ?? '작성자'}</strong>
+              <strong style={{ color: '#08203a', fontWeight: 700 }}>
+                {notice.writerNm ?? notice.writer ?? '작성자'}
+              </strong>
             </div>
-            <div style={{ color: '#94a3b8' }}>{notice.idate ?? notice.createdAt ?? ''}</div>
-            {typeof notice.viewCnt !== 'undefined' && <div style={{ color: '#94a3b8' }}>· 조회 {notice.viewCnt}</div>}
+            <div style={{ color: '#94a3b8' }}>
+              {notice.idate ?? notice.createdAt ?? ''}
+            </div>
+            {typeof notice.viewCnt !== 'undefined' && (
+              <div style={{ color: '#94a3b8' }}>· 조회 {notice.viewCnt}</div>
+            )}
           </div>
 
           {/* 추가: 이벤트 기간 표시 (startDate ~ endDate) */}
-          <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{
-              fontSize: 13,
-              color: '#0f172a',
-              background: 'linear-gradient(90deg,#eef6ff,#f8fbff)',
-              padding: '6px 10px',
-              borderRadius: 8,
-              border: '1px solid rgba(17,96,216,0.08)',
-              fontWeight: 700,
-            }}>
+          <div
+            style={{
+              marginTop: 12,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+            }}
+          >
+            <span
+              style={{
+                fontSize: 13,
+                color: '#0f172a',
+                background: 'linear-gradient(90deg,#eef6ff,#f8fbff)',
+                padding: '6px 10px',
+                borderRadius: 8,
+                border: '1px solid rgba(17,96,216,0.08)',
+                fontWeight: 700,
+              }}
+            >
               이벤트 기간
             </span>
             <div style={{ color: '#334155', fontSize: 14 }}>
-              {formatDateShort(notice.startDate) || '시작일 없음'} &nbsp;〜&nbsp; {formatDateShort(notice.endDate) || '종료일 없음'}
+              {formatDateShort(notice.startDate) || '시작일 없음'}{' '}
+              &nbsp;〜&nbsp; {formatDateShort(notice.endDate) || '종료일 없음'}
             </div>
           </div>
         </header>
@@ -182,15 +199,24 @@ export default function EventDetail() {
           {/* sanitized HTML 출력, 글자 크기도 키움 */}
           <div
             className="board-content"
-            style={{ fontSize: 'clamp(15px, 2.2vw, 18px)', color: '#0f172a', lineHeight: 1.9, wordBreak: 'break-word' }}
+            style={{
+              fontSize: 'clamp(15px, 2.2vw, 18px)',
+              color: '#0f172a',
+              lineHeight: 1.9,
+              wordBreak: 'break-word',
+            }}
             dangerouslySetInnerHTML={{
-              __html: sanitizedHtml || '<div style="color:#94a3b8">내용이 없습니다.</div>',
+              __html:
+                sanitizedHtml ||
+                '<div style="color:#94a3b8">내용이 없습니다.</div>',
             }}
           />
         </section>
 
         {/* 아래에 크게 보이는 파란 뒤로가기 버튼 (우측 정렬 유지) */}
-        <div style={{ marginTop: 22, display: 'flex', justifyContent: 'flex-end' }}>
+        <div
+          style={{ marginTop: 22, display: 'flex', justifyContent: 'flex-end' }}
+        >
           <button
             onClick={() => navigate(-1)}
             style={{
@@ -202,15 +228,22 @@ export default function EventDetail() {
               border: 'none',
               color: '#fff',
               background: 'linear-gradient(180deg,#2b8ef6 0%,#1160d8 100%)',
-              boxShadow: '0 14px 28px rgba(17,96,216,0.18), inset 0 -1px 0 rgba(255,255,255,0.06)',
+              boxShadow:
+                '0 14px 28px rgba(17,96,216,0.18), inset 0 -1px 0 rgba(255,255,255,0.06)',
               cursor: 'pointer',
               fontWeight: 800,
               fontSize: 16,
               transition: 'transform 120ms ease, box-shadow 120ms ease',
             }}
-            onMouseDown={(e) => (e.currentTarget.style.transform = 'translateY(1px)')}
-            onMouseUp={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
-            onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
+            onMouseDown={(e) =>
+              (e.currentTarget.style.transform = 'translateY(1px)')
+            }
+            onMouseUp={(e) =>
+              (e.currentTarget.style.transform = 'translateY(0)')
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.transform = 'translateY(0)')
+            }
           >
             <span style={{ fontSize: 18 }}>←</span>
             뒤로가기

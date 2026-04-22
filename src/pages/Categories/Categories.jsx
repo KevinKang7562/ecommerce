@@ -34,8 +34,23 @@ export default function Categories() {
   };
 
   return (
-    <div className="container flex flex-wrap items-center">
-      <h3 className="text-3xl font-medium mb-5 w-full">상품 카테고리</h3>
+    <div className="container py-5 flex flex-wrap items-center">
+      {/* 💡 제목 스타일을 공지사항과 동일하게 변경 */}
+      <h2
+        style={{
+          marginTop: '20px', // 제목 상단 여백 추가
+          marginBottom: '16px',
+          fontSize: '28px',
+          fontWeight: 800,
+          letterSpacing: '-0.4px',
+          color: '#0f172a',
+          lineHeight: 1.1,
+          fontFamily: 'Inter, Arial, sans-serif',
+          width: '100%', // 한 줄을 다 차지하도록 설정
+        }}
+      >
+        상품 카테고리
+      </h2>
       {data ? (
         data.map((category) => (
           <div
@@ -58,9 +73,7 @@ export default function Categories() {
           </div>
         ))
       ) : (
-        <div className="w-full">
-          <Spinner />
-        </div>
+        <Spinner />
       )}
     </div>
   );

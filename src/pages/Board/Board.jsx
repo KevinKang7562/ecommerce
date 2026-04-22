@@ -45,9 +45,13 @@ export default function Board() {
       setLoading(true);
       setError(null);
       try {
-        const res = await axios.post(`${API_BASE_URL}/api/board/selectBoard.do`, body, {
-          headers: { 'Content-Type': 'application/json' },
-        });
+        const res = await axios.post(
+          `${API_BASE_URL}/api/board/selectBoard.do`,
+          body,
+          {
+            headers: { 'Content-Type': 'application/json' },
+          },
+        );
 
         const data = res.data ?? {};
 
@@ -55,8 +59,8 @@ export default function Board() {
           typeof data.totalPages === 'number'
             ? data.totalPages
             : typeof data.total === 'number'
-            ? Math.max(1, Math.ceil(data.total / pageSize))
-            : 1;
+              ? Math.max(1, Math.ceil(data.total / pageSize))
+              : 1;
 
         setItems(Array.isArray(data.data) ? data.data : []);
         setTotalPages(tPages);
@@ -74,7 +78,7 @@ export default function Board() {
         setLoading(false);
       }
     },
-    [searchTitle, searchWriterNm, currentPage, pageSize]
+    [searchTitle, searchWriterNm, currentPage, pageSize],
   );
 
   // 초기 로드: 첫 페이지 불러오기 (서버에서 총 페이지 수를 받음)
@@ -109,16 +113,19 @@ export default function Board() {
   const emptyCount = Math.max(0, pageSize - items.length);
 
   return (
-    <div style={{ padding: 20, fontFamily: 'Inter, Arial, sans-serif' }}>
-      {/* 스타일 강화된 타이틀 */}
+    <div className="container py-5">
+      {/* 💡 제목 스타일을 공지사항과 동일하게 변경 */}
       <h2
         style={{
-          marginBottom: 16,
-          fontSize: 28,
+          marginTop: '20px', // 제목 상단 여백 추가
+          marginBottom: '16px',
+          fontSize: '28px',
           fontWeight: 800,
           letterSpacing: '-0.4px',
           color: '#0f172a',
           lineHeight: 1.1,
+          fontFamily: 'Inter, Arial, sans-serif',
+          width: '100%',
         }}
       >
         공지사항
@@ -256,11 +263,48 @@ export default function Board() {
           // 빈 데이터일 때도 pageSize 만큼의 빈행을 렌더하여 높이 유지
           Array.from({ length: pageSize }).map((_, i) => (
             <React.Fragment key={`empty-all-${i}`}>
-              <div style={{ padding: 10, borderBottom: '1px solid #fbfbfb', display: 'flex', alignItems: 'center', background: '#fff' }} />
-              <div style={{ padding: 10, borderBottom: '1px solid #fbfbfb', display: 'flex', alignItems: 'center' }} />
-              <div style={{ padding: 10, borderBottom: '1px solid #fbfbfb', display: 'flex', alignItems: 'center' }} />
-              <div style={{ padding: 10, borderBottom: '1px solid #fbfbfb', display: 'flex', alignItems: 'center' }} />
-              <div style={{ padding: 10, borderBottom: '1px solid #fbfbfb', display: 'flex', alignItems: 'center', justifyContent: 'center' }} />
+              <div
+                style={{
+                  padding: 10,
+                  borderBottom: '1px solid #fbfbfb',
+                  display: 'flex',
+                  alignItems: 'center',
+                  background: '#fff',
+                }}
+              />
+              <div
+                style={{
+                  padding: 10,
+                  borderBottom: '1px solid #fbfbfb',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              />
+              <div
+                style={{
+                  padding: 10,
+                  borderBottom: '1px solid #fbfbfb',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              />
+              <div
+                style={{
+                  padding: 10,
+                  borderBottom: '1px solid #fbfbfb',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              />
+              <div
+                style={{
+                  padding: 10,
+                  borderBottom: '1px solid #fbfbfb',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              />
             </React.Fragment>
           ))
         ) : (
@@ -339,11 +383,48 @@ export default function Board() {
             {/* 부족한 행을 빈 칸으로 채움 */}
             {Array.from({ length: emptyCount }).map((_, i) => (
               <React.Fragment key={`empty-${i}`}>
-                <div style={{ padding: 10, borderBottom: '1px solid #fbfbfb', display: 'flex', alignItems: 'center', background: '#fff' }} />
-                <div style={{ padding: 10, borderBottom: '1px solid #fbfbfb', display: 'flex', alignItems: 'center' }} />
-                <div style={{ padding: 10, borderBottom: '1px solid #fbfbfb', display: 'flex', alignItems: 'center' }} />
-                <div style={{ padding: 10, borderBottom: '1px solid #fbfbfb', display: 'flex', alignItems: 'center' }} />
-                <div style={{ padding: 10, borderBottom: '1px solid #fbfbfb', display: 'flex', alignItems: 'center', justifyContent: 'center' }} />
+                <div
+                  style={{
+                    padding: 10,
+                    borderBottom: '1px solid #fbfbfb',
+                    display: 'flex',
+                    alignItems: 'center',
+                    background: '#fff',
+                  }}
+                />
+                <div
+                  style={{
+                    padding: 10,
+                    borderBottom: '1px solid #fbfbfb',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                />
+                <div
+                  style={{
+                    padding: 10,
+                    borderBottom: '1px solid #fbfbfb',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                />
+                <div
+                  style={{
+                    padding: 10,
+                    borderBottom: '1px solid #fbfbfb',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                />
+                <div
+                  style={{
+                    padding: 10,
+                    borderBottom: '1px solid #fbfbfb',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                />
               </React.Fragment>
             ))}
           </>
@@ -351,16 +432,36 @@ export default function Board() {
       </div>
 
       {/* Pagination (그룹 페이징: 한 화면에 10개 페이지) */}
-      <div style={{ marginTop: 14, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-        <button onClick={() => goPage(1)} disabled={currentPage === 1} style={{ padding: '6px 10px' }}>
+      <div
+        style={{
+          marginTop: 14,
+          display: 'flex',
+          gap: 8,
+          alignItems: 'center',
+          flexWrap: 'wrap',
+        }}
+      >
+        <button
+          onClick={() => goPage(1)}
+          disabled={currentPage === 1}
+          style={{ padding: '6px 10px' }}
+        >
           처음
         </button>
 
-        <button onClick={() => goPage(prevGroupStart)} disabled={groupStart === 1} style={{ padding: '6px 10px' }}>
+        <button
+          onClick={() => goPage(prevGroupStart)}
+          disabled={groupStart === 1}
+          style={{ padding: '6px 10px' }}
+        >
           &lt;&lt;
         </button>
 
-        <button onClick={() => goPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1} style={{ padding: '6px 10px' }}>
+        <button
+          onClick={() => goPage(Math.max(1, currentPage - 1))}
+          disabled={currentPage === 1}
+          style={{ padding: '6px 10px' }}
+        >
           &lt;
         </button>
 
@@ -385,15 +486,27 @@ export default function Board() {
           );
         })}
 
-        <button onClick={() => goPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages} style={{ padding: '6px 10px' }}>
+        <button
+          onClick={() => goPage(Math.min(totalPages, currentPage + 1))}
+          disabled={currentPage === totalPages}
+          style={{ padding: '6px 10px' }}
+        >
           &gt;
         </button>
 
-        <button onClick={() => goPage(nextGroupStart)} disabled={groupEnd === totalPages} style={{ padding: '6px 10px' }}>
+        <button
+          onClick={() => goPage(nextGroupStart)}
+          disabled={groupEnd === totalPages}
+          style={{ padding: '6px 10px' }}
+        >
           &gt;&gt;
         </button>
 
-        <button onClick={() => goPage(totalPages)} disabled={currentPage === totalPages} style={{ padding: '6px 10px' }}>
+        <button
+          onClick={() => goPage(totalPages)}
+          disabled={currentPage === totalPages}
+          style={{ padding: '6px 10px' }}
+        >
           끝
         </button>
 

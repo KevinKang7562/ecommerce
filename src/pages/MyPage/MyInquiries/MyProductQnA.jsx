@@ -5,6 +5,7 @@ import { MyInquiryContext } from '../../../context/Inquiry/MyInquiry';
 import { DEFAULT_PRODUCT_IMAGE, IMAGE_BASE_URL } from '../../../constants/api';
 import ProductImg from '../../../components/ProductImg/ProductImg';
 import { Link } from 'react-router-dom';
+import Spinner from '../../../components/Spinner/Spinner';
 // import { authContext } from '../../../context/Auth/Auth';
 
 //나의 상품 문의 목록
@@ -163,9 +164,7 @@ export default function MyProductQnA() {
     <div className="px-4 sm:px-6 lg:px-8">
       <div className="overflow-x-auto">
         {loading ? (
-          <div className="py-20 text-center text-sm sm:text-base">
-            문의 내역을 불러오는 중입니다...
-          </div>
+          <Spinner />
         ) : error ? (
           <div className="py-20 text-center text-red-500 text-sm sm:text-base">
             {errorMessage} {/*INLINE 에러 표시 */}

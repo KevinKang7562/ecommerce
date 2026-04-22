@@ -7,6 +7,7 @@ import Pagination from '../../../components/MyPageCommon/Common/Pagination';
 import { MyInquiryContext } from '../../../context/Inquiry/MyInquiry';
 // import { authContext } from '../../../context/Auth/Auth';
 import { useNavigate } from 'react-router-dom';
+import Spinner from '../../../components/Spinner/Spinner';
 export default function MyPersonalInquiry() {
   const { selectMyInquiryList } = useContext(MyInquiryContext);
   // const { userNo } = useContext(authContext);
@@ -135,9 +136,7 @@ export default function MyPersonalInquiry() {
 
       <div className="overflow-x-auto">
         {loading ? (
-          <div className="py-20 text-center">
-            문의 내역을 불러오는 중입니다...
-          </div>
+          <Spinner />
         ) : error ? (
           <div className="py-20 text-center text-red-500">
             {errorMessage} {/*INLINE 에러 표시 */}

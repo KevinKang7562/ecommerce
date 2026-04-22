@@ -1,49 +1,41 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+// import axios from 'axios';
 import Spinner from '../../components/Spinner/Spinner';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { API_BASE_URL, SESSION_ALERT } from '../../constants/api';
-import { logout } from '../../components/Navbar/Navbar';
+import {
+  API_BASE_URL,
+  SESSION_ALERT,
+  IMAGE_BASE_URL,
+} from '../../constants/api';
+import api from '../../api/axios';
 
 export default function Event() {
   const navigate = useNavigate();
-  
+
   const [activeTab, setActiveTab] = useState('ongoing'); // 'ongoing' | 'ended'
 
   const statusMap = {
     ongoing: 'ES02', // 진행중
-    ended: 'ES03',   // 종료
+    ended: 'ES03', // 종료
   };
 
   // API 호출: eventStatus 를 body에 포함
   async function getEvent(eventStatus) {
-    const url = `${API_BASE_URL}/api/board/selectEvent.do`;
+    // const url = `${API_BASE_URL}/api/board/selectEvent.do`;
+    const url = `/api/board/selectEvent.do`;
 
     const requestBody = {
-      'eventStatus': eventStatus ?? statusMap[activeTab]
+      eventStatus: eventStatus ?? statusMap[activeTab],
     };
 
-    const requestHeaders = {
-      'Content-Type': 'application/json',
-    };
+    // const requestHeaders = {
+    //   'Content-Type': 'application/json',
+    // };
 
-    try {
-      const response = await axios.post(url, requestBody, {
-        headers: requestHeaders,
-      });
-      return response.data.data;
-    } catch (error) {
-      if (error.response?.status === 401) {
-        alert(`${SESSION_ALERT}`);
-        logout();
-        window.location.href = '/login';
-        throw error;
-      }
-      alert(error);
-      throw error;
-    }
+    const response = await api.post(url, requestBody);
+    return response.data.data;
   }
 
   // useQuery: activeTab 변경 시 쿼리키가 바뀌어 재요청됨
@@ -64,10 +56,24 @@ export default function Event() {
 
   return (
     <>
-      <div className="container">
-
-        { /* 제목 */ }
-        <h3 className="text-3xl font-medium mb-5 w-full">이벤트</h3>
+      {/* 💡 container에 py-5를 추가합니다. */}
+      <div className="container py-5">
+        {/* 💡 제목 스타일을 공지사항과 동일하게 변경 */}
+        <h2
+          style={{
+            marginTop: '20px', // 제목 상단 여백 추가
+            marginBottom: '16px',
+            fontSize: '28px',
+            fontWeight: 800,
+            letterSpacing: '-0.4px',
+            color: '#0f172a',
+            lineHeight: 1.1,
+            fontFamily: 'Inter, Arial, sans-serif',
+            width: '100%',
+          }}
+        >
+          이벤트
+        </h2>
 
         {/* 탭 네비게이션 */}
         <div className="flex items-center justify-start gap-3 mb-6">
@@ -102,23 +108,26 @@ export default function Event() {
 
         {/* 설명 */}
         <p className="text-sm text-gray-500 mb-6">
-          {activeTab === 'ongoing' ? '현재 진행중인 이벤트 목록입니다.' : '종료된 이벤트 목록입니다.'}
+          {activeTab === 'ongoing'
+            ? '현재 진행중인 이벤트 목록입니다.'
+            : '종료된 이벤트 목록입니다.'}
         </p>
 
         {/* 컨텐츠 그리드 (두 탭에 동일한 레이아웃, API는 eventStatus로 분기) */}
         <div className="flex flex-wrap items-center">
           {isLoading ? (
-            <div className="w-full">
-              <Spinner />
-            </div>
+            <Spinner />
           ) : data && data.length ? (
             data.map((event) => (
-              <div className="w-full lg:md:w-1/4 md:w-1/3 sm:w-1/2 p-3" key={event._id}>
+              <div
+                className="w-full lg:md:w-1/4 md:w-1/3 sm:w-1/2 p-3"
+                key={event._id}
+              >
                 <div className="relative bg-white mx-auto hover:shadow-green-300 transition-shadow shadow-md rounded-lg max-w-sm dark:bg-gray-800 dark:border-gray-700">
                   <img
                     onClick={() => onItemClick(event)}
                     className="rounded-t-lg sm:object-cover object-contain object-top w-full h-80"
-                    src={event.imgUrl}
+                    src={`${IMAGE_BASE_URL}${event.imgUrl}`}
                     alt={event.title}
                   />
                   <div className="px-5 py-2">
@@ -135,7 +144,9 @@ export default function Event() {
               </div>
             ))
           ) : (
-            <div className="w-full text-center text-gray-500">표시할 항목이 없습니다.</div>
+            <div className="w-full text-center text-gray-500">
+              표시할 항목이 없습니다.
+            </div>
           )}
         </div>
       </div>

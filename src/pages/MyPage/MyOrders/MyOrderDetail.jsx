@@ -8,6 +8,7 @@ import CsDetailModal from '../../../components/MyPageCommon/MyOrder/CsDetailModa
 import { OrderContext } from '../../../context/Order/Order';
 import { DEFAULT_PRODUCT_IMAGE, IMAGE_BASE_URL } from '../../../constants/api';
 import ProductImg from '../../../components/ProductImg/ProductImg';
+import Spinner from '../../../components/Spinner/Spinner';
 
 export default function MyOrderDetail() {
   //주문번호 파라미터
@@ -191,7 +192,7 @@ export default function MyOrderDetail() {
   //조건부 랜더링(데이터 조회 전 orderData 구조분해 실행으로 인한 에러발생 방지하기 위해 초기 랜더링 시 구조분해 전에 return으로 함수 조기 종료)
   // =====================================================================
   if (loading) {
-    return <div className="py-20 text-center">로딩중...</div>;
+    return <Spinner />;
   }
   if (error) {
     return <div className="py-20 text-center text-red-500">{errorMessage}</div>;
