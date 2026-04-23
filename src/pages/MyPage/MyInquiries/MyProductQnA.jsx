@@ -178,6 +178,20 @@ export default function MyProductQnA() {
       key: 'inquiryStatusNm',
       header: '답변상태',
       className: 'w-20 sm:w-24',
+      render: (v, row) => {
+        const isAnswered = Boolean(row.answerContent) || v === '답변완료';
+        return (
+          <span
+            className={
+              isAnswered
+                ? 'text-blue-600 font-bold'
+                : 'text-gray-600 font-medium'
+            }
+          >
+            {isAnswered ? '답변완료' : '답변대기'}
+          </span>
+        );
+      },
     },
     {
       key: 'inquiryDate',
