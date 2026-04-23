@@ -49,7 +49,7 @@ export default function Login() {
 
     setIsLoading(true);
     api
-      .post(`${AUTH_PATH}/login.do`, data, { meta: { errorType: 'INLINE' } })
+      .post(`${AUTH_PATH}/login.do`, data, { meta: { errorType: 'ALERT' } })
       .then((response) => {
         // 서버 응답 성공 = 세션 쿠키 발급 완료
         // AuthContext에 상태 공유용 플래그 저장 (이 값이 localStorage에 저장되어 다른 창으로 전파됨)
@@ -61,13 +61,13 @@ export default function Login() {
       })
       .catch((error) => {
         setIsLoading(false);
-        setErr(error.response?.data?.message || 'Login failed');
+        setErr(error.response?.data?.message || '로그인 실패');
       });
   }
 
   const validate = Yup.object({
-    userId: Yup.string().required('User ID is required'),
-    password: Yup.string().required('Password is required'),
+    userId: Yup.string().required('아이디를 입력해 주세요'),
+    password: Yup.string().required('비밀번호를 입력해 주세요'),
   });
 
   return (
@@ -83,8 +83,12 @@ export default function Login() {
           className="max-w-md mx-auto md:mt-12 mt-0"
           onSubmit={handleLogin}
         >
-          <h1 className="text-2xl text-gray-500 mb-5 font-bold">Login Now</h1>
-          {err && <div className="bg-red-300 py-1 mb-4 font-light">{err}</div>}
+          <h1 className="text-2xl text-gray-500 mb-4 font-bold">로그인</h1>
+          <div className="min-h-[20px] mb-5">
+            {err ? (
+              <div className="text-red-500 py-1 font-light">{err}</div>
+            ) : null}
+          </div>
           <div className="relative z-0 w-full mb-5 group">
             <input
               type="text"
@@ -94,14 +98,14 @@ export default function Login() {
               onChange={() =>
                 setFieldErrors((prev) => ({ ...prev, userId: undefined }))
               }
-              className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-green-500 focus:outline-none focus:ring-0 focus:border-green-600 peer"
+              className="block py-2 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-green-500 focus:outline-none focus:ring-0 focus:border-green-600 peer"
               placeholder=" "
             />
             <label
               htmlFor="userId"
-              className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-green-600 peer-focus:dark:text-green-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+              className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-2 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-green-600 peer-focus:dark:text-green-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
             >
-              User ID
+              ID
             </label>
             {fieldErrors.userId && (
               <span className="text-red-600 font-light text-sm">
@@ -137,14 +141,14 @@ export default function Login() {
             to="/forgotPassword"
             className="text-green-800 text-sm underline block my-3"
           >
-            Forgot password?
+            비밀번호 찾기
           </Link>
           {isLoading ? (
             <button {...buttonProps} disabled>
               <i className="fa-solid fa-spinner animate-spin"></i>
             </button>
           ) : (
-            <button {...buttonProps}>Login</button>
+            <button {...buttonProps}>로그인</button>
           )}
         </form>
       </div>

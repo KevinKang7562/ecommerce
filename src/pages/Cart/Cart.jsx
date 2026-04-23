@@ -34,7 +34,7 @@ export default function Cart() {
   }, []);
 
   return (
-    <div className="container flex flex-wrap">
+    <div className="container mt-10 flex flex-wrap">
       <div className="relative overflow-x-auto shadow-md sm:rounded-lg w-full">
         <table className="w-full table-fixed text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
           <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">

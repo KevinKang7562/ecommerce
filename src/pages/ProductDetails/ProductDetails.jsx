@@ -441,7 +441,7 @@ export default function ProductDetails() {
       {/* 1. 최상단 컨테이너: 
        - 기본(작은 화면): container 클래스로 기존 비율 유지
        - lg(큰 화면): max-w-6xl로 너비를 제한하고 px-10으로 안쪽 여백을 더 넓게 줌 */}
-      <div className="container lg:max-w-6xl mx-auto px-4 lg:px-10 dark:bg-gray-800">
+      <div className="container container mt-11 ">
         {/* 2. 그리드 레이아웃:
          - 기본(작은 화면): gap-6으로 좁은 간격 유지
          - lg(큰 화면): gap-20으로 좌우 단락 사이를 시원하게 벌림 */}

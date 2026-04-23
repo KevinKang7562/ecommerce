@@ -92,7 +92,7 @@ export default function MainSlider() {
   };
 
   return (
-    <div className="container mt-7">
+    <div className="container mt-12">
       <div className="flex">
         <div className="w-full my-0 relative">
           {events.length > 0 ? (

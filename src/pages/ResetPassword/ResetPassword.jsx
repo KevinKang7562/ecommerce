@@ -55,7 +55,7 @@ export default function ResetPassword() {
       .catch((err) => {
         toast.error('Something went wrong, please try again');
         setIsLoading(false);
-        setErr(err.response?.data?.message || 'Reset password failed');
+        setErr(err.response?.data?.message || '비밀번호 변경에 실패했습니다.');
       });
   }
 
@@ -75,50 +75,51 @@ export default function ResetPassword() {
 
   return (
     <>
-      {/* <Helmet>
-        <title>Reset Password</title>
-      </Helmet> */}
-
-      <form
-        method="post"
-        className="max-w-md mx-auto"
-        onSubmit={formik.handleSubmit}
-      >
-        <h1 className="text-2xl text-gray-500 mb-5 font-bold">
-          Reset Password
-        </h1>
-        {err && <div className="bg-red-300 py-1 mb-4 font-light">{err}</div>}
-        <div className="relative z-0 w-full mb-5 group">
-          <input
-            type="password"
-            name="newPassword"
-            id="newPassword"
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-            value={formik.values.newPassword}
-            className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-green-500 focus:outline-none focus:ring-0 focus:border-green-600 peer"
-            placeholder=" "
-          />
-          <label
-            htmlFor="newPassword"
-            className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-green-600 peer-focus:dark:text-green-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
-          >
-            New Password
-          </label>
-          {formik.errors.newPassword && formik.touched.newPassword && (
-            <span className="text-red-600 font-light text-sm">
-              {formik.errors.newPassword}
-            </span>
+      <Helmet>
+        <title>비밀번호 변경</title>
+      </Helmet>
+      <div className="container">
+        <form
+          method="post"
+          className="max-w-md mx-auto  md:mt-12 mt-0"
+          onSubmit={formik.handleSubmit}
+        >
+          <h1 className="text-2xl text-gray-500 mb-5 font-bold">
+            비밀번호 변경
+          </h1>
+          {err && <div className="bg-red-300 py-1 mb-4 font-light">{err}</div>}
+          <div className="relative z-0 w-full mb-5 group">
+            <input
+              type="password"
+              name="newPassword"
+              id="newPassword"
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              value={formik.values.newPassword}
+              className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-green-500 focus:outline-none focus:ring-0 focus:border-green-600 peer"
+              placeholder=" "
+            />
+            <label
+              htmlFor="newPassword"
+              className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-green-600 peer-focus:dark:text-green-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+            >
+              새 비밀번호
+            </label>
+            {formik.errors.newPassword && formik.touched.newPassword && (
+              <span className="text-red-600 font-light text-sm">
+                {formik.errors.newPassword}
+              </span>
+            )}
+          </div>
+          {isLoading ? (
+            <button {...buttonProps} disabled>
+              <i className="fa-solid fa-spinner animate-spin"></i>
+            </button>
+          ) : (
+            <button {...buttonProps}>비밀번호 변경</button>
           )}
-        </div>
-        {isLoading ? (
-          <button {...buttonProps} disabled>
-            <i className="fa-solid fa-spinner animate-spin"></i>
-          </button>
-        ) : (
-          <button {...buttonProps}>Submit</button>
-        )}
-      </form>
+        </form>
+      </div>
     </>
   );
 }

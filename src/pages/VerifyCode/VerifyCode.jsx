@@ -49,16 +49,16 @@ export default function VerifyCode() {
       })
       .catch((err) => {
         setIsLoading(false);
-        setErr(err.response?.data?.message || 'Verification failed');
+        setErr(err.response?.data?.message || '인증에 실패했습니다.');
       });
   }
 
   const validate = Yup.object({
     resetCode: Yup.string()
-      .required('Code is required')
+      .required('코드를 입력해 주세요')
       .matches(
         /^[A-Z0-9]{8}$/,
-        'Code must be 8 characters using uppercase letters and numbers',
+        '코드는 8자리로 입력해 주세요 (대문자와 숫자만 사용 가능)',
       ),
   });
 
@@ -73,58 +73,58 @@ export default function VerifyCode() {
   return (
     <>
       <Helmet>
-        <title>Verify Code</title>
+        <title>인증 코드 입력</title>
       </Helmet>
-
-      <form
-        method="post"
-        className="max-w-md mx-auto"
-        onSubmit={formik.handleSubmit}
-      >
-        <h1 className="text-2xl text-gray-500 mb-5 font-bold">
-          Enter Verification Code:
-        </h1>
-        {err && <div className="bg-red-300 py-1 mb-4 font-light">{err}</div>}
-
-        <div className="relative z-0 w-full mb-5 group">
-          <input
-            type="text"
-            name="resetCode"
-            id="resetCode"
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-            value={formik.values.resetCode}
-            className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-green-500 focus:outline-none focus:ring-0 focus:border-green-600 peer"
-            placeholder=" "
-          />
-          <label
-            htmlFor="resetCode"
-            className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto peer-focus:text-green-600 peer-focus:dark:text-green-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
-          >
-            8 Character Code
-          </label>
-          {formik.errors.resetCode && formik.touched.resetCode && (
-            <span className="text-red-600 font-light text-sm">
-              {formik.errors.resetCode}
-            </span>
-          )}
-        </div>
-        <p
-          id="helper-text-explanation"
-          className="mt-2 mb-5 text-sm text-gray-500 dark:text-gray-400"
+      <div className="container">
+        <form
+          method="post"
+          className="max-w-md mx-auto md:mt-12 mt-0"
+          onSubmit={formik.handleSubmit}
         >
-          Please enter the 8-character verification code shown on the previous
-          screen.
-        </p>
+          <h1 className="text-2xl text-gray-500 mb-5 font-bold">
+            인증 코드 입력
+          </h1>
+          {err && <div className="bg-red-300 py-1 mb-4 font-light">{err}</div>}
 
-        {isLoading ? (
-          <button {...buttonProps} disabled>
-            <i className="fa-solid fa-spinner animate-spin"></i>
-          </button>
-        ) : (
-          <button {...buttonProps}>Submit</button>
-        )}
-      </form>
+          <div className="relative z-0 w-full mb-5 group">
+            <input
+              type="text"
+              name="resetCode"
+              id="resetCode"
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              value={formik.values.resetCode}
+              className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-green-500 focus:outline-none focus:ring-0 focus:border-green-600 peer"
+              placeholder=" "
+            />
+            <label
+              htmlFor="resetCode"
+              className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto peer-focus:text-green-600 peer-focus:dark:text-green-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+            >
+              8자리 인증 코드
+            </label>
+            {formik.errors.resetCode && formik.touched.resetCode && (
+              <span className="text-red-600 font-light text-sm">
+                {formik.errors.resetCode}
+              </span>
+            )}
+          </div>
+          <p
+            id="helper-text-explanation"
+            className="mt-2 mb-5 text-sm text-gray-500 dark:text-gray-400"
+          >
+            이메일로 발송된 8자리 인증 코드를 입력해 주세요.
+          </p>
+
+          {isLoading ? (
+            <button {...buttonProps} disabled>
+              <i className="fa-solid fa-spinner animate-spin"></i>
+            </button>
+          ) : (
+            <button {...buttonProps}>제출</button>
+          )}
+        </form>
+      </div>
     </>
   );
 }

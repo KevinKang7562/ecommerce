@@ -1,7 +1,7 @@
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useEffect, useMemo, useState } from 'react';
-import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import { useParams, useLocation, useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import DaumPostcode from 'react-daum-postcode';
 import api from '../../api/axios';
@@ -388,7 +388,7 @@ export default function Checkout() {
         <title>주문 / 결제</title>
       </Helmet>
 
-      <div className="container">
+      <div className="container  mt-10">
         <h1 className="text-3xl font-bold text-gray-800 mb-6">주문 / 결제</h1>
 
         {cartLoading ? (
@@ -748,7 +748,9 @@ export default function Checkout() {
                             key={`${product.prodNo || idx}-${idx}`}
                             className="flex gap-3"
                           >
-                            <ProductImg src={item.product.imgUrl} />
+                            <Link to={`/product/${item.product.prodNo}`}>
+                              <ProductImg src={item.product.imgUrl} />
+                            </Link>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-gray-800 truncate">
                                 {product.prodNm || '상품명 없음'}
