@@ -11,6 +11,7 @@ export default function ProductSlider({ title, apiEndpoint }) {
   const [products, setProducts] = useState(null);
   const navigate = useNavigate();
   const { addProduct } = useContext(cartContext);
+  const [dragging, setDragging] = useState(false); //드래그 상태 저장, 드래그 중 클릭 방지
 
   useEffect(() => {
     async function fetchProducts() {
@@ -35,6 +36,9 @@ export default function ProductSlider({ title, apiEndpoint }) {
     autoplay: true,
     autoplaySpeed: 3000,
     pauseOnHover: true,
+    //  슬라이드가 넘어갈 때(드래그) 상태 업데이트
+    beforeChange: () => setDragging(true),
+    afterChange: () => setDragging(false),
     responsive: [
       {
         breakpoint: 1024,
@@ -60,7 +64,12 @@ export default function ProductSlider({ title, apiEndpoint }) {
     ],
   };
 
-  const handleCardClick = (prodNo) => {
+  const handleCardClick = (e, prodNo) => {
+    if (dragging) {
+      e.stopPropagation(); // 이벤트 전파 방지
+      e.preventDefault(); // 기본 동작 방지
+      return;
+    }
     navigate(`/product/${prodNo}`);
   };
 
@@ -98,8 +107,9 @@ export default function ProductSlider({ title, apiEndpoint }) {
 
                 return (
                   <div key={product.prodNo} className="p-3 outline-none">
+                    {/* onClick 에 이벤트(e) 객체를 함께 전달(드래그 중 클릭 방지)*/}
                     <div
-                      onClick={() => handleCardClick(product.prodNo)}
+                      onClick={(e) => handleCardClick(product.prodNo)}
                       className="relative bg-white mx-auto hover:-translate-y-1 transition-transform duration-300 hover:shadow-green-300 shadow-md rounded-lg max-w-sm dark:bg-gray-800 dark:border-gray-700 cursor-pointer"
                     >
                       <ProductImg
