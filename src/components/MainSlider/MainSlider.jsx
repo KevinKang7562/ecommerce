@@ -132,7 +132,7 @@ export default function MainSlider() {
             </>
           ) : (
             // 💡 스켈레톤 로딩 UI도 고정 높이 대신 범용적인 가로세로 비율(aspect-ratio)을 사용하도록 변경
-            <div className="w-full aspect-[21/9] bg-gray-200 animate-pulse rounded-lg flex items-center justify-center">
+            <div className="w-full aspect-[5/2] md:aspect-[21/9] lg:aspect-[4/1] bg-gray-200 animate-pulse rounded-lg flex items-center justify-center">
               <span className="text-gray-500">
                 <Spinner />
               </span>
