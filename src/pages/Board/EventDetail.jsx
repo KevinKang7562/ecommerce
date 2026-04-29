@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import DOMPurify from 'dompurify';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import { API_BASE_URL } from '../../constants/api';
+import { API_BASE_URL, IMAGE_BASE_URL } from '../../constants/api';
 import Spinner from '../../components/Spinner/Spinner';
 
 export default function EventDetail() {
@@ -65,7 +65,18 @@ export default function EventDetail() {
   // sanitize HTML content to render safely; allow common tags and data/src URIs
   const rawHtml = notice?.boardContent ?? notice?.content ?? notice?.body ?? '';
   const sanitizedHtml = useMemo(() => {
-    return DOMPurify.sanitize(rawHtml, {
+    if (!rawHtml) return '';
+
+    let processedHtml = rawHtml;
+
+    // 1. 복잡한 정규식 대신 확실한 문자열 매칭(replaceAll) 사용
+    // 만약 IMAGE_BASE_URL이 undefined라면 에러가 나지 않도록 대비('')
+    const targetIp = 'http://192.168.0.225';
+    const newIp = IMAGE_BASE_URL;
+
+    processedHtml = processedHtml.replaceAll(targetIp, newIp);
+
+    return DOMPurify.sanitize(processedHtml, {
       USE_PROFILES: { html: true },
       ALLOWED_URI_REGEXP: /^(?:(?:https?|data):|\/)/i,
     });
